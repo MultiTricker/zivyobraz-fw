@@ -1,0 +1,860 @@
+/*
+* ZivyObraz.eu - Orchestrate your ePaper displays
+* 
+* You need to change some initial things like ePaper type etc. - see below.
+*
+* Code based on both: 
+* https://github.com/ZinggJM/GxEPD2/blob/master/examples/GxEPD2_WiFi_Example/GxEPD2_WiFi_Example.ino
+* and
+* https://github.com/LaskaKit/ESPink-42/blob/main/SW/Weatherstation_info/Weatherstation_info.ino
+* 
+* Compile with board type: ESP32 dev module
+*
+* Libraries:
+* Analog read with calibration data: https://github.com/madhephaestus/ESP32AnalogRead/ 
+* EPD library: https://github.com/ZinggJM/GxEPD2
+* EPD library for 4G "Grayscale": https://github.com/ZinggJM/GxEPD2_4G
+* WiFi manager by tzapu https://github.com/tzapu/WiFiManager
+*
+* original code made by Jean-Marc Zingg and LaskaKit
+* modified by @MultiTricker (https://michalsevcik.eu)
+*/
+
+// Uncomment if you have connected SHT40 sensor for sending temperature and humidity
+//#define SHT40
+
+// Uncomment correct color capability of your ePaper display
+#define TYPE_BW // black and white
+//#define TYPE_3C // 3 colors - black, white and red/yellow
+//#define TYPE_GRAYSCALE // grayscale - 4 colors
+//#define TYPE_7C // 7 colors
+
+////////////
+// Board
+////////////
+
+// https://www.laskakit.cz/laskakit-espink-esp32-e-paper-pcb-antenna/?variantId=12419
+// Also ESPInk-42 all-in-one board
+
+/* ---------------- Pinout of ESPink ------------ */
+#define PIN_SS 5 //SS
+#define PIN_DC 17 // D/C
+#define PIN_RST 16 // RES
+#define PIN_BUSY 4 // PIN_BUSY
+#define ePaperPowerPin 2
+/* ---------------------------------------------- */
+
+// For LaskaKit ESP32-Dev kit use pins:
+ /*
+ SDI  = GPIO23
+ SCL  = GPIO18
+ CS   = GPIO5
+ D/C  = GPIO17
+ RES  = GPIO16
+ PIN_BUSY = GPIO4
+*/
+
+///////////////////////
+// ePaper libraries
+///////////////////////
+
+// 2 colors (Black and White)
+#ifdef TYPE_BW
+  #include <GxEPD2_BW.h>
+  const char* defined_color_type = "BW";
+#endif
+
+// 3 colors (Black, White and Red/Yellow)
+#ifdef TYPE_3C
+  #include <GxEPD2_3C.h>
+  const char* defined_color_type = "3C";
+#endif
+
+// 4 colors (Grayscale - Black, Darkgrey, Lightgrey, White) (https://github.com/ZinggJM/GxEPD2_4G)
+#ifdef TYPE_GRAYSCALE
+  #include "../lib/GxEPD2_4G/src/GxEPD2_4G_4G.h"
+  #include "../lib/GxEPD2_4G/src/GxEPD2_4G_BW.h"
+  const char* defined_color_type = "4G";
+#endif
+
+// 7 colors
+#ifdef TYPE_7C
+  #include <GxEPD2_7C.h>
+  const char* defined_color_type = "7C";
+#endif
+
+/////////////////////////////////
+// Choose ePaper
+/////////////////////////////////
+
+// Supported display classes can be found for example here:
+// https://github.com/ZinggJM/GxEPD2/blob/master/examples/GxEPD2_Example/GxEPD2_display_selection.h
+
+/////////////////
+// BW
+/////////////////
+
+// 4.2" b/w 400x300
+//GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); 
+
+// 7.5" b/w 800x480
+GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> display(GxEPD2_750_T7(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
+
+// GDEY075T7 800x480, UC8179 (GD7965)
+//GxEPD2_BW<GxEPD2_750_YT7, GxEPD2_750_YT7::HEIGHT> display(GxEPD2_750_YT7(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); 
+
+// GDEY027T91 2.7" 264x176
+//GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); 
+
+// GDEW0154T8 152x152, UC8151 (IL0373)
+//GxEPD2_BW<GxEPD2_154_T8, GxEPD2_154_T8::HEIGHT> display(GxEPD2_154_T8(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
+
+// GDEY0213B74 122x250, SSD1680, (FPC-A002 20.04.08)
+//GxEPD2_BW<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
+
+/////////////////
+// 3C
+/////////////////
+
+// 7.5" 3C 800x480
+//GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); // GDEY075Z08 800x480, GDEW075Z08
+
+/////////////////
+// Grayscale
+/////////////////
+
+// 4.2" Grayscale 400x300
+//GxEPD2_4G_4G<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(/*CS=5*/ PIN_SS, /*DC=*/ PIN_DC, /*RST=*/ PIN_RST, /*BUSY=*/ PIN_BUSY));
+
+// 7.5" Grayscale 800x480
+//GxEPD2_4G_4G<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(/*CS=5*/ PIN_SS, /*DC=*/ PIN_DC, /*RST=*/ PIN_RST, /*BUSY=*/ PIN_BUSY));
+
+/////////////////
+// Color
+/////////////////
+
+// 7.5" 7C 800x480
+//GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(GxEPD2_730c_GDEY073D46(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); // GDEY073D46 800x480 7-color, (N-FPC-001 2021.11.26)
+
+///////////////////////////////////////////////
+// That's all!
+// Code of ZivyObraz follows
+///////////////////////////////////////////////
+
+////////////////////////////
+// Library etc. includes
+////////////////////////////
+
+// WiFi
+#include <WiFi.h>
+#include <WiFiManager.h>
+
+// SPI
+#include "SPI.h"
+// ADC reading
+#include <ESP32AnalogRead.h>
+// Font
+#include "OpenSansSB_12px.h"
+
+// SHT40 sensor
+#ifdef SHT40
+#include <Wire.h>
+#include "Adafruit_SHT4x.h"
+Adafruit_SHT4x sht4 = Adafruit_SHT4x();
+#endif
+
+/* ---- ADC reading - indoor Battery voltage ---- */
+ESP32AnalogRead adc;
+#define dividerRatio 1.769
+#define vBatPin 34
+
+/* ---- Server Zivy obraz ----------------------- */
+const char* host = "cdn.zivyobraz.eu";
+const char* firmware = "1.0";
+
+/* ---------- Deepsleep time in minutes --------- */
+uint64_t defaultDeepSleepTime = 2; // if there is a problem with loading images, 
+                              // this time will be used as fallback to try again soon
+uint64_t deepSleepTime = defaultDeepSleepTime; // actual sleep time in minutes, value is changed 
+                                          // by what server suggest in response headers
+/* ---------------------------------------------- */
+
+/*-------------- ePaper resolution -------------- */
+// Get display width from selected display class
+#define DISPLAY_RESOLUTION_X display.epd2.WIDTH
+#define DISPLAY_RESOLUTION_Y display.epd2.HEIGHT
+/* ---------------------------------------------- */
+
+/* variables */
+int strength; // Wi-Fi signal strength
+float d_volt; // indoor battery voltage
+RTC_DATA_ATTR uint64_t timestamp = 0;
+uint64_t timestampNow = 1; // initialize value for timestamp from server
+
+int8_t getWifiStrength()
+{
+  strength = WiFi.RSSI();
+  Serial.println("Wifi Strength: " + String(strength) + " dB"); 
+
+  return strength;
+}
+
+uint8_t getBatteryVoltage()
+{
+  // attach ADC input
+  adc.attach(vBatPin);
+  // battery voltage measurement
+  d_volt = adc.readVoltage() * dividerRatio;
+  Serial.println("Battery voltage: " + String(d_volt) + " V");
+
+  return d_volt;
+}
+
+void displayInit()
+{
+  display.init();
+  display.setRotation(0);
+  display.fillScreen(GxEPD_WHITE);  // white background
+  display.setTextColor(GxEPD_BLACK);  // black font
+}
+
+void WiFiInit()
+{
+  // Connecting to WiFi
+  Serial.println();
+  Serial.print("Connecting...");
+  //Serial.println(ssid);
+
+  //WiFi.begin(ssid, pass);
+  WiFi.mode(WIFI_STA);
+  WiFiManager wm;
+
+  // reset settings - wipe stored credentials for testing
+  //wm.resetSettings();
+
+  wm.setConfigPortalTimeout(300);   // set portal time to 5 min, then sleep/try again.
+  bool res;
+  // Set network name to wi-fi mac address
+  String hostname = "INK_";
+  hostname += WiFi.macAddress();
+  // Replace colon with nothing
+  hostname.replace(":", "");
+
+  res = wm.autoConnect(hostname.c_str() ,"zivyobraz"); // password protected ap
+
+  // Check if Wi-Fi is configured or connection to AP failed - show on ePaper
+  if(!wm.getWiFiIsSaved() or !res) {
+      displayInit();
+      pinMode(ePaperPowerPin, OUTPUT); 
+      digitalWrite(ePaperPowerPin, HIGH);
+      delay(500);
+
+      display.setFont(&OpenSansSB_12px);
+      display.setCursor(10, 20);
+      display.print("No Wi-Fi configuration/connection.");
+      display.setCursor(10, 40);
+      display.print("Configuration portal has been started!");
+      display.setCursor(10, 60);
+      display.print("Connect to AP and (re)configure Wi-Fi connection:");
+      display.setCursor((DISPLAY_RESOLUTION_X / 2) - 70, 100);
+      display.print(hostname);
+
+      display.display(false); // update screen
+      digitalWrite(ePaperPowerPin, LOW);
+
+      timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
+  }
+
+  if(!res) {
+      Serial.println("Failed to connect to Wi-Fi, starting portal");
+  } 
+  else {
+        //if you get here you have connected to the WiFi    
+        Serial.println("Wi-Fi connected successfully");
+  }
+}
+
+uint32_t skip(WiFiClient& client, int32_t bytes)
+{
+  int32_t remain = bytes;
+  uint32_t start = millis();
+  while ((client.connected() || client.available()) && (remain > 0))
+  {
+    if (client.available())
+    {
+      client.read();
+      remain--;
+    }
+    else delay(1);
+    if (millis() - start > 2000) break; // don't hang forever
+  }
+  return bytes - remain;
+}
+
+uint32_t read8n(WiFiClient& client, uint8_t* buffer, int32_t bytes)
+{
+  int32_t remain = bytes;
+  uint32_t start = millis();
+  while ((client.connected() || client.available()) && (remain > 0))
+  {
+    if (client.available())
+    {
+      int16_t v = client.read();
+      *buffer++ = uint8_t(v);
+      remain--;
+    }
+    else delay(1);
+    if (millis() - start > 2000) break; // don't hang forever
+  }
+  return bytes - remain;
+}
+
+uint16_t read16(WiFiClient& client)
+{
+  // BMP data is stored little-endian, same as Arduino.
+  uint16_t result;
+  ((uint8_t *)&result)[0] = client.read(); // LSB
+  ((uint8_t *)&result)[1] = client.read(); // MSB
+  return result;
+}
+
+uint32_t read32(WiFiClient& client)
+{
+  // BMP data is stored little-endian, same as Arduino.
+  uint32_t result;
+  ((uint8_t *)&result)[0] = client.read(); // LSB
+  ((uint8_t *)&result)[1] = client.read();
+  ((uint8_t *)&result)[2] = client.read();
+  ((uint8_t *)&result)[3] = client.read(); // MSB
+  return result;
+}
+
+bool checkForNewTimestampOnServer()
+{
+  // Connect to the HOST and read data via GET method
+  WiFiClient client; // Use WiFiClient class to create TCP connections
+  bool connection_ok = false;
+
+  // Make an url
+  String url = "index.php?mac=" + WiFi.macAddress() + "&timestamp_check=1&rssi=" + String(strength) + "&v=" + String(d_volt) + "&x=" + String(DISPLAY_RESOLUTION_X) + "&y=" + String(DISPLAY_RESOLUTION_Y) + "&c=" + String(defined_color_type) + "&fw=" + String(firmware);
+
+  ////////////////////////////////////////
+  // Measuring temperature and humidity?
+  ////////////////////////////////////////
+
+  #ifdef SHT40
+  if (! sht4.begin()) 
+  {
+    Serial.println("SHT4x not found");
+    Serial.println("Check the connection");
+    delay(1000);
+  }
+  else
+  {
+    sht4.setPrecision(SHT4X_HIGH_PRECISION); // highest resolution
+    sht4.setHeater(SHT4X_NO_HEATER); // no heater
+    float teplota = 0.0;
+    int vlhkost = 0;
+
+    sensors_event_t humidity, temp; // temperature and humidity variables
+    sht4.getEvent(&humidity, &temp);
+
+    teplota = temp.temperature;
+    vlhkost = humidity.relative_humidity;
+
+    url += "&temp=" + String(teplota) + "&hum=" + String(vlhkost);
+  }
+  #endif
+
+  ////////////////////////////////////////
+
+  Serial.print("connecting to "); Serial.println(host);
+  if (!client.connect(host, 80))
+  {
+    Serial.println("connection failed");
+    deepSleepTime = defaultDeepSleepTime;
+    return false;
+  }
+  Serial.print("requesting URL: ");
+  Serial.println(String("http://") + host + "/" + url);
+  client.print(String("GET ") + "/" + url + " HTTP/1.1\r\n" +
+               "Host: " + host + "\r\n" + 
+               "Connection: close\r\n\r\n");
+  Serial.println("request sent");
+
+  // Workaroud for timeout
+  unsigned long timeout = millis();
+  while (client.available() == 0) {
+    if (millis() - timeout > 10000) {
+      Serial.println(">>> Client Timeout !");
+      client.stop();
+      deepSleepTime = defaultDeepSleepTime;
+      return false;
+    }
+  }
+
+  int gotTimestamp = 0;
+
+  while (client.connected())
+  {
+    String line = client.readStringUntil('\n');
+
+    // If line starts with "Timestamp", put it into the timestamp variable
+    if (line.startsWith("Timestamp"))
+    {
+      gotTimestamp = 1;
+      timestampNow = line.substring(11).toInt();
+      Serial.print("Timestamp now: ");
+      Serial.println(timestampNow);
+    }
+
+    // Let's try to get info about how long to go to deep sleep
+    if(line.startsWith("Sleep"))
+    {
+      uint64_t sleep = line.substring(7).toInt();
+      deepSleepTime = sleep;
+      Serial.print("Sleep: ");
+      Serial.println(sleep);
+    }
+
+    if (!connection_ok)
+    {
+      connection_ok = line.startsWith("HTTP/1.1 200 OK");
+      if (connection_ok) Serial.println(line);
+      //if (!connection_ok) Serial.println(line);
+    }
+    if (!connection_ok) Serial.println(line);
+    //Serial.println(line);
+    if (line == "\r")
+    {
+      Serial.println("headers received");
+      break;
+    }
+  }
+
+  if (!connection_ok)
+  { 
+    deepSleepTime = defaultDeepSleepTime;
+    return false;
+  }
+
+  if (gotTimestamp == 1 && timestampNow == timestamp)
+  {
+    Serial.print("No screen reload, because we already are at current timestamp: "); 
+    Serial.println(timestamp);
+    return false;
+  }
+  else
+  {
+    // Set timestamp to actual one
+    timestamp = timestampNow;
+    return true;
+  }
+}
+
+void readBitmapData()
+{
+  // Connect to the HOST and read data via GET method
+  WiFiClient client; // Use WiFiClient class to create TCP connections
+
+  // Let's read bitmap
+  static const uint16_t input_buffer_pixels = 800; // may affect performance
+  static const uint16_t max_row_width = 1872; // for up to 7.8" display 1872x1404
+  static const uint16_t max_palette_pixels = 256; // for depth <= 8
+
+  int16_t x = display.width() - DISPLAY_RESOLUTION_X;
+  int16_t y = display.height() - DISPLAY_RESOLUTION_Y;
+
+  uint8_t input_buffer[3 * input_buffer_pixels]; // up to depth 24
+  uint8_t output_row_mono_buffer[max_row_width / 8]; // buffer for at least one row of b/w bits
+  uint8_t output_row_color_buffer[max_row_width / 8]; // buffer for at least one row of color bits
+  uint8_t mono_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 b/w
+  uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 c/w
+  uint16_t rgb_palette_buffer[max_palette_pixels]; // palette buffer for depth <= 8 for buffered graphics, needed for 7-color display
+
+  // Defaults - also for BW
+  bool with_color = false;
+  bool has_multicolors = false;
+  bool grayscale = false;
+
+  #ifdef TYPE_GRAYSCALE
+    with_color = true;
+    has_multicolors = false;
+    grayscale = true;
+  #endif
+
+  #ifdef TYPE_7C
+    with_color = true;
+    has_multicolors = true;
+    grayscale = false;
+  #endif
+
+  #ifdef TYPE_3C
+    with_color = true;
+    has_multicolors = false;
+    grayscale = false;
+  #endif
+
+  bool connection_ok = false;
+  bool valid = false; // valid format to be handled
+  bool flip = true; // bitmap is stored bottom-to-top
+
+  bool whitish = false;
+  bool lightgrey = false;
+  bool darkgrey = false;
+  bool colored = false;
+
+  uint32_t startTime = millis();
+  if ((x >= display.width()) || (y >= display.height())) return;
+  Serial.print("connecting to "); Serial.println(host);
+  if (!client.connect(host, 80))
+  {
+    Serial.println("connection failed");
+    return;
+  }
+
+  // Make an url
+  String url = "index.php?mac=" + WiFi.macAddress() + "&rssi=" + String(strength) + "&v=" + String(d_volt) + "&x=" + String(DISPLAY_RESOLUTION_X) + "&y=" + String(DISPLAY_RESOLUTION_Y) + "&c=" + String(defined_color_type) + "&fw=" + String(firmware);
+  Serial.print("requesting URL: ");
+  Serial.println(String("http://") + host + "/" + url);
+  client.print(String("GET ") + "/" + url + " HTTP/1.1\r\n" +
+               "Host: " + host + "\r\n" + 
+               "Connection: close\r\n\r\n");
+  Serial.println("request sent");
+
+  // Workaroud for timeout
+  unsigned long timeout = millis();
+  while (client.available() == 0) {
+    if (millis() - timeout > 10000) {
+      Serial.println(">>> Client Timeout !");
+      client.stop();
+      return;
+    }
+  }
+
+  int gotTimestamp = 0;
+
+  while (client.connected())
+  {
+    String line = client.readStringUntil('\n');
+
+    if (!connection_ok)
+    {
+      connection_ok = line.startsWith("HTTP/1.1 200 OK");
+      if (connection_ok) Serial.println(line);
+      //if (!connection_ok) Serial.println(line);
+    }
+    if (!connection_ok) Serial.println(line);
+    //Serial.println(line);
+    if (line == "\r")
+    {
+      Serial.println("headers received");
+      break;
+    }
+  }
+
+  // Is there a problem? Fallback to default deep sleep time to try again soon
+  if (!connection_ok)
+  { 
+    deepSleepTime = defaultDeepSleepTime;
+    return;
+  }
+
+  // Parse BMP header
+  if (read16(client) == 0x4D42) // BMP signature
+  {
+    //#include <pgmspace.h>
+
+    uint32_t fileSize = read32(client);
+    uint32_t creatorBytes = read32(client); (void)creatorBytes; //unused
+    uint32_t imageOffset = read32(client); // Start of image data
+    uint32_t headerSize = read32(client);
+    uint32_t width  = read32(client);
+    int32_t height = (int32_t) read32(client);
+    uint16_t planes = read16(client);
+    uint16_t depth = read16(client); // bits per pixel
+    uint32_t format = read32(client);
+    uint32_t bytes_read = 7 * 4 + 3 * 2; // read so far
+    if ((planes == 1) && ((format == 0) || (format == 3))) // uncompressed is handled, 565 also
+    {
+      Serial.print("File size: "); Serial.println(fileSize);
+      Serial.print("Image Offset: "); Serial.println(imageOffset);
+      Serial.print("Header size: "); Serial.println(headerSize);
+      Serial.print("Bit Depth: "); Serial.println(depth);
+      Serial.print("Image size: ");
+      Serial.print(width);
+      Serial.print('x');
+      Serial.println(height);
+      // BMP rows are padded (if needed) to 4-byte boundary
+      uint32_t rowSize = (width * depth / 8 + 3) & ~3;
+      if (depth < 8) rowSize = ((width * depth + 8 - depth) / 8 + 3) & ~3;
+      if (height < 0)
+      {
+        height = -height;
+        flip = false;
+      }
+      uint16_t w = width;
+      uint16_t h = height;
+      if ((x + w - 1) >= display.width())  w = display.width()  - x;
+      if ((y + h - 1) >= display.height()) h = display.height() - y;
+      
+      //if (w <= max_row_width) // handle with direct drawing
+      {
+        valid = true;
+        uint8_t bitmask = 0xFF;
+        uint8_t bitshift = 8 - depth;
+        uint16_t red, green, blue, rowToShow;
+        whitish = false;
+        lightgrey = false;
+        darkgrey = false;
+        colored = false;
+        if (depth == 1) with_color = false;
+        if (depth <= 8)
+        {
+          if (depth < 8) bitmask >>= depth;
+          //bytes_read += skip(client, 54 - bytes_read); //palette is always @ 54
+          bytes_read += skip(client, imageOffset - (4 << depth) - bytes_read); // 54 for regular, diff for colorsimportant
+          for (uint16_t pn = 0; pn < (1 << depth); pn++)
+          {
+            blue  = client.read();
+            green = client.read();
+            red   = client.read();
+            client.read();
+            bytes_read += 4;
+            whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
+            colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
+            if (0 == pn % 8) mono_palette_buffer[pn / 8] = 0;
+            mono_palette_buffer[pn / 8] |= whitish << pn % 8;
+            if (0 == pn % 8) color_palette_buffer[pn / 8] = 0;
+            color_palette_buffer[pn / 8] |= colored << pn % 8;
+            //Serial.print("0x00"); Serial.print(red, HEX); Serial.print(green, HEX); Serial.print(blue, HEX);
+            //Serial.print(" : "); Serial.print(whitish); Serial.print(", "); Serial.println(colored);
+            rgb_palette_buffer[pn] = ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
+          }
+        }
+
+        uint32_t rowPosition = flip ? imageOffset + (height - h) * rowSize : imageOffset;
+        //Serial.print("skip "); Serial.println(rowPosition - bytes_read);
+        bytes_read += skip(client, rowPosition - bytes_read);
+
+        for (uint16_t row = 0; row < h; row++, rowPosition += rowSize) // for each line
+        {
+          if (!connection_ok || !(client.connected() || client.available())) break;
+          delay(1); // yield() to avoid WDT
+          uint32_t in_remain = rowSize;
+          uint32_t in_idx = 0;
+          uint32_t in_bytes = 0;
+          uint8_t in_byte = 0; // for depth <= 8
+          uint8_t in_bits = 0; // for depth <= 8
+          uint16_t color = GxEPD_WHITE;
+          for (uint16_t col = 0; col < w; col++) // for each pixel
+          {
+            yield();
+            if (!connection_ok || !(client.connected() || client.available())) break;
+            // Time to read more pixel data?
+            if (in_idx >= in_bytes) // ok, exact match for 24bit also (size IS multiple of 3)
+            {
+              uint32_t get = in_remain > sizeof(input_buffer) ? sizeof(input_buffer) : in_remain;
+              uint32_t got = read8n(client, input_buffer, get);
+              while ((got < get) && connection_ok)
+              {
+                //Serial.print("got "); Serial.print(got); Serial.print(" < "); Serial.print(get); Serial.print(" @ "); Serial.println(bytes_read);
+                uint32_t gotmore = read8n(client, input_buffer + got, get - got);
+                got += gotmore;
+                connection_ok = gotmore > 0;
+              }
+              in_bytes = got;
+              in_remain -= got;
+              bytes_read += got;
+            }
+            if (!connection_ok)
+            {
+              Serial.print("Error: got no more after "); Serial.print(bytes_read); Serial.println(" bytes read!");
+              break;
+            }
+
+            whitish = false;
+            lightgrey = false;
+            darkgrey = false;
+            colored = false;
+            switch (depth)
+            {
+              case 32:
+                blue = input_buffer[in_idx++];
+                green = input_buffer[in_idx++];
+                red = input_buffer[in_idx++];
+                in_idx++; // skip alpha
+                whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
+                lightgrey = with_color ? ((red > 0x60) && (green > 0x60) && (blue > 0x60)) : ((red + green + blue) > 3 * 0x60); // lightgrey
+                darkgrey = with_color ? ((red > 0x40) && (green > 0x40) && (blue > 0x40)) : ((red + green + blue) > 3 * 0x40); // darkgrey
+                colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
+                color = ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
+                break;
+              case 24:
+                blue = input_buffer[in_idx++];
+                green = input_buffer[in_idx++];
+                red = input_buffer[in_idx++];
+                whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
+                lightgrey = with_color ? ((red > 0x60) && (green > 0x60) && (blue > 0x60)) : ((red + green + blue) > 3 * 0x60); // lightgrey
+                darkgrey = with_color ? ((red > 0x40) && (green > 0x40) && (blue > 0x40)) : ((red + green + blue) > 3 * 0x40); // darkgrey
+                colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
+                color = ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
+                break;
+              case 16:
+                {
+                  uint8_t lsb = input_buffer[in_idx++];
+                  uint8_t msb = input_buffer[in_idx++];
+                  if (format == 0) // 555
+                  {
+                    blue  = (lsb & 0x1F) << 3;
+                    green = ((msb & 0x03) << 6) | ((lsb & 0xE0) >> 2);
+                    red   = (msb & 0x7C) << 1;
+                    color = ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
+                  }
+                  else // 565
+                  {
+                    blue  = (lsb & 0x1F) << 3;
+                    green = ((msb & 0x07) << 5) | ((lsb & 0xE0) >> 3);
+                    red   = (msb & 0xF8);
+                    color = (msb << 8) | lsb;
+                  }
+                  whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
+                  lightgrey = with_color ? ((red > 0x60) && (green > 0x60) && (blue > 0x60)) : ((red + green + blue) > 3 * 0x60); // lightgrey
+                  darkgrey = with_color ? ((red > 0x40) && (green > 0x40) && (blue > 0x40)) : ((red + green + blue) > 3 * 0x40); // darkgrey
+                  colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
+                }
+                break;
+              case 1:
+              case 2:
+              case 4:
+              case 8:
+                {
+                  if (0 == in_bits)
+                  {
+                    in_byte = input_buffer[in_idx++];
+                    in_bits = 8;
+                  }
+                  uint16_t pn = (in_byte >> bitshift) & bitmask;
+                  whitish = mono_palette_buffer[pn / 8] & (0x1 << pn % 8);
+                  colored = color_palette_buffer[pn / 8] & (0x1 << pn % 8);
+                  in_byte <<= depth;
+                  in_bits -= depth;
+                  color = rgb_palette_buffer[pn];
+
+                  if(grayscale)
+                  {
+                    switch(pn){
+                      case 1:
+                        lightgrey = true;
+                      break;
+                      case 2:
+                        darkgrey = true;
+                      break;
+                      case 3:
+                        darkgrey = true;
+                      break;
+                      case 4:
+                        whitish = true;
+                      break;
+                    }
+                  }
+                }
+                break;
+            }
+            if (with_color && has_multicolors)
+            {
+              // keep color
+            }
+            else if (whitish)
+            {
+              color = GxEPD_WHITE;
+            }
+            else if (grayscale && lightgrey)
+            {
+              color = GxEPD_LIGHTGREY;
+            }
+            else if (grayscale && darkgrey)
+            {
+              color = GxEPD_DARKGREY;
+            }
+            else if (colored && with_color)
+            {
+              color = GxEPD_COLORED;
+            }
+            else
+            {
+              color = GxEPD_BLACK;
+            }
+
+            uint16_t yrow = y + (flip ? h - row - 1 : row);
+            display.drawPixel(x + col, yrow, color);
+          } // end pixel
+        } // end line
+      } // end block
+
+      Serial.print("bytes read "); Serial.println(bytes_read);
+    }
+
+  }
+  Serial.print("loaded in "); Serial.print(millis() - startTime); Serial.println(" ms");
+
+  client.stop();
+  if (!valid)
+  {
+    Serial.println("bitmap format not handled.");
+    deepSleepTime = defaultDeepSleepTime;
+    timestamp = 0;
+  }
+}
+
+void setup()
+{
+  Serial.begin(115200);
+
+  // ePaper init
+  displayInit();
+
+  // Wifi init
+  WiFiInit();
+
+  // WiFi strength - so you will know how good your signal is
+  getWifiStrength();
+
+  // Battery voltage - you deserve to know in advance
+  getBatteryVoltage();
+
+  // Do we need to update the screen?
+  if(checkForNewTimestampOnServer())
+  {
+    pinMode(ePaperPowerPin, OUTPUT); 
+    digitalWrite(ePaperPowerPin, HIGH);
+    delay(500);
+
+    // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
+
+    // If you can't use whole display at once, there will be multiple pages and therefore 
+    // requests and downloads of one bitmap from server, since you have to always write whole image
+    display.setFullWindow();
+    display.firstPage();
+    do
+    {
+      readBitmapData();
+    }
+    while (display.nextPage());
+
+    // Disable power supply for ePaper
+    digitalWrite(ePaperPowerPin, LOW);
+  }
+
+  // Deep sleep mode
+  Serial.print("Going to sleep now for (minutes): ");
+  Serial.println(deepSleepTime);
+  esp_sleep_enable_timer_wakeup(deepSleepTime * 60 * 1000000);
+  delay(200);
+  esp_deep_sleep_start();
+}
+
+void loop()
+{
+
+}
