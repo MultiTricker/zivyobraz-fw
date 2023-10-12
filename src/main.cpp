@@ -223,7 +223,7 @@ uint8_t getBatteryVoltage()
   return d_volt;
 }
 
-void displayInit() 
+void displayInit()
 {
 #ifdef REMAP_SPI
   // only CLK and MOSI are important for EPD
