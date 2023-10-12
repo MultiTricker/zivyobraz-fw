@@ -43,8 +43,7 @@
 #define PIN_BUSY 4 // PIN_BUSY
 #define ePaperPowerPin 2
 
-#define REMAP_SPI
-
+//#define REMAP_SPI
 #ifdef REMAP_SPI
 #define PIN_SPI_CLK 13  // CLK
 #define PIN_SPI_MISO 14 // unused
