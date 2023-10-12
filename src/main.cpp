@@ -42,6 +42,15 @@
 #define PIN_RST 16 // RES
 #define PIN_BUSY 4 // PIN_BUSY
 #define ePaperPowerPin 2
+
+#define REMAP_SPI
+
+#ifdef REMAP_SPI
+#define PIN_SPI_CLK 13  // CLK
+#define PIN_SPI_MISO 14 // unused
+#define PIN_SPI_MOSI 12 // DIN
+#define PIN_SPI_SS 15   // unused
+#endif
 /* ---------------------------------------------- */
 
 // For LaskaKit ESP32-Dev kit use pins:
@@ -156,6 +165,10 @@ GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> display(GxEPD2_750_T7(/*CS*/ PIN
 // Font
 #include "OpenSansSB_12px.h"
 
+#ifdef REMAP_SPI
+  SPIClass hspi(HSPI);
+#endif
+
 // SHT40 sensor
 #ifdef SHT40
 #include <Wire.h>
@@ -210,8 +223,14 @@ uint8_t getBatteryVoltage()
   return d_volt;
 }
 
-void displayInit()
+void displayInit() 
 {
+#ifdef REMAP_SPI
+  // only CLK and MOSI are important for EPD
+  hspi.begin(PIN_SPI_CLK, PIN_SPI_MISO, PIN_SPI_MOSI, PIN_SPI_SS);  // swap pins
+  display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
+#endif
+
   display.init();
   display.setRotation(0);
   display.fillScreen(GxEPD_WHITE);  // white background
