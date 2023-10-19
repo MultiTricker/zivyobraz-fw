@@ -3,6 +3,8 @@
 * 
 * You need to change some initial things like ePaper type etc. - see below.
 *
+* Default password for Wi-Fi AP is: zivyobraz 
+*
 * Code based on both: 
 * https://github.com/ZinggJM/GxEPD2/blob/master/examples/GxEPD2_WiFi_Example/GxEPD2_WiFi_Example.ino
 * and
@@ -182,7 +184,7 @@ ESP32AnalogRead adc;
 
 /* ---- Server Zivy obraz ----------------------- */
 const char* host = "cdn.zivyobraz.eu";
-const char* firmware = "1.0";
+const char* firmware = "2.0";
 
 /* ---------- Deepsleep time in minutes --------- */
 uint64_t defaultDeepSleepTime = 2; // if there is a problem with loading images, 
@@ -224,11 +226,11 @@ uint8_t getBatteryVoltage()
 
 void displayInit()
 {
-#ifdef REMAP_SPI
-  // only CLK and MOSI are important for EPD
-  hspi.begin(PIN_SPI_CLK, PIN_SPI_MISO, PIN_SPI_MOSI, PIN_SPI_SS);  // swap pins
-  display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
-#endif
+  #ifdef REMAP_SPI
+    // only CLK and MOSI are important for EPD
+    hspi.begin(PIN_SPI_CLK, PIN_SPI_MISO, PIN_SPI_MOSI, PIN_SPI_SS);  // swap pins
+    display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
+  #endif
 
   display.init();
   display.setRotation(0);
@@ -242,10 +244,14 @@ void WiFiInit()
   Serial.println();
   Serial.print("Connecting...");
   //Serial.println(ssid);
-
   //WiFi.begin(ssid, pass);
   WiFi.mode(WIFI_STA);
   WiFiManager wm;
+  wm.setWiFiAutoReconnect(true);
+  wm.setConnectRetries(3);
+  wm.setDarkMode(true);
+  wm.setConnectTimeout(3);
+  wm.setSaveConnectTimeout(3);
 
   // reset settings - wipe stored credentials for testing
   //wm.resetSettings();
@@ -525,10 +531,14 @@ void readBitmapData()
   uint32_t startTime = millis();
   if ((x >= display.width()) || (y >= display.height())) return;
   Serial.print("connecting to "); Serial.println(host);
-  if (!client.connect(host, 80))
+  // Let's try twice
+  for (int client_reconnect = 0; client_reconnect < 2; client_reconnect++)
   {
-    Serial.println("connection failed");
-    return;
+    if (!client.connect(host, 80))
+    {
+      Serial.println("connection failed");
+      return;
+    }
   }
 
   // Make an url
@@ -578,11 +588,26 @@ void readBitmapData()
     return;
   }
 
+    // For debug purposes - print out the whole response
+    /*
+    Serial.println("Byte by byte:");
+
+    while (client.connected() || client.available()) {
+      if (client.available()) {
+        char c = client.read();  // Read one byte
+        Serial.print(c);         // Print the byte to the serial monitor
+      }
+    }
+    client.stop();
+    */
+
   // Parse BMP header
-  if (read16(client) == 0x4D42) // BMP signature
+  uint16_t header = read16(client);
+  Serial.print("Header "); Serial.println(header, HEX);
+ 
+  if (header == 0x4D42) // BMP signature
   {
     //#include <pgmspace.h>
-
     uint32_t fileSize = read32(client);
     uint32_t creatorBytes = read32(client); (void)creatorBytes; //unused
     uint32_t imageOffset = read32(client); // Start of image data
@@ -806,23 +831,146 @@ void readBitmapData()
 
             uint16_t yrow = y + (flip ? h - row - 1 : row);
             display.drawPixel(x + col, yrow, color);
-          } // end pixel
-        } // end line
+          } // end col
+        } // end row
       } // end block
 
       Serial.print("bytes read "); Serial.println(bytes_read);
     }
 
   }
-  Serial.print("loaded in "); Serial.print(millis() - startTime); Serial.println(" ms");
-
-  client.stop();
-  if (!valid)
+  else if(header == 0x315A || header == 0x325A) // ZivyObraz RLE data Z1 or Z2
   {
-    Serial.println("bitmap format not handled.");
-    deepSleepTime = defaultDeepSleepTime;
-    timestamp = 0;
+    // Z1 - 1 byte for color, 1 byte for number of repetition
+    // Z2 - 2 bits for color, 6 bits for number of repetition
+    if(header == 0x315A) Serial.println("Got format Z1, processing");
+    if(header == 0x325A) Serial.println("Got format Z2, processing");
+
+    uint32_t bytes_read = 2; // read so far
+    uint16_t w = display.width();
+    uint16_t h = display.height();
+    uint8_t pixel_color, count, compressed;
+    uint16_t color;
+    valid = true;
+
+    uint16_t color2 = GxEPD_LIGHTGREY;
+    uint16_t color3 = GxEPD_DARKGREY;
+
+    #ifdef TYPE_3C
+      color2 = GxEPD_RED;
+      color3 = GxEPD_YELLOW;
+    #endif
+
+    #ifdef TYPE_7C
+      color2 = GxEPD_RED;
+      color3 = GxEPD_YELLOW;
+    #endif
+
+    for (uint16_t row = 0; row < h; row++) // for each line
+    {
+      if (!connection_ok || !(client.connected() || client.available())) break;
+      delay(1); // yield() to avoid WDT
+
+      for (uint16_t col = 0; col < w; col++) // for each pixel
+      {
+        yield();
+
+        if (!connection_ok)
+        {
+          Serial.print("Error: got no more after "); Serial.print(bytes_read); Serial.println(" bytes read!");
+          break;
+        }
+
+        if (!(client.connected() || client.available()))
+        {
+          Serial.println("Client got disconnected after bytes:");
+          Serial.println(bytes_read);
+          break;
+        }
+
+        // Z1
+        if(header == 0x315A)
+        {
+          pixel_color = client.read();
+          count = client.read();
+          bytes_read += 2;
+        } else if (header == 0x325A) {
+          // Z2
+          compressed = client.read();
+          count = compressed & 0b00111111;
+          pixel_color = (compressed & 0b11000000) >> 6;
+          bytes_read++;
+        }
+
+        switch(pixel_color)
+        {
+          case 0x0:
+            color = GxEPD_WHITE;
+          break;
+          case 0x1:
+            color = GxEPD_BLACK;
+          break;
+          case 0x2:
+            color = color2;
+          break;
+          case 0x3:
+            color = color3;
+          break;
+          #ifdef TYPE_7C
+            case 0x4:
+              color = GxEPD_GREEN;
+            break;
+            case 0x5:
+              color = GxEPD_BLUE;
+            break;
+            case 0x6:
+              color = GxEPD_ORANGE;
+            break;
+          #endif
+
+        }
+
+        // Debug
+        /*
+        if(bytes_read < 20)
+        {
+          Serial.print("count: "); Serial.print(count); Serial.print(" pixel: "); Serial.println(color);
+        }
+        /**/
+
+        for(uint8_t i = 0; i < count - 1; i++)
+        {
+          display.drawPixel(col, row, color);
+
+          if(count > 1)
+          {
+            col++;
+
+            if(col == w)
+            {
+              col = 0;
+              row++;
+            }
+          }
+        }
+
+        display.drawPixel(col, row, color);
+      } // end col
+    } // end row
+
+    Serial.print("bytes read "); Serial.println(bytes_read);
   }
+
+    Serial.print("loaded in "); Serial.print(millis() - startTime); Serial.println(" ms");
+
+    client.stop();
+    if (!valid)
+    {
+      Serial.print("Format not handled, got: ");
+      Serial.println(header);
+      deepSleepTime = defaultDeepSleepTime;
+      timestamp = 0;
+    }
 }
 
 void setup()
