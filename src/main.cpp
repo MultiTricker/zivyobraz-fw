@@ -393,12 +393,20 @@ bool checkForNewTimestampOnServer()
   ////////////////////////////////////////
 
   Serial.print("connecting to "); Serial.println(host);
-  if (!client.connect(host, 80))
+
+  for (int client_reconnect = 0; client_reconnect < 3; client_reconnect++)
   {
-    Serial.println("connection failed");
-    deepSleepTime = defaultDeepSleepTime;
-    return false;
+    if (!client.connect(host, 80))
+    {
+      Serial.println("connection failed");
+      if(client_reconnect == 2)
+      {
+        deepSleepTime = defaultDeepSleepTime;
+        delay(200);
+      }
+    }
   }
+
   Serial.print("requesting URL: ");
   Serial.println(String("http://") + host + "/" + url);
   client.print(String("GET ") + "/" + url + " HTTP/1.1\r\n" +
@@ -532,12 +540,17 @@ void readBitmapData()
   if ((x >= display.width()) || (y >= display.height())) return;
   Serial.print("connecting to "); Serial.println(host);
   // Let's try twice
-  for (int client_reconnect = 0; client_reconnect < 2; client_reconnect++)
+  for (int client_reconnect = 0; client_reconnect < 3; client_reconnect++)
   {
     if (!client.connect(host, 80))
     {
       Serial.println("connection failed");
-      return;
+      if(client_reconnect == 2)
+      {
+        deepSleepTime = defaultDeepSleepTime;
+        return;
+      }
+      delay(200);
     }
   }
 
