@@ -1,12 +1,14 @@
 # Živý obraz - firmware
 
-Vítejte v repozitáři projektu Živý obraz s firmwarem pro vývojové desky založené na ESP32. Živý obraz slouží pro krmení ePaper/e-Ink displejů obrázky ze serveru.
+Vítejte v repozitáři projektu Živý obraz s firmwarem pro vývojové desky založené na ESP32. Živý obraz slouží pro krmení ePaper/e-Ink displejů obrazovými daty z webového serveru.
 
 Základní informace najdete na webu projektu: https://zivyobraz.eu/
 
-Konkrétní informace ohledně zprovoznění poté v dokumentaci na adrese: https://wiki.zivyobraz.eu/
+Konkrétní informace ohledně zprovoznění jsou v dokumentaci na adrese: https://wiki.zivyobraz.eu/
 
-Zrychleně ke kompilaci a nastavení v kódu firmwaru:
+V dokumentaci také naleznete předkompilovaný firmware k flashnutí pro několik nejběžnějších typů ePaperů.
+
+Ve zkratce ke kompilaci a nastavení v kódu firmwaru:
 
 Budete potřebovat mít nainstalované následující knihovny:
 > zinggjm/GxEPD2@^1.5.2  
