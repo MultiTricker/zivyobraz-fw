@@ -24,9 +24,10 @@
 
 // Uncomment if you have connected SHT40 sensor for sending temperature and humidity
 //#define SHT40
+//#define SHT SHT40
 
 // Uncomment correct color capability of your ePaper display
-#define TYPE_BW // black and white
+//#define TYPE_BW // black and white
 //#define TYPE_3C // 3 colors - black, white and red/yellow
 //#define TYPE_GRAYSCALE // grayscale - 4 colors
 //#define TYPE_7C // 7 colors
