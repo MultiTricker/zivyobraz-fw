@@ -151,7 +151,7 @@ GxEPD2_BW<GxEPD2_750_YT7, GxEPD2_750_YT7::HEIGHT> display(GxEPD2_750_YT7(/*CS*/ 
 
 #ifdef D_HINK_E075A01
 //7.5", 640x384, UC8179 (IL0371)
-GxEPD2_3C<GxEPD2_750c, GxEPD2_750c::HEIGHT> display(GxEPD2_750c(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY))); 
+GxEPD2_3C<GxEPD2_750c, GxEPD2_750c::HEIGHT> display(GxEPD2_750c(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); 
 #endif
 
 #ifdef D_GDEY075Z08
@@ -163,7 +163,7 @@ GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(
 // Grayscale
 /////////////////
 
-#ifdef D_GDEW042T2
+#ifdef D_GDEW042T2_G
 // 4.2", 400x300, Grayscale
 GxEPD2_4G_4G<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(/*CS=5*/ PIN_SS, /*DC=*/PIN_DC, /*RST=*/PIN_RST, /*BUSY=*/PIN_BUSY));
 #endif
