@@ -119,51 +119,57 @@ const char *defined_color_type = "7C";
 // BW
 /////////////////
 
-#ifdef D_GDEW042T2
-// 4.2" b/w 400x300
-GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
-#endif
 
-#ifdef GDEW075T7
-// GDEY075T7 800x480, UC8179 (GD7965)
-GxEPD2_BW<GxEPD2_750_YT7, GxEPD2_750_YT7::HEIGHT> display(GxEPD2_750_YT7(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
-#endif
-
-#ifdef GDEY027T91
-// GDEY027T91 2.7" 264x176
-GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
-#endif
-
-#ifdef GDEW0154T8
-// GDEW0154T8 152x152, UC8151 (IL0373)
+#ifdef D_GDEW0154T8
+// 1.54", 152x152, UC8151 (IL0373)
 GxEPD2_BW<GxEPD2_154_T8, GxEPD2_154_T8::HEIGHT> display(GxEPD2_154_T8(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
 #endif
 
-#ifdef GDEY0213B74
-// GDEY0213B74 122x250, SSD1680, (FPC-A002 20.04.08)
+#ifdef D_GDEY0213B74
+// 2.13", 122x250, SSD1680, (FPC-A002 20.04.08)
 GxEPD2_BW<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
+#endif
+
+#ifdef D_GDEY027T91
+// 2.7", 264x176
+GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
+#endif
+
+#ifdef D_GDEW042T2
+// 4.2", 400x300
+GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
+#endif
+
+#ifdef D_GDEW075T7
+// 7.5", 800x480, UC8179 (GD7965)
+GxEPD2_BW<GxEPD2_750_YT7, GxEPD2_750_YT7::HEIGHT> display(GxEPD2_750_YT7(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
 #endif
 
 /////////////////
 // 3C
 /////////////////
 
-#ifdef GDEY075Z08
-// 7.5" 3C 800x480
-GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); // GDEY075Z08 800x480, GDEW075Z08
+#ifdef D_HINK_E075A01
+//7.5", 640x384, UC8179 (IL0371)
+GxEPD2_3C<GxEPD2_750c, GxEPD2_750c::HEIGHT> display(GxEPD2_750c(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY))); 
+#endif
+
+#ifdef D_GDEY075Z08
+// 7.5", 800x480
+GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
 #endif
 
 /////////////////
 // Grayscale
 /////////////////
 
-#ifdef GDEW042T2
-// 4.2" Grayscale 400x300
+#ifdef D_GDEW042T2
+// 4.2", 400x300, Grayscale
 GxEPD2_4G_4G<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(/*CS=5*/ PIN_SS, /*DC=*/PIN_DC, /*RST=*/PIN_RST, /*BUSY=*/PIN_BUSY));
 #endif
 
-#ifdef GDEW075T7_G
-// 7.5" Grayscale 800x480
+#ifdef D_GDEW075T7_G
+// 7.5", 800x480, Grayscale 
 GxEPD2_4G_4G<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(/*CS=5*/ PIN_SS, /*DC=*/PIN_DC, /*RST=*/PIN_RST, /*BUSY=*/PIN_BUSY));
 #endif
 
@@ -171,7 +177,7 @@ GxEPD2_4G_4G<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(/*C
 // Color
 /////////////////
 
-#ifdef GDEY073D46
+#ifdef D_GDEY073D46
 // 7.5" 7C 800x480
 GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(GxEPD2_730c_GDEY073D46(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); // GDEY073D46 800x480 7-color, (N-FPC-001 2021.11.26)
 #endif
@@ -436,6 +442,13 @@ bool checkForNewTimestampOnServer()
   ////////////////////////////////////////
 
 #ifdef SHT40
+#ifdef ESPink
+  // LaskaKit ESPInk 2.5 needst to power up uSup
+  pinMode(ePaperPowerPin, OUTPUT); 
+  digitalWrite(ePaperPowerPin, HIGH);
+  delay(50);
+#endif
+
   if (!sht4.begin())
   {
     Serial.println("SHT4x not found");
@@ -457,6 +470,10 @@ bool checkForNewTimestampOnServer()
 
     url += "&temp=" + String(teplota) + "&hum=" + String(vlhkost);
   }
+  #ifdef ESPink
+// Power down for LaskaKit ESPInk 2.5 for now 
+  digitalWrite(ePaperPowerPin, LOW);
+#endif
 #endif
 
   ////////////////////////////////////////
@@ -694,7 +711,7 @@ void readBitmapData()
   client.stop();
   */
 
-  // Parse BMP header
+  // Parse header
   uint16_t header = read16(client);
   Serial.print("Header ");
   Serial.println(header, HEX);
