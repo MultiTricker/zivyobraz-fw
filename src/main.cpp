@@ -119,7 +119,7 @@ GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> display(GxEPD2_750_T7(/*CS*/ PIN
 // GDEW0154T8 152x152, UC8151 (IL0373)
 //GxEPD2_BW<GxEPD2_154_T8, GxEPD2_154_T8::HEIGHT> display(GxEPD2_154_T8(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
 
-// GDEY0213B74 122x250, SSD1680, (FPC-A002 20.04.08)
+// GDEY0213B74 122x250, SSD1680, (FPC-A002 20.04.08) (LaskaKit ESPink-Shelf-213 ESP32 e-Paper)
 //GxEPD2_BW<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
 
 /////////////////
@@ -367,6 +367,11 @@ bool checkForNewTimestampOnServer()
   ////////////////////////////////////////
 
   #ifdef SHT40
+  // LaskaKit ESPInk 2.5 needst to power up uSup
+  pinMode(ePaperPowerPin, OUTPUT); 
+  digitalWrite(ePaperPowerPin, HIGH);
+  delay(50);
+
   if (! sht4.begin()) 
   {
     Serial.println("SHT4x not found");
@@ -388,6 +393,9 @@ bool checkForNewTimestampOnServer()
 
     url += "&temp=" + String(teplota) + "&hum=" + String(vlhkost);
   }
+
+  // Power down for now
+  digitalWrite(ePaperPowerPin, LOW);
   #endif
 
   ////////////////////////////////////////
@@ -612,9 +620,9 @@ void readBitmapData()
       }
     }
     client.stop();
-    */
+    /* */
 
-  // Parse BMP header
+  // Parse header
   uint16_t header = read16(client);
   Serial.print("Header "); Serial.println(header, HEX);
  
@@ -949,7 +957,7 @@ void readBitmapData()
         {
           Serial.print("count: "); Serial.print(count); Serial.print(" pixel: "); Serial.println(color);
         }
-        /**/
+        /* */
 
         for(uint8_t i = 0; i < count - 1; i++)
         {
