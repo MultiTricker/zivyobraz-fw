@@ -42,13 +42,13 @@ jobs:
       id: create-release
       uses: actions/create-release@v
       env:
-        GITHUB_TOKEN: ${{secret: GITHUB_TOKEN}}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{github.run_number}}
     - name: Upload release assets
       uses: action/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{secret: GITHUB_TOKEN}}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{steps.create-release.output.upload_url}}
         asset_path: ./firmware/
