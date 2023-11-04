@@ -49,12 +49,11 @@
 #endif
 
 #ifdef ESP32Dev
-#define SDI 23
-#define SCL 18
 #define PIN_SS 5
 #define PIN_DC 17
 #define PIN_RST 16
 #define PIN_BUSY 4
+#define ePaperPowerPin -1
 #endif
 
 #ifdef ES3ink
