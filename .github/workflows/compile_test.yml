@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   build:
+    name: Compile firmware binaries for Zivy obraz
     runs-on: ubuntu-latest
 
     steps:
@@ -20,5 +21,10 @@ jobs:
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
 
-      - name: Build Pl
+      - name: Compile firware binaries
         run: pio run
+      - name: Upload binaries
+        uses: actions/upload-artifact@v3
+        with:
+          path: .pio/build/*/*.bin
+          name: firmware
