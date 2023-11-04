@@ -1,0 +1,56 @@
+name: Compile firmware for Živý obraz service
+
+on: [push]
+
+jobs:
+  build-project:
+    name: Compile firmware binaries for Zivy obraz
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Compile firware binaries
+        run: pio run
+      - name: Upload binaries
+        uses: actions/upload-artifact@v3
+        with:
+          path: .pio/build/*/*.bin
+          name: firmware
+  release-project:
+    name: Release project
+    run-on: ubuntu-latest
+    needs: build-project
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: Test artifact download
+        run: ls -R
+    - name: Create GitHub release
+      id: create-release
+      uses: actions/create-release@v
+      env:
+        GITHUB_TOKEN: ${{secret: GITHUB_TOKEN}}
+      with:
+        tag_name: ${{github.run_number}}
+    - name: Upload release assets
+      uses: action/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{secret: GITHUB_TOKEN}}
+      with:
+        upload_url: ${{steps.create-release.output.upload_url}}
+        asset_path: ./firmware/
+        asset_name: *.bin
+        asset_content_type: application/octet-stream
