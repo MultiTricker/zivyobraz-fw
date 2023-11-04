@@ -30,7 +30,7 @@ jobs:
           name: firmware
   release-project:
     name: Release project
-    run-on: ubuntu-latest
+    runs-on: ubuntu-latest
     needs: build-project
     steps:
     - name: Download artifact
