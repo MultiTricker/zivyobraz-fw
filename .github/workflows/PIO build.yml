@@ -38,19 +38,23 @@ jobs:
       with:
         name: firmware
         #run: ls -R
-    - name: Create GitHub release
-      id: create-release
+    - name: Create Release
+      id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{github.run_number}}
-    - name: Upload release assets
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+    - name: Upload Release Asset
+      id: upload-release-asset 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{steps.create-release.output.upload_url}}
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./firmware/
         asset_name: firmwares
         asset_content_type: application/octet-stream
