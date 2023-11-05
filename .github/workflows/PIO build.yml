@@ -37,7 +37,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: Test artifact download
-        run: ls -R
+        #run: ls -R
     - name: Create GitHub release
       id: create-release
       uses: actions/create-release@v1
