@@ -144,6 +144,13 @@ GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(/*CS*/ PIN_SS, /*DC
 GxEPD2_BW<GxEPD2_750_YT7, GxEPD2_750_YT7::HEIGHT> display(GxEPD2_750_YT7(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
 #endif
 
+#ifdef D_GDEH0154D67
+// 1.54", 200x200, 
+GxEPD2_154_M09 medp = GxEPD2_154_M09(/*CS=D8*/ 9, /*DC=D3*/ 15, /*RST=D4*/ 0, /*BUSY=D2*/ 4);
+GxEPD2_BW<GxEPD2_154_M09, GxEPD2_154_M09::HEIGHT> display(medp);  // GDEH0154D67
+#endif
+
+
 /////////////////
 // 3C
 /////////////////
@@ -190,6 +197,11 @@ GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(Gx
 // Library etc. includes
 ////////////////////////////
 
+//M5Stack CoreInk
+#ifdef M5StackCoreInk
+#include <M5CoreInk.h>
+#endif
+
 // WiFi
 #include <WiFi.h>
 #include <WiFiManager.h>
@@ -216,11 +228,14 @@ Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 #ifdef ES3ink
 #define vBatPin ADC1_GPIO2_CHANNEL
 #define dividerRatio 2.018
+#elif M5StackCoreInk
+#define vBatPin 35
 #else
 ESP32AnalogRead adc;
 #define dividerRatio 1.769
 #define vBatPin 34
 #endif
+
 
 /* ---- Server Zivy obraz ----------------------- */
 const char *host = "cdn.zivyobraz.eu";
@@ -279,6 +294,19 @@ uint8_t getBatteryVoltage()
   Serial.println("Battery voltage: " + String(d_volt) + " V");
 
   return d_volt;
+#elif M5StackCoreInk
+  analogSetPinAttenuation(vBatPin, ADC_11db);
+  esp_adc_cal_characteristics_t *adc_chars =
+    (esp_adc_cal_characteristics_t *)calloc(
+      1, sizeof(esp_adc_cal_characteristics_t));
+  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12,
+                           3600, adc_chars);
+  uint16_t ADCValue = analogRead(vBatPin);
+
+  uint32_t BatVolmV = esp_adc_cal_raw_to_voltage(ADCValue, adc_chars);
+  d_volt      = float(BatVolmV) * 25.1 / 5.1 / 1000;
+  free(adc_chars);
+  return d_volt;
 #else
   // attach ADC input
   adc.attach(vBatPin);
@@ -297,7 +325,11 @@ void displayInit()
 #else
   display.init();
 #endif
+#ifdef M5StackCoreInk  
+  display.setRotation(0);
+#else  
   display.setRotation(2);
+#endif
   display.fillScreen(GxEPD_WHITE);   // white background
   display.setTextColor(GxEPD_BLACK); // black font
 }
@@ -336,7 +368,8 @@ void WiFiInit()
     displayInit();
 #ifdef ES3ink
     digitalWrite(ePaperPowerPin, LOW);
-#else
+#elif M5StackCoreInk
+#else    
     digitalWrite(ePaperPowerPin, HIGH);
 #endif
     delay(500);
@@ -352,8 +385,9 @@ void WiFiInit()
     display.print(hostname);
 
     display.display(false); // update screen
+#ifndef M5StackCoreInk
     digitalWrite(ePaperPowerPin, LOW);
-
+#endif
     timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
   }
 
@@ -1111,10 +1145,16 @@ void readBitmapData()
 
 void setup()
 {
+#ifdef M5StackCoreInk
+  M5.begin(false, false, true);
+  display.init(115200, false);
+  M5.update();
+  Serial.println("Starting firmware for Zivy Obraz service");
+#else
   Serial.begin(115200);
   Serial.println("Starting firmware for Zivy Obraz service");
   printf("HELLO=<%s>\n", HELLO);
-
+#endif
 #ifdef ES3ink
   pinMode(enableBattery, OUTPUT);
 #endif
@@ -1125,7 +1165,7 @@ void setup()
   // ePaper init
   displayInit();
 
-  // Wifi init
+	  // Wifi init
   WiFiInit();
 
   // WiFi strength - so you will know how good your signal is
@@ -1134,10 +1174,13 @@ void setup()
   // Do we need to update the screen?
   if (checkForNewTimestampOnServer())
   {
+#ifndef M5StackCoreInk	  
     pinMode(ePaperPowerPin, OUTPUT);
+#endif    
 #ifdef ES3ink
     digitalWrite(ePaperPowerPin, LOW);
-#else
+#elif M5StackCoreInk
+#else    
     digitalWrite(ePaperPowerPin, HIGH);
 #endif
     delay(500);
@@ -1156,6 +1199,7 @@ void setup()
     // Disable power supply for ePaper
 #ifdef ES3ink
     digitalWrite(ePaperPowerPin, HIGH);
+#elif M5StackCoreInk
 #else
     digitalWrite(ePaperPowerPin, LOW);
 #endif
@@ -1164,11 +1208,16 @@ void setup()
   // Deep sleep mode
   Serial.print("Going to sleep now for (minutes): ");
   Serial.println(deepSleepTime);
+#ifdef M5StackCoreInk
+   display.powerOff();
+  M5.shutdown(deepSleepTime*60);
+#else  
   esp_sleep_enable_timer_wakeup(deepSleepTime * 60 * 1000000);
   delay(200);
   esp_deep_sleep_start();
+#endif  
 }
 
-void loop()
+	void loop()
 {
 }
