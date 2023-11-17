@@ -64,6 +64,8 @@
 //#define D_GDEW075T7_G   // 800x480, 7.5"
 
 // 3C
+//#define D_Waveshare42YBW400300 // 400x300, 4.2"
+//#define D_GDEQ042Z21    // 400x300, 4.2"
 //#define D_HINK_E075A01  // 640x384, 7.5"
 //#define D_GDEQ0583Z31   // 648x480, 5.83"
 //#define D_GDEY075Z08    // 800x480, 7.5"
@@ -218,6 +220,16 @@ esp_adc_cal_characteristics_t adc_cal;
 ///////////////////////
 // 3C
 ///////////////////////
+
+// Waveshare42YBW400300 - 3C, 400x300px, 4.2" 
+#ifdef D_Waveshare42YBW400300
+    GxEPD2_3C<GxEPD2_420c, GxEPD2_420c::HEIGHT> display(GxEPD2_420c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
+
+// GDEQ042Z21 - 3C, 400x300px, 4.2" 
+#ifdef D_GDEQ042Z21
+    GxEPD2_3C<GxEPD2_420c_Z21, GxEPD2_420c_Z21::HEIGHT> display(GxEPD2_420c_Z21(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
 
 // HINK_E075A01 - 3C, 640x384px, 7.5" 
 #ifdef D_HINK_E075A01
