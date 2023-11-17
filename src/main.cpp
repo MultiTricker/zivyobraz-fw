@@ -1,35 +1,71 @@
 /*
-* ZivyObraz.eu - Orchestrate your ePaper displays
-* 
-* You need to change some initial things like ePaper type etc. - see below.
-*
-* Default password for Wi-Fi AP is: zivyobraz 
-*
-* Code based on both: 
-* https://github.com/ZinggJM/GxEPD2/blob/master/examples/GxEPD2_WiFi_Example/GxEPD2_WiFi_Example.ino
-* and
-* https://github.com/LaskaKit/ESPink-42/blob/main/SW/Weatherstation_info/Weatherstation_info.ino
-* 
-* Compile with board type: ESP32 dev module
-*
-* Libraries:
-* Analog read with calibration data: https://github.com/madhephaestus/ESP32AnalogRead/ 
-* EPD library: https://github.com/ZinggJM/GxEPD2
-* EPD library for 4G "Grayscale": https://github.com/ZinggJM/GxEPD2_4G
-* WiFi manager by tzapu https://github.com/tzapu/WiFiManager
-*
-* original code made by Jean-Marc Zingg and LaskaKit
-* modified by @MultiTricker (https://michalsevcik.eu)
-*/
+ * ZivyObraz.eu - Orchestrate your ePaper displays
+ * 
+ * You need to change some initial things like ePaper type etc. - see below.
+ *
+ * Default password for Wi-Fi AP is: zivyobraz 
+ *
+ * Code based on both: 
+ * https://github.com/ZinggJM/GxEPD2/blob/master/examples/GxEPD2_WiFi_Example/GxEPD2_WiFi_Example.ino
+ * and
+ * https://github.com/LaskaKit/ESPink-42/blob/main/SW/Weatherstation_info/Weatherstation_info.ino
+ * 
+ * Compile with board type: ESP32 dev module
+ *
+ * Libraries:
+ * Analog read with calibration data: https://github.com/madhephaestus/ESP32AnalogRead/ 
+ * EPD library: https://github.com/ZinggJM/GxEPD2
+ * EPD library for 4G "Grayscale": https://github.com/ZinggJM/GxEPD2_4G
+ * WiFi manager by tzapu https://github.com/tzapu/WiFiManager
+ *
+ * original code made by Jean-Marc Zingg and LaskaKit
+ * modified by @MultiTricker (https://michalsevcik.eu)
+ */
 
+/////////////////////////////////
+// Uncomment for correct board
+/////////////////////////////////
+
+//#define ESPink
+//#define ES3ink
+//#define REMAP_SPI
+
+//////////////////////////////////////////////////////////////////////////////////////
 // Uncomment if you have connected SHT40 sensor for sending temperature and humidity
+//////////////////////////////////////////////////////////////////////////////////////
+
 //#define SHT40
 
+//////////////////////////////////////////////////////////////
 // Uncomment correct color capability of your ePaper display
-#define TYPE_BW // black and white
+//////////////////////////////////////////////////////////////
+
+//#define TYPE_BW // black and white
 //#define TYPE_3C // 3 colors - black, white and red/yellow
 //#define TYPE_GRAYSCALE // grayscale - 4 colors
 //#define TYPE_7C // 7 colors
+
+//////////////////////////////////////////////////////////////
+// Uncomment for correct ePaper you have
+//////////////////////////////////////////////////////////////
+
+// BW
+//#define D_GDEY0213B7    // 122x250, 2.13"
+//#define D_GDEY027T91    // 176x246, 2.7"
+//#define D_GDEW0154T8    // 152x152, 1.54"
+//#define D_GDEW042T2     // 400x300, 4.2"
+//#define D_GDEW075T7     // 800x480, 7.5"
+
+// Grayscale
+//#define D_GDEW042T2_G   // 400x300, 4.2"
+//#define D_GDEW075T7_G   // 800x480, 7.5"
+
+// 3C
+//#define D_HINK_E075A01  // 640x384, 7.5"
+//#define D_GDEY075Z08    // 800x480, 7.5"
+
+// 7C
+//#define D_GDEY073D46    // 800x480, 7.3"
 
 ////////////
 // Board
@@ -39,11 +75,26 @@
 // Also ESPInk-42 all-in-one board
 
 /* ---------------- Pinout of ESPink ------------ */
-#define PIN_SS 5 //SS
-#define PIN_DC 17 // D/C
+#ifdef ESPink
+#define PIN_SS 5   // SS
+#define PIN_DC 17  // D/C
 #define PIN_RST 16 // RES
 #define PIN_BUSY 4 // PIN_BUSY
 #define ePaperPowerPin 2
+#endif
+
+#ifdef ES3ink
+#define PIN_SS 9   // SS
+#define PIN_DC 10  // D/C
+#define PIN_RST 5  // RES
+#define PIN_BUSY 6 // PIN_BUSY
+#define ePaperPowerPin 48
+#define enableBattery 40
+
+#include <esp_adc_cal.h>
+#include <soc/adc_channel.h>
+esp_adc_cal_characteristics_t adc_cal;
+#endif
 
 //#define REMAP_SPI
 #ifdef REMAP_SPI
@@ -94,60 +145,79 @@
 #endif
 
 /////////////////////////////////
-// Choose ePaper
+// Use ePaper uncommented above
 /////////////////////////////////
 
 // Supported display classes can be found for example here:
 // https://github.com/ZinggJM/GxEPD2/blob/master/examples/GxEPD2_Example/GxEPD2_display_selection.h
+// If you need, you can get definition from there and then use it here 
+// without uncommenting any particular display above
 
-/////////////////
+///////////////////////
 // BW
-/////////////////
+///////////////////////
 
-// 4.2" b/w 400x300
-//GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); 
+// GDEY0213B7 - BW, 122x250px, 2.13" 
+#ifdef D_GDEY0213B7
+    GxEPD2_BW<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
 
-// 7.5" b/w 800x480
-GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> display(GxEPD2_750_T7(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
+// GDEY027T91 - BW, 176x246px, 2.7" 
+#ifdef D_GDEY027T91
+    GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
 
-// GDEY075T7 800x480, UC8179 (GD7965)
-//GxEPD2_BW<GxEPD2_750_YT7, GxEPD2_750_YT7::HEIGHT> display(GxEPD2_750_YT7(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); 
+// GDEW0154T8 - BW, 152x152px, 1.54" 
+#ifdef D_GDEW0154T8
+    GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
 
-// GDEY027T91 2.7" 264x176
-//GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); 
+// GDEW042T2 - BW, 400x300px, 4.2" 
+#ifdef D_GDEW042T2
+    GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
 
-// GDEW0154T8 152x152, UC8151 (IL0373)
-//GxEPD2_BW<GxEPD2_154_T8, GxEPD2_154_T8::HEIGHT> display(GxEPD2_154_T8(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
+// GDEW075T7 - BW, 800x480px, 7.5" 
+#ifdef D_GDEW075T7
+    GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
 
-// GDEY0213B74 122x250, SSD1680, (FPC-A002 20.04.08) (LaskaKit ESPink-Shelf-213 ESP32 e-Paper)
-//GxEPD2_BW<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY));
-
-/////////////////
-// 3C
-/////////////////
-
-// 4.2" 3C 400x300
-//GxEPD2_3C<GxEPD2_420c_Z21, GxEPD2_420c_Z21::HEIGHT> display(GxEPD2_420c_Z21(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); // GDEQ042Z21 400x300, UC8276
-
-// 7.5" 3C 800x480
-//GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); // GDEY075Z08 800x480, GDEW075Z08
-
-/////////////////
+///////////////////////
 // Grayscale
-/////////////////
+///////////////////////
 
-// 4.2" Grayscale 400x300
-//GxEPD2_4G_4G<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(/*CS=5*/ PIN_SS, /*DC=*/ PIN_DC, /*RST=*/ PIN_RST, /*BUSY=*/ PIN_BUSY));
+// GDEW042T2_G - Grayscale, 400x300px, 4.2" 
+#ifdef D_GDEW042T2_G
+    GxEPD2_4G_4G<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
 
-// 7.5" Grayscale 800x480
-//GxEPD2_4G_4G<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(/*CS=5*/ PIN_SS, /*DC=*/ PIN_DC, /*RST=*/ PIN_RST, /*BUSY=*/ PIN_BUSY));
+// GDEW075T7_G - Grayscale, 800x480px, 7.5" 
+#ifdef D_GDEW075T7_G
+    GxEPD2_4G_4G<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
 
-/////////////////
-// Color
-/////////////////
+///////////////////////
+// 3C
+///////////////////////
 
-// 7.5" 7C 800x480
-//GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(GxEPD2_730c_GDEY073D46(/*CS*/ PIN_SS, /*DC*/ PIN_DC, /*RST*/ PIN_RST, /*BUSY*/ PIN_BUSY)); // GDEY073D46 800x480 7-color, (N-FPC-001 2021.11.26)
+// HINK_E075A01 - 3C, 640x384px, 7.5" 
+#ifdef D_HINK_E075A01
+    GxEPD2_3C<GxEPD2_750c, GxEPD2_750c::HEIGHT> display(GxEPD2_750c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
+
+// GDEY075Z08 - 3C, 800x480px, 7.5" 
+#ifdef D_GDEY075Z08
+    GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
+
+///////////////////////
+// 7C
+///////////////////////
+
+// GDEY073D46 - 7C, 800x480px, 7.3" 
+#ifdef D_GDEY073D46
+    GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(GxEPD2_730c_GDEY073D46(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
 
 ///////////////////////////////////////////////
 // That's all!
@@ -181,9 +251,14 @@ Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 #endif
 
 /* ---- ADC reading - indoor Battery voltage ---- */
+#ifdef ES3ink
+#define vBatPin ADC1_GPIO2_CHANNEL
+#define dividerRatio 2.018
+#else
 ESP32AnalogRead adc;
 #define dividerRatio 1.769
 #define vBatPin 34
+#endif
 
 /* ---- Server Zivy obraz ----------------------- */
 const char* host = "cdn.zivyobraz.eu";
@@ -218,6 +293,31 @@ int8_t getWifiStrength()
 
 uint8_t getBatteryVoltage()
 {
+#ifdef ES3ink
+
+  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 0, &adc_cal);
+  adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_11);
+
+  Serial.println("Reading battery on ES3ink board");
+  bool readBattery = 0;
+  do
+  {
+    digitalWrite(enableBattery, LOW);
+    uint32_t raw = adc1_get_raw(vBatPin);
+    Serial.println(raw);
+    uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw, &adc_cal);
+    Serial.println(millivolts);
+    const uint32_t upper_divider = 1000;
+    const uint32_t lower_divider = 1000;
+    d_volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
+    readBattery = 1;
+    digitalWrite(enableBattery, LOW);
+  } while (readBattery != 1);
+
+  Serial.println("Battery voltage: " + String(d_volt) + " V");
+
+  return d_volt;
+#else
   // attach ADC input
   adc.attach(vBatPin);
   // battery voltage measurement
@@ -225,6 +325,7 @@ uint8_t getBatteryVoltage()
   Serial.println("Battery voltage: " + String(d_volt) + " V");
 
   return d_volt;
+#endif
 }
 
 void displayInit()
@@ -235,7 +336,11 @@ void displayInit()
     display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
   #endif
 
-  display.init();
+  #ifdef ES3ink
+    display.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+  #else
+    display.init();
+  #endif
   display.setRotation(0);
   display.fillScreen(GxEPD_WHITE);  // white background
   display.setTextColor(GxEPD_BLACK);  // black font
@@ -245,8 +350,7 @@ void WiFiInit()
 {
   // Connecting to WiFi
   Serial.println();
-  Serial.print("Connecting...");
-  //Serial.println(ssid);
+  Serial.print("Connecting... ");
   //WiFi.begin(ssid, pass);
   WiFi.mode(WIFI_STA);
   WiFiManager wm;
@@ -273,7 +377,11 @@ void WiFiInit()
   if(!wm.getWiFiIsSaved() or !res) {
       displayInit();
       pinMode(ePaperPowerPin, OUTPUT); 
-      digitalWrite(ePaperPowerPin, HIGH);
+      #ifdef ES3ink
+          digitalWrite(ePaperPowerPin, LOW);
+      #else
+          digitalWrite(ePaperPowerPin, HIGH);
+      #endif
       delay(500);
 
       display.setFont(&OpenSansSB_12px);
@@ -1001,6 +1109,13 @@ void setup()
 {
   Serial.begin(115200);
 
+  #ifdef ES3ink
+    pinMode(enableBattery, OUTPUT);
+  #endif
+
+  // Battery voltage measurement
+  getBatteryVoltage();
+
   // ePaper init
   displayInit();
 
@@ -1010,14 +1125,15 @@ void setup()
   // WiFi strength - so you will know how good your signal is
   getWifiStrength();
 
-  // Battery voltage - you deserve to know in advance
-  getBatteryVoltage();
-
   // Do we need to update the screen?
   if(checkForNewTimestampOnServer())
   {
     pinMode(ePaperPowerPin, OUTPUT); 
-    digitalWrite(ePaperPowerPin, HIGH);
+    #ifdef ES3ink
+        digitalWrite(ePaperPowerPin, LOW);
+    #else
+        digitalWrite(ePaperPowerPin, HIGH);
+    #endif
     delay(500);
 
     // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
@@ -1033,7 +1149,11 @@ void setup()
     while (display.nextPage());
 
     // Disable power supply for ePaper
-    digitalWrite(ePaperPowerPin, LOW);
+    #ifdef ES3ink
+        digitalWrite(ePaperPowerPin, HIGH);
+    #else
+        digitalWrite(ePaperPowerPin, LOW);
+    #endif
   }
 
   // Deep sleep mode
