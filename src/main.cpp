@@ -54,7 +54,10 @@
 //#define D_GDEY027T91    // 176x246, 2.7"
 //#define D_GDEW0154T8    // 152x152, 1.54"
 //#define D_GDEW042T2     // 400x300, 4.2"
+//#define D_GDEQ042T81    // 400x300, 4.2"
+//#define D_GDEQ0583T31   // 648x480, 5.83"
 //#define D_GDEW075T7     // 800x480, 7.5"
+//#define D_GDEQ102T90    // 960x640, 10.2"
 
 // Grayscale
 //#define D_GDEW042T2_G   // 400x300, 4.2"
@@ -62,6 +65,7 @@
 
 // 3C
 //#define D_HINK_E075A01  // 640x384, 7.5"
+//#define D_GDEQ0583Z31   // 648x480, 5.83"
 //#define D_GDEY075Z08    // 800x480, 7.5"
 
 // 7C
@@ -177,9 +181,24 @@ esp_adc_cal_characteristics_t adc_cal;
     GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 #endif
 
+// GDEQ042T81 - BW, 400x300px, 4.2" 
+#ifdef D_GDEQ042T81
+    GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> display(GxEPD2_420_GDEY042T81(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
+
+// GDEQ0583T31 - BW, 648x480px, 5.83" 
+#ifdef D_GDEQ0583T31
+    GxEPD2_BW<GxEPD2_583_GDEQ0583T31, GxEPD2_583_GDEQ0583T31::HEIGHT> display(GxEPD2_583_GDEQ0583T31(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
+
 // GDEW075T7 - BW, 800x480px, 7.5" 
 #ifdef D_GDEW075T7
     GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
+
+// GDEQ102T90 - BW, 960x640px, 10.2" 
+#ifdef D_GDEQ102T90
+    GxEPD2_BW<GxEPD2_1160_T91, GxEPD2_1160_T91::HEIGHT / 2> display(GxEPD2_1160_T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 #endif
 
 ///////////////////////
@@ -203,6 +222,11 @@ esp_adc_cal_characteristics_t adc_cal;
 // HINK_E075A01 - 3C, 640x384px, 7.5" 
 #ifdef D_HINK_E075A01
     GxEPD2_3C<GxEPD2_750c, GxEPD2_750c::HEIGHT> display(GxEPD2_750c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
+
+// GDEQ0583Z31 - 3C, 648x480px, 5.83" 
+#ifdef D_GDEQ0583Z31
+    GxEPD2_3C<GxEPD2_583c, GxEPD2_583c::HEIGHT> display(GxEPD2_583c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 #endif
 
 // GDEY075Z08 - 3C, 800x480px, 7.5" 
