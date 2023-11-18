@@ -1,6 +1,6 @@
 name: Compile firmware for Živý obraz service
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build-project:
@@ -21,7 +21,7 @@ jobs:
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
 
-      - name: Compile firware binaries
+      - name: Compile firmware binaries
         run: pio run
       - name: Upload binaries
         uses: actions/upload-artifact@v3
@@ -31,30 +31,20 @@ jobs:
   release-project:
     name: Release project
     runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.step_upload_url.outputs.upload_url }}
     needs: build-project
     steps:
     - name: Download artifact
       uses: actions/download-artifact@v3
       with:
         name: firmware
-        #run: ls -R
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
+        path: ${{ github.workspace }}
+    - name: Create Release With Asset
+      id: Release-AIO
+      uses: Hs1r1us/Release-AIO@v2.0.0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-    - name: Upload Release Asset
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./firmware/
-        asset_name: firmwares
-        asset_content_type: application/octet-stream
+        tag_name: ${{github.run_number}}
+        files: /home/runner/work/zivyobraz-fw/zivyobraz-fw/firmware.zip
