@@ -57,12 +57,14 @@
 #endif
 
 #ifdef ES3ink
-#define PIN_SS 9   // SS
-#define PIN_DC 10  // D/C
+//for version P1.1
+#define PIN_SS 10   // SS
+#define PIN_DC 7  // D/C
 #define PIN_RST 5  // RES
 #define PIN_BUSY 6 // PIN_BUSY
-#define ePaperPowerPin 48
-#define enableBattery 40
+#define ePaperPowerPin 46
+//ePaperPowerPin IO46 default, rework to 3 if problems occur. Maybe IO3 in next version (IO46 is not ideal because it is a strapping pin)?
+#define enableBattery 40 
 
 #include <esp_adc_cal.h>
 #include <soc/adc_channel.h>
@@ -276,20 +278,16 @@ uint8_t getBatteryVoltage()
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_11);
 
   Serial.println("Reading battery on ES3ink board");
-  bool readBattery = 0;
-  do
-  {
-    digitalWrite(enableBattery, LOW);
-    uint32_t raw = adc1_get_raw(vBatPin);
-    Serial.println(raw);
-    uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw, &adc_cal);
-    Serial.println(millivolts);
-    const uint32_t upper_divider = 1000;
-    const uint32_t lower_divider = 1000;
-    d_volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
-    readBattery = 1;
-    digitalWrite(enableBattery, LOW);
-  } while (readBattery != 1);
+  
+  digitalWrite(enableBattery, LOW);
+  uint32_t raw = adc1_get_raw(vBatPin);
+  //Serial.println(raw);
+  uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw, &adc_cal);
+  //Serial.println(millivolts);
+  const uint32_t upper_divider = 1000;
+  const uint32_t lower_divider = 1000;
+  d_volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
+  digitalWrite(enableBattery, HIGH);
 
   Serial.println("Battery voltage: " + String(d_volt) + " V");
 
@@ -1145,6 +1143,14 @@ void readBitmapData()
 
 void setup()
 {
+#ifdef ES3ink
+  //Battery voltage reading via PMOS switch with series capacitor to gate.
+  //can be read right after High->Low transition of enableBattery
+  //Here, pin should not go LOW, so intentionally digitalWrite called as first.
+  //First write output register (PORTx) then activate output direction (DDRx). Pin will go from highZ(sleep) to HIGH without LOW pulse.
+  digitalWrite(enableBattery,HIGH); 
+  pinMode(enableBattery,OUTPUT); 
+#endif
 #ifdef M5StackCoreInk
   M5.begin(false, false, true);
   display.init(115200, false);
@@ -1154,9 +1160,6 @@ void setup()
   Serial.begin(115200);
   Serial.println("Starting firmware for Zivy Obraz service");
   printf("HELLO=<%s>\n", HELLO);
-#endif
-#ifdef ES3ink
-  pinMode(enableBattery, OUTPUT);
 #endif
 
   // Battery voltage - you deserve to know in advance
