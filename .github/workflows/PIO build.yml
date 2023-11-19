@@ -47,4 +47,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{github.run_number}}
-        files: /home/runner/work/zivyobraz-fw/zivyobraz-fw/firmware.zip
+        asset_files: /home/runner/work/zivyobraz-fw/zivyobraz-fw/
