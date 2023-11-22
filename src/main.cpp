@@ -317,10 +317,14 @@ Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 #elif defined MakerBadge_revB
 ESP32AnalogRead adc;
 #define vBatPin 9 
+#define dividerRatio 1.5
+#define BATT_V_CAL_SCALE 1.00
 
 #elif defined MakerBadge_revD
 ESP32AnalogRead adc;
 #define vBatPin 9
+#define dividerRatio 1.5
+#define BATT_V_CAL_SCALE 1.05
 
 #else
 ESP32AnalogRead adc;
@@ -388,14 +392,14 @@ uint8_t getBatteryVoltage()
 
 #elif defined MakerBadge_revB
   adc.attach(vBatPin);
-  d_volt = 2.0*(2.50*adc.readVoltage()/4096);
+  d_volt = (BATT_V_CAL_SCALE*2.0*(2.50*batt_adc/4096)); // d_volt = adc.readVoltage() * dividerRatio;
   Serial.println("Battery voltage: " + String(d_volt) + " V");
 
   return d_volt;
 
 #elif defined MakerBadge_revD
-adc.attach(vBatPin);
-  d_volt = 2*2.0*(2.50*adc.readVoltage()/4096);
+  adc.attach(vBatPin);
+  d_volt = (BATT_V_CAL_SCALE*2.0*(2.50*batt_adc/4096)); // d_volt = adc.readVoltage() * dividerRatio;
   Serial.println("Battery voltage: " + String(d_volt) + " V");
 
   return d_volt;
