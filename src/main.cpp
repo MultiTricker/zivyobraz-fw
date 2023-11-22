@@ -119,6 +119,7 @@ esp_adc_cal_characteristics_t adc_cal;
 #define PIN_RST 39 // RES
 #define PIN_BUSY 42 // PIN_BUSY
 #define ePaperPowerPin 16 // only version D and newer supports this feature
+#define enableBattery 14
 #endif
 
 //#define REMAP_SPI
@@ -321,6 +322,7 @@ ESP32AnalogRead adc;
 #define BATT_V_CAL_SCALE 1.00
 
 #elif defined MakerBadge_revD
+digitalWrite(enableBattery, LOW);
 ESP32AnalogRead adc;
 #define vBatPin 9
 #define dividerRatio 1.5
