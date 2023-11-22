@@ -405,14 +405,10 @@ adc.attach(vBatPin);
   adc.attach(vBatPin);
   // battery voltage measurement
   d_volt = adc.readVoltage() * dividerRatio;
-
   Serial.println("Battery voltage: " + String(d_volt) + " V");
 
   return d_volt;
-
 #endif
-
-
 }
 
 void displayInit()
