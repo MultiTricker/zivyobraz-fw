@@ -29,6 +29,8 @@
 //#define ESPink
 //#define ES3ink
 //#define REMAP_SPI
+//#define MakerBadge_revB //also works with A and C
+// #define MakerBadge_revD
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Uncomment if you have connected SHT40 sensor for sending temperature and humidity
@@ -50,6 +52,7 @@
 //////////////////////////////////////////////////////////////
 
 // BW
+//#define D_B74           // 122x250, 2.13" MakerBadge all versions
 //#define D_GDEY0213B7    // 122x250, 2.13"
 //#define D_GDEY027T91    // 176x246, 2.7"
 //#define D_GDEW0154T8    // 152x152, 1.54"
@@ -100,6 +103,22 @@
 #include <esp_adc_cal.h>
 #include <soc/adc_channel.h>
 esp_adc_cal_characteristics_t adc_cal;
+#endif
+
+#ifdef MakerBadge_revB
+#define PIN_SS 41   // SS
+#define PIN_DC 40  // D/C
+#define PIN_RST 39 // RES
+#define PIN_BUSY 42 // PIN_BUSY
+#define ePaperPowerPin 16 // only version D and newer supports this feature
+#endif
+
+#ifdef MakerBadge_revD
+#define PIN_SS 41   // SS
+#define PIN_DC 40  // D/C
+#define PIN_RST 39 // RES
+#define PIN_BUSY 42 // PIN_BUSY
+#define ePaperPowerPin 16 // only version D and newer supports this feature
 #endif
 
 //#define REMAP_SPI
@@ -162,6 +181,10 @@ esp_adc_cal_characteristics_t adc_cal;
 ///////////////////////
 // BW
 ///////////////////////
+
+#ifdef D_B74
+    GxEPD2_BW<GxEPD2_213_B74, GxEPD2_213_B74::HEIGHT> display(GxEPD2_213_B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+#endif
 
 // GDEY0213B7 - BW, 122x250px, 2.13" 
 #ifdef D_GDEY0213B7
@@ -290,6 +313,15 @@ Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 #ifdef ES3ink
 #define vBatPin ADC1_GPIO2_CHANNEL
 #define dividerRatio 2.018
+
+#elif defined MakerBadge_revB
+ESP32AnalogRead adc;
+#define vBatPin 9 
+
+#elif defined MakerBadge_revD
+ESP32AnalogRead adc;
+#define vBatPin 9
+
 #else
 ESP32AnalogRead adc;
 #define dividerRatio 1.769
@@ -353,15 +385,34 @@ uint8_t getBatteryVoltage()
   Serial.println("Battery voltage: " + String(d_volt) + " V");
 
   return d_volt;
+
+#elif defined MakerBadge_revB
+  adc.attach(vBatPin);
+  d_volt = 2.0*(2.50*adc.readVoltage()/4096);
+  Serial.println("Battery voltage: " + String(d_volt) + " V");
+
+  return d_volt;
+
+#elif defined MakerBadge_revD
+adc.attach(vBatPin);
+  d_volt = 2*2.0*(2.50*adc.readVoltage()/4096);
+  Serial.println("Battery voltage: " + String(d_volt) + " V");
+
+  return d_volt;
+
 #else
   // attach ADC input
   adc.attach(vBatPin);
   // battery voltage measurement
   d_volt = adc.readVoltage() * dividerRatio;
+
   Serial.println("Battery voltage: " + String(d_volt) + " V");
 
   return d_volt;
+
 #endif
+
+
 }
 
 void displayInit()
