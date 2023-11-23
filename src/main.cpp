@@ -30,7 +30,7 @@
 //#define ES3ink
 //#define REMAP_SPI
 //#define MakerBadge_revB //also works with A and C
-// #define MakerBadge_revD
+//#define MakerBadge_revD
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Uncomment if you have connected SHT40 sensor for sending temperature and humidity
@@ -52,7 +52,7 @@
 //////////////////////////////////////////////////////////////
 
 // BW
-//#define D_B74           // 122x250, 2.13" MakerBadge all versions
+//#define D_B74           // 122x250, 2.13" Maker badge all versions
 //#define D_GDEY0213B7    // 122x250, 2.13"
 //#define D_GDEY027T91    // 176x246, 2.7"
 //#define D_GDEW0154T8    // 152x152, 1.54"
@@ -107,18 +107,18 @@ esp_adc_cal_characteristics_t adc_cal;
 
 #ifdef MakerBadge_revB
 #define PIN_SS 41   // SS
-#define PIN_DC 40  // D/C
-#define PIN_RST 39 // RES
+#define PIN_DC 40   // D/C
+#define PIN_RST 39  // RES
 #define PIN_BUSY 42 // PIN_BUSY
-#define ePaperPowerPin 16 // only version D and newer supports this feature
+#define ePaperPowerPin 16
 #endif
 
 #ifdef MakerBadge_revD
 #define PIN_SS 41   // SS
-#define PIN_DC 40  // D/C
-#define PIN_RST 39 // RES
+#define PIN_DC 40   // D/C
+#define PIN_RST 39  // RES
 #define PIN_BUSY 42 // PIN_BUSY
-#define ePaperPowerPin 16 // only version D and newer supports this feature
+#define ePaperPowerPin 16
 #define enableBattery 14
 #endif
 
@@ -183,6 +183,7 @@ esp_adc_cal_characteristics_t adc_cal;
 // BW
 ///////////////////////
 
+// B74 - BW, 122x250, 2.13" Maker badge all versions
 #ifdef D_B74
     GxEPD2_BW<GxEPD2_213_B74, GxEPD2_213_B74::HEIGHT> display(GxEPD2_213_B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 #endif
@@ -316,16 +317,11 @@ Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 #define dividerRatio 2.018
 
 #elif defined MakerBadge_revB
-ESP32AnalogRead adc;
-#define vBatPin 9 
-#define dividerRatio 1.5
+#define vBatPin 6
 #define BATT_V_CAL_SCALE 1.00
 
 #elif defined MakerBadge_revD
-digitalWrite(enableBattery, LOW);
-ESP32AnalogRead adc;
-#define vBatPin 9
-#define dividerRatio 1.5
+#define vBatPin 6
 #define BATT_V_CAL_SCALE 1.05
 
 #else
@@ -393,15 +389,24 @@ uint8_t getBatteryVoltage()
   return d_volt;
 
 #elif defined MakerBadge_revB
-  adc.attach(vBatPin);
-  d_volt = (BATT_V_CAL_SCALE*2.0*(2.50*batt_adc/4096)); // d_volt = adc.readVoltage() * dividerRatio;
+  d_volt = (BATT_V_CAL_SCALE*2.0*(2.50*analogRead(vBatPin)/8192));
   Serial.println("Battery voltage: " + String(d_volt) + " V");
 
   return d_volt;
 
 #elif defined MakerBadge_revD
-  adc.attach(vBatPin);
-  d_volt = (BATT_V_CAL_SCALE*2.0*(2.50*batt_adc/4096)); // d_volt = adc.readVoltage() * dividerRatio;
+  // Borrowed from @Yourigh
+  // Battery voltage reading 
+  // can be read right after High->Low transition of IO_BAT_meas_disable
+  // Here, pin should not go LOW, so intentionally digitalWrite called as first.
+  // First write output register (PORTx) then activate output direction (DDRx). Pin will go from highZ(sleep) to HIGH without LOW pulse.
+  digitalWrite(IO_BAT_meas_disable,HIGH); 
+  pinMode(IO_BAT_meas_disable,OUTPUT); 
+
+  digitalWrite(IO_BAT_meas_disable,LOW);
+  delayMicroseconds(150);
+  d_volt = (BATT_V_CAL_SCALE*2.0*(2.50*analogRead(vBatPin)/8192)); 
+  digitalWrite(IO_BAT_meas_disable,HIGH);
   Serial.println("Battery voltage: " + String(d_volt) + " V");
 
   return d_volt;
