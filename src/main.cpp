@@ -51,7 +51,7 @@
 
 // BW
 //#define D_GDEY0213B7    // 122x250, 2.13"
-//#define D_GDEY027T91    // 176x246, 2.7"
+//#define D_GDEY027T91    // 176x264, 2.7"
 //#define D_GDEW0154T8    // 152x152, 1.54"
 //#define D_GDEW042T2     // 400x300, 4.2"
 //#define D_GDEQ042T81    // 400x300, 4.2"
@@ -90,12 +90,14 @@
 #endif
 
 #ifdef ES3ink
-#define PIN_SS 9   // SS
-#define PIN_DC 10  // D/C
+//for version P1.1
+#define PIN_SS 10   // SS
+#define PIN_DC 7  // D/C
 #define PIN_RST 5  // RES
 #define PIN_BUSY 6 // PIN_BUSY
-#define ePaperPowerPin 48
-#define enableBattery 40
+#define ePaperPowerPin 46
+//ePaperPowerPin IO46 default, rework to 3 if problems occur. Maybe IO3 in next version (IO46 is not ideal because it is a strapping pin)?
+#define enableBattery 40 
 
 #include <esp_adc_cal.h>
 #include <soc/adc_channel.h>
@@ -168,7 +170,7 @@ esp_adc_cal_characteristics_t adc_cal;
     GxEPD2_BW<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 #endif
 
-// GDEY027T91 - BW, 176x246px, 2.7" 
+// GDEY027T91 - BW, 176x264px, 2.7" 
 #ifdef D_GDEY027T91
     GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 #endif
