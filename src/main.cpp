@@ -222,7 +222,11 @@ esp_adc_cal_characteristics_t adc_cal;
 
 // GDEW075T7 - BW, 800x480px, 7.5" 
 #ifdef D_GDEW075T7
-    GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+    // Good display - 7.5", but only 640x384, leaving this here for now, might be usefull one day
+     //GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+    // Waveshare displays
+    GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> display(GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY)); // GDEW075T7 800x480, EK79655 (GD7965)
+    //GxEPD2_BW<GxEPD2_750_YT7, GxEPD2_750_YT7::HEIGHT> display(GxEPD2_750_YT7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY)); // GDEY075T7 800x480, UC8179 (GD7965)
 #endif
 
 // GDEQ102T90 - BW, 960x640px, 10.2" 
@@ -587,7 +591,7 @@ bool checkForNewTimestampOnServer()
   }
   else
   {
-    sht4.setPrecision(SHT4X_HIGH_PRECISION); // highest resolution
+    sht4.setPrecision(SHT4X_LOW_PRECISION); // highest resolution
     sht4.setHeater(SHT4X_NO_HEATER); // no heater
     float teplota = 0.0;
     int vlhkost = 0;
