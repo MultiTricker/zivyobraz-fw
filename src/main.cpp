@@ -64,7 +64,7 @@
 
 // Grayscale
 //#define D_GDEW042T2_G   // 400x300, 4.2"
-//#define D_GDEW075T7_G   // 800x480, 7.5"
+//#define D_GDEY075T7     // 800x480, 7.5"
 
 // 3C
 //#define D_Waveshare42YBW400300 // 400x300, 4.2"
@@ -243,8 +243,8 @@ esp_adc_cal_characteristics_t adc_cal;
     GxEPD2_4G_4G<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 #endif
 
-// GDEW075T7_G - Grayscale, 800x480px, 7.5" 
-#ifdef D_GDEW075T7_G
+// GDEY075T7 - Grayscale, 800x480px, 7.5" 
+#ifdef D_GDEY075T7
     GxEPD2_4G_4G<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 #endif
 
