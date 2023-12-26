@@ -895,7 +895,7 @@ void readBitmapData()
                 blue = input_buffer[in_idx++];
                 green = input_buffer[in_idx++];
                 red = input_buffer[in_idx++];
-                if(depth == 24) in_idx++; // skip alpha
+                if(depth == 32) in_idx++; // skip alpha
                 whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
                 lightgrey = with_color ? ((red > 0x60) && (green > 0x60) && (blue > 0x60)) : ((red + green + blue) > 3 * 0x60); // lightgrey
                 darkgrey = with_color ? ((red > 0x40) && (green > 0x40) && (blue > 0x40)) : ((red + green + blue) > 3 * 0x40); // darkgrey
