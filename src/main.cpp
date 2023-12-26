@@ -358,7 +358,7 @@ uint8_t getBatteryVoltage()
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_11);
 
   Serial.println("Reading battery on ES3ink board");
-  bool readBattery = 0;
+  bool readBattery = false;
   do
   {
     digitalWrite(enableBattery, LOW);
@@ -369,9 +369,9 @@ uint8_t getBatteryVoltage()
     const uint32_t upper_divider = 1000;
     const uint32_t lower_divider = 1000;
     d_volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
-    readBattery = 1;
+    readBattery = true;
     digitalWrite(enableBattery, LOW);
-  } while (readBattery != 1);
+  } while (!readBattery);
 
 #elif defined MakerBadge_revB
   d_volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
@@ -486,23 +486,6 @@ void WiFiInit()
   }
 }
 
-uint32_t skip(WiFiClient& client, int32_t bytes)
-{
-  int32_t remain = bytes;
-  uint32_t start = millis();
-  while ((client.connected() || client.available()) && (remain > 0))
-  {
-    if (client.available())
-    {
-      client.read();
-      remain--;
-    }
-    else delay(1);
-    if (millis() - start > 2000) break; // don't hang forever
-  }
-  return bytes - remain;
-}
-
 uint32_t read8n(WiFiClient& client, uint8_t *buffer, int32_t bytes)
 {
   int32_t remain = bytes;
@@ -512,13 +495,18 @@ uint32_t read8n(WiFiClient& client, uint8_t *buffer, int32_t bytes)
     if (client.available())
     {
       int16_t v = client.read();
-      *buffer++ = uint8_t(v);
+      if (buffer) *buffer++ = uint8_t(v);
       remain--;
     }
     else delay(1);
     if (millis() - start > 2000) break; // don't hang forever
   }
   return bytes - remain;
+}
+
+uint32_t skip(WiFiClient& client, int32_t bytes)
+{
+  return read8n(client, NULL, bytes);
 }
 
 uint16_t read16(WiFiClient& client)
@@ -541,14 +529,142 @@ uint32_t read32(WiFiClient& client)
   return result;
 }
 
+bool createRequest(bool *connStatus, bool checkTimestamp, String extraParams)
+{
+  // Connect to the HOST and read data via GET method
+  WiFiClient client; // Use WiFiClient class to create TCP connections
+
+  // Make an url
+  String url = "index.php?mac=" + WiFi.macAddress() +
+               (checkTimestamp ? "&timestamp_check=1" : "") +
+               "&rssi=" + String(strength) +
+               "&v=" + String(d_volt) +
+               "&x=" + String(DISPLAY_RESOLUTION_X) +
+               "&y=" + String(DISPLAY_RESOLUTION_Y) +
+               "&c=" + String(defined_color_type) +
+               "&fw=" + String(firmware) +
+               extraParams;
+
+  Serial.print("connecting to ");
+  Serial.println(host);
+
+  // Let's try twice
+  for (int client_reconnect = 0; client_reconnect < 3; client_reconnect++)
+  {
+    if (!client.connect(host, 80))
+    {
+      Serial.println("connection failed");
+      if (client_reconnect == 2)
+      {
+        deepSleepTime = defaultDeepSleepTime;
+        if (!checkTimestamp) return false;
+        delay(200);
+      }
+      if (!checkTimestamp) delay(200);
+    }
+  }
+
+  Serial.print("requesting URL: ");
+  Serial.println(String("http://") + host + "/" + url);
+  client.print(String("GET ") + "/" + url + " HTTP/1.1\r\n" +
+               "Host: " + host + "\r\n" +
+               "Connection: close\r\n\r\n");
+  Serial.println("request sent");
+
+  // Workaroud for timeout
+  unsigned long timeout = millis();
+  while (client.available() == 0)
+  {
+    if (millis() - timeout > 10000)
+    {
+      Serial.println(">>> Client Timeout !");
+      client.stop();
+      if (checkTimestamp) deepSleepTime = defaultDeepSleepTime;
+      return false;
+    }
+  }
+
+  bool gotTimestamp = false;
+
+  while (client.connected())
+  {
+    String line = client.readStringUntil('\n');
+
+    if (checkTimestamp)
+    {
+      // If line starts with "Timestamp", put it into the timestamp variable
+      if (line.startsWith("Timestamp"))
+      {
+        gotTimestamp = true;
+        timestampNow = line.substring(11).toInt();
+        Serial.print("Timestamp now: ");
+        Serial.println(timestampNow);
+      }
+
+      // Let's try to get info about how long to go to deep sleep
+      if (line.startsWith("Sleep"))
+      {
+        uint64_t sleep = line.substring(7).toInt();
+        deepSleepTime = sleep;
+        Serial.print("Sleep: ");
+        Serial.println(sleep);
+      }
+    }
+
+    if (!*connStatus)
+    {
+      *connStatus = line.startsWith("HTTP/1.1 200 OK");
+      Serial.println(line);
+    }
+    if (line == "\r")
+    {
+      Serial.println("headers received");
+      break;
+    }
+  }
+
+  // Is there a problem? Fallback to default deep sleep time to try again soon
+  if (!*connStatus)
+  {
+    deepSleepTime = defaultDeepSleepTime;
+    return false;
+  }
+
+  // For debug purposes - print out the whole response
+  /*
+  Serial.println("Byte by byte:");
+
+  while (client.connected() || client.available()) {
+    if (client.available()) {
+      char c = client.read();  // Read one byte
+      Serial.print(c);         // Print the byte to the serial monitor
+    }
+  }
+  client.stop();
+  /* */
+
+  if (checkTimestamp)
+  {
+    if (gotTimestamp && (timestampNow == timestamp))
+    {
+      Serial.print("No screen reload, because we already are at current timestamp: ");
+      Serial.println(timestamp);
+      return false;
+    }
+
+    // Set timestamp to actual one
+    timestamp = timestampNow;
+  }
+
+  return true;
+}
+
 bool checkForNewTimestampOnServer()
 {
   // Connect to the HOST and read data via GET method
   WiFiClient client; // Use WiFiClient class to create TCP connections
   bool connection_ok = false;
-
-  // Make an url
-  String url = "index.php?mac=" + WiFi.macAddress() + "&timestamp_check=1&rssi=" + String(strength) + "&v=" + String(d_volt) + "&x=" + String(DISPLAY_RESOLUTION_X) + "&y=" + String(DISPLAY_RESOLUTION_Y) + "&c=" + String(defined_color_type) + "&fw=" + String(firmware);
+  String url = "";
 
   ////////////////////////////////////////
   // Measuring temperature and humidity?
@@ -588,99 +704,7 @@ bool checkForNewTimestampOnServer()
 
   ////////////////////////////////////////
 
-  Serial.print("connecting to ");
-  Serial.println(host);
-
-  for (int client_reconnect = 0; client_reconnect < 3; client_reconnect++)
-  {
-    if (!client.connect(host, 80))
-    {
-      Serial.println("connection failed");
-      if (client_reconnect == 2)
-      {
-        deepSleepTime = defaultDeepSleepTime;
-        delay(200);
-      }
-    }
-  }
-
-  Serial.print("requesting URL: ");
-  Serial.println(String("http://") + host + "/" + url);
-  client.print(String("GET ") + "/" + url + " HTTP/1.1\r\n" +
-               "Host: " + host + "\r\n" +
-               "Connection: close\r\n\r\n");
-  Serial.println("request sent");
-
-  // Workaroud for timeout
-  unsigned long timeout = millis();
-  while (client.available() == 0)
-  {
-    if (millis() - timeout > 10000)
-    {
-      Serial.println(">>> Client Timeout !");
-      client.stop();
-      deepSleepTime = defaultDeepSleepTime;
-      return false;
-    }
-  }
-
-  int gotTimestamp = 0;
-
-  while (client.connected())
-  {
-    String line = client.readStringUntil('\n');
-
-    // If line starts with "Timestamp", put it into the timestamp variable
-    if (line.startsWith("Timestamp"))
-    {
-      gotTimestamp = 1;
-      timestampNow = line.substring(11).toInt();
-      Serial.print("Timestamp now: ");
-      Serial.println(timestampNow);
-    }
-
-    // Let's try to get info about how long to go to deep sleep
-    if (line.startsWith("Sleep"))
-    {
-      uint64_t sleep = line.substring(7).toInt();
-      deepSleepTime = sleep;
-      Serial.print("Sleep: ");
-      Serial.println(sleep);
-    }
-
-    if (!connection_ok)
-    {
-      connection_ok = line.startsWith("HTTP/1.1 200 OK");
-      if (connection_ok) Serial.println(line);
-      //if (!connection_ok) Serial.println(line);
-    }
-    if (!connection_ok) Serial.println(line);
-    //Serial.println(line);
-    if (line == "\r")
-    {
-      Serial.println("headers received");
-      break;
-    }
-  }
-
-  if (!connection_ok)
-  {
-    deepSleepTime = defaultDeepSleepTime;
-    return false;
-  }
-
-  if (gotTimestamp == 1 && timestampNow == timestamp)
-  {
-    Serial.print("No screen reload, because we already are at current timestamp: ");
-    Serial.println(timestamp);
-    return false;
-  }
-  else
-  {
-    // Set timestamp to actual one
-    timestamp = timestampNow;
-    return true;
-  }
+  return createRequest(&connection_ok, true, url);
 }
 
 void readBitmapData()
@@ -735,84 +759,7 @@ void readBitmapData()
 
   uint32_t startTime = millis();
   if ((x >= display.width()) || (y >= display.height())) return;
-  Serial.print("connecting to ");
-  Serial.println(host);
-  // Let's try twice
-  for (int client_reconnect = 0; client_reconnect < 3; client_reconnect++)
-  {
-    if (!client.connect(host, 80))
-    {
-      Serial.println("connection failed");
-      if (client_reconnect == 2)
-      {
-        deepSleepTime = defaultDeepSleepTime;
-        return;
-      }
-      delay(200);
-    }
-  }
-
-  // Make an url
-  String url = "index.php?mac=" + WiFi.macAddress() + "&rssi=" + String(strength) + "&v=" + String(d_volt) + "&x=" + String(DISPLAY_RESOLUTION_X) + "&y=" + String(DISPLAY_RESOLUTION_Y) + "&c=" + String(defined_color_type) + "&fw=" + String(firmware);
-  Serial.print("requesting URL: ");
-  Serial.println(String("http://") + host + "/" + url);
-  client.print(String("GET ") + "/" + url + " HTTP/1.1\r\n" +
-               "Host: " + host + "\r\n" +
-               "Connection: close\r\n\r\n");
-  Serial.println("request sent");
-
-  // Workaroud for timeout
-  unsigned long timeout = millis();
-  while (client.available() == 0)
-  {
-    if (millis() - timeout > 10000)
-    {
-      Serial.println(">>> Client Timeout !");
-      client.stop();
-      return;
-    }
-  }
-
-  int gotTimestamp = 0;
-
-  while (client.connected())
-  {
-    String line = client.readStringUntil('\n');
-
-    if (!connection_ok)
-    {
-      connection_ok = line.startsWith("HTTP/1.1 200 OK");
-      if (connection_ok) Serial.println(line);
-      //if (!connection_ok) Serial.println(line);
-    }
-    if (!connection_ok) Serial.println(line);
-    //Serial.println(line);
-    if (line == "\r")
-    {
-      Serial.println("headers received");
-      break;
-    }
-  }
-
-  // Is there a problem? Fallback to default deep sleep time to try again soon
-  if (!connection_ok)
-  {
-    deepSleepTime = defaultDeepSleepTime;
-    return;
-  }
-
-  // For debug purposes - print out the whole response
-  /*
-  Serial.println("Byte by byte:");
-
-  while (client.connected() || client.available()) {
-    if (client.available()) {
-      char c = client.read();  // Read one byte
-      Serial.print(c);         // Print the byte to the serial monitor
-    }
-  }
-  client.stop();
-  /* */
+  if (!createRequest(&connection_ok, false, "")) return;
 
   // Parse header
   uint16_t header = read16(client);
@@ -944,20 +891,11 @@ void readBitmapData()
             switch (depth)
             {
               case 32:
-                blue = input_buffer[in_idx++];
-                green = input_buffer[in_idx++];
-                red = input_buffer[in_idx++];
-                in_idx++; // skip alpha
-                whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
-                lightgrey = with_color ? ((red > 0x60) && (green > 0x60) && (blue > 0x60)) : ((red + green + blue) > 3 * 0x60); // lightgrey
-                darkgrey = with_color ? ((red > 0x40) && (green > 0x40) && (blue > 0x40)) : ((red + green + blue) > 3 * 0x40); // darkgrey
-                colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
-                color = ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
-                break;
               case 24:
                 blue = input_buffer[in_idx++];
                 green = input_buffer[in_idx++];
                 red = input_buffer[in_idx++];
+                if(depth == 24) in_idx++; // skip alpha
                 whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
                 lightgrey = with_color ? ((red > 0x60) && (green > 0x60) && (blue > 0x60)) : ((red + green + blue) > 3 * 0x60); // lightgrey
                 darkgrey = with_color ? ((red > 0x40) && (green > 0x40) && (blue > 0x40)) : ((red + green + blue) > 3 * 0x40); // darkgrey
@@ -1013,8 +951,6 @@ void readBitmapData()
                       lightgrey = true;
                       break;
                     case 2:
-                      darkgrey = true;
-                      break;
                     case 3:
                       darkgrey = true;
                       break;
@@ -1169,9 +1105,7 @@ void readBitmapData()
 
           if (count > 1)
           {
-            col++;
-
-            if (col == w)
+            if (++col == w)
             {
               col = 0;
               row++;
