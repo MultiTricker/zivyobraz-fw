@@ -570,16 +570,16 @@ bool checkForNewTimestampOnServer()
   {
     sht4.setPrecision(SHT4X_LOW_PRECISION); // highest resolution
     sht4.setHeater(SHT4X_NO_HEATER); // no heater
-    float teplota = 0.0;
-    int vlhkost = 0;
+    float temperature;
+    int humidity;
 
-    sensors_event_t humidity, temp; // temperature and humidity variables
-    sht4.getEvent(&humidity, &temp);
+    sensors_event_t hum, temp; // temperature and humidity variables
+    sht4.getEvent(&hum, &temp);
 
-    teplota = temp.temperature;
-    vlhkost = humidity.relative_humidity;
+    temperature = temp.temperature;
+    humidity = hum.relative_humidity;
 
-    url += "&temp=" + String(teplota) + "&hum=" + String(vlhkost);
+    url += "&temp=" + String(temperature) + "&hum=" + String(humidity);
   }
 
   // Power down for now
