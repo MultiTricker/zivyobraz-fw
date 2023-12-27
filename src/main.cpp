@@ -529,7 +529,7 @@ uint32_t read32(WiFiClient& client)
   return result;
 }
 
-bool createRequest(bool *connStatus, bool checkTimestamp, String extraParams)
+bool createHttpRequest(bool &connStatus, bool checkTimestamp, const String &extraParams)
 {
   // Connect to the HOST and read data via GET method
   WiFiClient client; // Use WiFiClient class to create TCP connections
@@ -611,9 +611,9 @@ bool createRequest(bool *connStatus, bool checkTimestamp, String extraParams)
       }
     }
 
-    if (!*connStatus)
+    if (!connStatus)
     {
-      *connStatus = line.startsWith("HTTP/1.1 200 OK");
+      connStatus = line.startsWith("HTTP/1.1 200 OK");
       Serial.println(line);
     }
     if (line == "\r")
@@ -624,7 +624,7 @@ bool createRequest(bool *connStatus, bool checkTimestamp, String extraParams)
   }
 
   // Is there a problem? Fallback to default deep sleep time to try again soon
-  if (!*connStatus)
+  if (!connStatus)
   {
     deepSleepTime = defaultDeepSleepTime;
     return false;
@@ -664,7 +664,7 @@ bool checkForNewTimestampOnServer()
   // Connect to the HOST and read data via GET method
   WiFiClient client; // Use WiFiClient class to create TCP connections
   bool connection_ok = false;
-  String url = "";
+  String extraParams = "";
 
   ////////////////////////////////////////
   // Measuring temperature and humidity?
@@ -695,7 +695,7 @@ bool checkForNewTimestampOnServer()
     temperature = temp.temperature;
     humidity = hum.relative_humidity;
 
-    url += "&temp=" + String(temperature) + "&hum=" + String(humidity);
+    extraParams += "&temp=" + String(temperature) + "&hum=" + String(humidity);
   }
 
   // Power down for now
@@ -704,7 +704,7 @@ bool checkForNewTimestampOnServer()
 
   ////////////////////////////////////////
 
-  return createRequest(&connection_ok, true, url);
+  return createHttpRequest(connection_ok, true, extraParams);
 }
 
 void readBitmapData()
@@ -759,7 +759,7 @@ void readBitmapData()
 
   uint32_t startTime = millis();
   if ((x >= display.width()) || (y >= display.height())) return;
-  if (!createRequest(&connection_ok, false, "")) return;
+  if (!createHttpRequest(connection_ok, false, "")) return;
 
   // Parse header
   uint16_t header = read16(client);
