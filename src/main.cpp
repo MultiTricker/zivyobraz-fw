@@ -337,7 +337,7 @@ uint64_t deepSleepTime = defaultDeepSleepTime; // actual sleep time in minutes, 
 /* ---------------------------------------------- */
 
 /* variables */
-int strength; // Wi-Fi signal strength
+int8_t strength; // Wi-Fi signal strength
 float d_volt; // indoor battery voltage
 RTC_DATA_ATTR uint64_t timestamp = 0;
 uint64_t timestampNow = 1; // initialize value for timestamp from server
@@ -394,12 +394,12 @@ uint8_t getBatteryVoltage()
   // attach ADC input
   adc.attach(vBatPin);
   // battery voltage measurement
-  d_volt = adc.readVoltage() * dividerRatio;
+  d_volt = (float)(adc.readVoltage() * dividerRatio);
 #endif
 
   Serial.println("Battery voltage: " + String(d_volt) + " V");
 
-  return d_volt;
+  return (uint8_t)d_volt;
 }
 
 void displayInit()
@@ -494,7 +494,7 @@ uint32_t read8n(WiFiClient& client, uint8_t *buffer, int32_t bytes)
   {
     if (client.available())
     {
-      int16_t v = client.read();
+      int16_t v = (int16_t)client.read();
       if (buffer) *buffer++ = uint8_t(v);
       remain--;
     }
@@ -549,7 +549,7 @@ bool createHttpRequest(bool &connStatus, bool checkTimestamp, const String &extr
   Serial.println(host);
 
   // Let's try twice
-  for (int client_reconnect = 0; client_reconnect < 3; client_reconnect++)
+  for (uint8_t client_reconnect = 0; client_reconnect < 3; client_reconnect++)
   {
     if (!client.connect(host, 80))
     {
@@ -572,7 +572,7 @@ bool createHttpRequest(bool &connStatus, bool checkTimestamp, const String &extr
   Serial.println("request sent");
 
   // Workaroud for timeout
-  unsigned long timeout = millis();
+  uint32_t timeout = millis();
   while (client.available() == 0)
   {
     if (millis() - timeout > 10000)
@@ -822,7 +822,7 @@ void readBitmapData()
         {
           if (depth < 8) bitmask >>= depth;
           //bytes_read += skip(client, 54 - bytes_read); //palette is always @ 54
-          bytes_read += skip(client, imageOffset - (4 << depth) - bytes_read); // 54 for regular, diff for colorsimportant
+          bytes_read += skip(client, (int32_t)(imageOffset - (4 << depth) - bytes_read)); // 54 for regular, diff for colorsimportant
           for (uint16_t pn = 0; pn < (1 << depth); pn++)
           {
             blue = client.read();
@@ -844,7 +844,7 @@ void readBitmapData()
 
         uint32_t rowPosition = flip ? imageOffset + (height - h) * rowSize : imageOffset;
         //Serial.print("skip "); Serial.println(rowPosition - bytes_read);
-        bytes_read += skip(client, rowPosition - bytes_read);
+        bytes_read += skip(client, (int32_t)(rowPosition - bytes_read));
 
         for (uint16_t row = 0; row < h; row++, rowPosition += rowSize) // for each line
         {
@@ -864,11 +864,11 @@ void readBitmapData()
             if (in_idx >= in_bytes) // ok, exact match for 24bit also (size IS multiple of 3)
             {
               uint32_t get = in_remain > sizeof(input_buffer) ? sizeof(input_buffer) : in_remain;
-              uint32_t got = read8n(client, input_buffer, get);
+              uint32_t got = read8n(client, input_buffer, (int32_t)get);
               while ((got < get) && connection_ok)
               {
                 //Serial.print("got "); Serial.print(got); Serial.print(" < "); Serial.print(get); Serial.print(" @ "); Serial.println(bytes_read);
-                uint32_t gotmore = read8n(client, input_buffer + got, get - got);
+                uint32_t gotmore = read8n(client, input_buffer + got, (int32_t)(get - got));
                 got += gotmore;
                 connection_ok = gotmore > 0;
               }
