@@ -148,23 +148,23 @@ PIN_BUSY = GPIO4
 // 2 colors (Black and White)
 #ifdef TYPE_BW
   #include <GxEPD2_BW.h>
-const char *defined_color_type = "BW";
+static const char *defined_color_type = "BW";
 
 // 3 colors (Black, White and Red/Yellow)
 #elif TYPE_3C
   #include <GxEPD2_3C.h>
-const char *defined_color_type = "3C";
+static const char *defined_color_type = "3C";
 
 // 4 colors (Grayscale - Black, Darkgrey, Lightgrey, White) (https://github.com/ZinggJM/GxEPD2_4G)
 #elif TYPE_GRAYSCALE
   #include "../lib/GxEPD2_4G/src/GxEPD2_4G_4G.h"
   #include "../lib/GxEPD2_4G/src/GxEPD2_4G_BW.h"
-const char *defined_color_type = "4G";
+static const char *defined_color_type = "4G";
 
 // 7 colors
 #elif TYPE_7C
   #include <GxEPD2_7C.h>
-const char *defined_color_type = "7C";
+static const char *defined_color_type = "7C";
 #else
   #error "ePaper type not defined!"
 #endif
@@ -337,7 +337,7 @@ uint64_t deepSleepTime = defaultDeepSleepTime; // actual sleep time in minutes, 
 /* ---------------------------------------------- */
 
 /* variables */
-int strength; // Wi-Fi signal strength
+int8_t strength; // Wi-Fi signal strength
 float d_volt; // indoor battery voltage
 RTC_DATA_ATTR uint64_t timestamp = 0;
 uint64_t timestampNow = 1; // initialize value for timestamp from server
@@ -394,12 +394,12 @@ uint8_t getBatteryVoltage()
   // attach ADC input
   adc.attach(vBatPin);
   // battery voltage measurement
-  d_volt = adc.readVoltage() * dividerRatio;
+  d_volt = (float)(adc.readVoltage() * dividerRatio);
 #endif
 
   Serial.println("Battery voltage: " + String(d_volt) + " V");
 
-  return d_volt;
+  return (uint8_t)d_volt;
 }
 
 void displayInit()
@@ -494,7 +494,7 @@ uint32_t read8n(WiFiClient& client, uint8_t *buffer, int32_t bytes)
   {
     if (client.available())
     {
-      int16_t v = client.read();
+      int16_t v = (int16_t)client.read();
       if (buffer) *buffer++ = uint8_t(v);
       remain--;
     }
@@ -529,7 +529,7 @@ uint32_t read32(WiFiClient& client)
   return result;
 }
 
-bool createRequest(bool *connStatus, bool checkTimestamp, String extraParams)
+bool createHttpRequest(bool &connStatus, bool checkTimestamp, const String &extraParams)
 {
   // Connect to the HOST and read data via GET method
   WiFiClient client; // Use WiFiClient class to create TCP connections
@@ -549,7 +549,7 @@ bool createRequest(bool *connStatus, bool checkTimestamp, String extraParams)
   Serial.println(host);
 
   // Let's try twice
-  for (int client_reconnect = 0; client_reconnect < 3; client_reconnect++)
+  for (uint8_t client_reconnect = 0; client_reconnect < 3; client_reconnect++)
   {
     if (!client.connect(host, 80))
     {
@@ -572,7 +572,7 @@ bool createRequest(bool *connStatus, bool checkTimestamp, String extraParams)
   Serial.println("request sent");
 
   // Workaroud for timeout
-  unsigned long timeout = millis();
+  uint32_t timeout = millis();
   while (client.available() == 0)
   {
     if (millis() - timeout > 10000)
@@ -611,9 +611,9 @@ bool createRequest(bool *connStatus, bool checkTimestamp, String extraParams)
       }
     }
 
-    if (!*connStatus)
+    if (!connStatus)
     {
-      *connStatus = line.startsWith("HTTP/1.1 200 OK");
+      connStatus = line.startsWith("HTTP/1.1 200 OK");
       Serial.println(line);
     }
     if (line == "\r")
@@ -624,7 +624,7 @@ bool createRequest(bool *connStatus, bool checkTimestamp, String extraParams)
   }
 
   // Is there a problem? Fallback to default deep sleep time to try again soon
-  if (!*connStatus)
+  if (!connStatus)
   {
     deepSleepTime = defaultDeepSleepTime;
     return false;
@@ -664,7 +664,7 @@ bool checkForNewTimestampOnServer()
   // Connect to the HOST and read data via GET method
   WiFiClient client; // Use WiFiClient class to create TCP connections
   bool connection_ok = false;
-  String url = "";
+  String extraParams = "";
 
   ////////////////////////////////////////
   // Measuring temperature and humidity?
@@ -695,7 +695,7 @@ bool checkForNewTimestampOnServer()
     temperature = temp.temperature;
     humidity = hum.relative_humidity;
 
-    url += "&temp=" + String(temperature) + "&hum=" + String(humidity);
+    extraParams += "&temp=" + String(temperature) + "&hum=" + String(humidity);
   }
 
   // Power down for now
@@ -704,7 +704,7 @@ bool checkForNewTimestampOnServer()
 
   ////////////////////////////////////////
 
-  return createRequest(&connection_ok, true, url);
+  return createHttpRequest(connection_ok, true, extraParams);
 }
 
 void readBitmapData()
@@ -759,7 +759,7 @@ void readBitmapData()
 
   uint32_t startTime = millis();
   if ((x >= display.width()) || (y >= display.height())) return;
-  if (!createRequest(&connection_ok, false, "")) return;
+  if (!createHttpRequest(connection_ok, false, "")) return;
 
   // Parse header
   uint16_t header = read16(client);
@@ -822,7 +822,7 @@ void readBitmapData()
         {
           if (depth < 8) bitmask >>= depth;
           //bytes_read += skip(client, 54 - bytes_read); //palette is always @ 54
-          bytes_read += skip(client, imageOffset - (4 << depth) - bytes_read); // 54 for regular, diff for colorsimportant
+          bytes_read += skip(client, (int32_t)(imageOffset - (4 << depth) - bytes_read)); // 54 for regular, diff for colorsimportant
           for (uint16_t pn = 0; pn < (1 << depth); pn++)
           {
             blue = client.read();
@@ -832,9 +832,11 @@ void readBitmapData()
             bytes_read += 4;
             whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
             colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
-            if (0 == pn % 8) mono_palette_buffer[pn / 8] = 0;
+            if (0 == pn % 8) {
+              mono_palette_buffer[pn / 8] = 0;
+              color_palette_buffer[pn / 8] = 0;
+            }
             mono_palette_buffer[pn / 8] |= whitish << pn % 8;
-            if (0 == pn % 8) color_palette_buffer[pn / 8] = 0;
             color_palette_buffer[pn / 8] |= colored << pn % 8;
             //Serial.print("0x00"); Serial.print(red, HEX); Serial.print(green, HEX); Serial.print(blue, HEX);
             //Serial.print(" : "); Serial.print(whitish); Serial.print(", "); Serial.println(colored);
@@ -844,7 +846,7 @@ void readBitmapData()
 
         uint32_t rowPosition = flip ? imageOffset + (height - h) * rowSize : imageOffset;
         //Serial.print("skip "); Serial.println(rowPosition - bytes_read);
-        bytes_read += skip(client, rowPosition - bytes_read);
+        bytes_read += skip(client, (int32_t)(rowPosition - bytes_read));
 
         for (uint16_t row = 0; row < h; row++, rowPosition += rowSize) // for each line
         {
@@ -863,12 +865,12 @@ void readBitmapData()
             // Time to read more pixel data?
             if (in_idx >= in_bytes) // ok, exact match for 24bit also (size IS multiple of 3)
             {
-              uint32_t get = in_remain > sizeof(input_buffer) ? sizeof(input_buffer) : in_remain;
-              uint32_t got = read8n(client, input_buffer, get);
+              uint32_t get = min(in_remain, sizeof(input_buffer));
+              uint32_t got = read8n(client, input_buffer, (int32_t)get);
               while ((got < get) && connection_ok)
               {
                 //Serial.print("got "); Serial.print(got); Serial.print(" < "); Serial.print(get); Serial.print(" @ "); Serial.println(bytes_read);
-                uint32_t gotmore = read8n(client, input_buffer + got, get - got);
+                uint32_t gotmore = read8n(client, input_buffer + got, (int32_t)(get - got));
                 got += gotmore;
                 connection_ok = gotmore > 0;
               }
@@ -895,7 +897,7 @@ void readBitmapData()
                 blue = input_buffer[in_idx++];
                 green = input_buffer[in_idx++];
                 red = input_buffer[in_idx++];
-                if(depth == 32) in_idx++; // skip alpha
+                if (depth == 32) in_idx++; // skip alpha
                 whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
                 lightgrey = with_color ? ((red > 0x60) && (green > 0x60) && (blue > 0x60)) : ((red + green + blue) > 3 * 0x60); // lightgrey
                 darkgrey = with_color ? ((red > 0x40) && (green > 0x40) && (blue > 0x40)) : ((red + green + blue) > 3 * 0x40); // darkgrey
@@ -1088,12 +1090,11 @@ void readBitmapData()
             color = GxEPD_ORANGE;
             break;
 #endif
-
         }
 
         // Debug
         /*
-        if(bytes_read < 20)
+        if (bytes_read < 20)
         {
           Serial.print("count: "); Serial.print(count); Serial.print(" pixel: "); Serial.println(color);
         }
@@ -1103,13 +1104,10 @@ void readBitmapData()
         {
           display.drawPixel(col, row, color);
 
-          if (count > 1)
+          if ((count > 1) && (++col == w))
           {
-            if (++col == w)
-            {
-              col = 0;
-              row++;
-            }
+            col = 0;
+            row++;
           }
         }
 
