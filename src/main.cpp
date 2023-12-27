@@ -832,9 +832,11 @@ void readBitmapData()
             bytes_read += 4;
             whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
             colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
-            if (0 == pn % 8) mono_palette_buffer[pn / 8] = 0;
+            if (0 == pn % 8) {
+              mono_palette_buffer[pn / 8] = 0;
+              color_palette_buffer[pn / 8] = 0;
+            }
             mono_palette_buffer[pn / 8] |= whitish << pn % 8;
-            if (0 == pn % 8) color_palette_buffer[pn / 8] = 0;
             color_palette_buffer[pn / 8] |= colored << pn % 8;
             //Serial.print("0x00"); Serial.print(red, HEX); Serial.print(green, HEX); Serial.print(blue, HEX);
             //Serial.print(" : "); Serial.print(whitish); Serial.print(", "); Serial.println(colored);
@@ -863,7 +865,7 @@ void readBitmapData()
             // Time to read more pixel data?
             if (in_idx >= in_bytes) // ok, exact match for 24bit also (size IS multiple of 3)
             {
-              uint32_t get = in_remain > sizeof(input_buffer) ? sizeof(input_buffer) : in_remain;
+              uint32_t get = min(in_remain, sizeof(input_buffer));
               uint32_t got = read8n(client, input_buffer, (int32_t)get);
               while ((got < get) && connection_ok)
               {
@@ -895,7 +897,7 @@ void readBitmapData()
                 blue = input_buffer[in_idx++];
                 green = input_buffer[in_idx++];
                 red = input_buffer[in_idx++];
-                if(depth == 32) in_idx++; // skip alpha
+                if (depth == 32) in_idx++; // skip alpha
                 whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
                 lightgrey = with_color ? ((red > 0x60) && (green > 0x60) && (blue > 0x60)) : ((red + green + blue) > 3 * 0x60); // lightgrey
                 darkgrey = with_color ? ((red > 0x40) && (green > 0x40) && (blue > 0x40)) : ((red + green + blue) > 3 * 0x40); // darkgrey
@@ -1088,12 +1090,11 @@ void readBitmapData()
             color = GxEPD_ORANGE;
             break;
 #endif
-
         }
 
         // Debug
         /*
-        if(bytes_read < 20)
+        if (bytes_read < 20)
         {
           Serial.print("count: "); Serial.print(count); Serial.print(" pixel: "); Serial.println(color);
         }
@@ -1103,13 +1104,10 @@ void readBitmapData()
         {
           display.drawPixel(col, row, color);
 
-          if (count > 1)
+          if ((count > 1) && (++col == w))
           {
-            if (++col == w)
-            {
-              col = 0;
-              row++;
-            }
+            col = 0;
+            row++;
           }
         }
 
