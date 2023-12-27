@@ -148,23 +148,23 @@ PIN_BUSY = GPIO4
 // 2 colors (Black and White)
 #ifdef TYPE_BW
   #include <GxEPD2_BW.h>
-const char *defined_color_type = "BW";
+static const char *defined_color_type = "BW";
 
 // 3 colors (Black, White and Red/Yellow)
 #elif TYPE_3C
   #include <GxEPD2_3C.h>
-const char *defined_color_type = "3C";
+static const char *defined_color_type = "3C";
 
 // 4 colors (Grayscale - Black, Darkgrey, Lightgrey, White) (https://github.com/ZinggJM/GxEPD2_4G)
 #elif TYPE_GRAYSCALE
   #include "../lib/GxEPD2_4G/src/GxEPD2_4G_4G.h"
   #include "../lib/GxEPD2_4G/src/GxEPD2_4G_BW.h"
-const char *defined_color_type = "4G";
+static const char *defined_color_type = "4G";
 
 // 7 colors
 #elif TYPE_7C
   #include <GxEPD2_7C.h>
-const char *defined_color_type = "7C";
+static const char *defined_color_type = "7C";
 #else
   #error "ePaper type not defined!"
 #endif
