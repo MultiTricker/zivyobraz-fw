@@ -337,7 +337,7 @@ uint64_t deepSleepTime = defaultDeepSleepTime; // actual sleep time in minutes, 
 /* ---------------------------------------------- */
 
 /* variables */
-int8_t strength; // Wi-Fi signal strength
+int8_t rssi; // Wi-Fi signal strength
 float d_volt; // indoor battery voltage
 RTC_DATA_ATTR uint64_t timestamp = 0;
 uint64_t timestampNow = 1; // initialize value for timestamp from server
@@ -354,14 +354,16 @@ void setEPaperPowerOn(bool on)
 
 int8_t getWifiStrength()
 {
-  strength = WiFi.RSSI();
-  Serial.println("Wifi Strength: " + String(strength) + " dB");
+  int8_t rssi = WiFi.RSSI();
+  Serial.println("Wifi Strength: " + String(rssi) + " dB");
 
-  return strength;
+  return rssi;
 }
 
-uint8_t getBatteryVoltage()
+float getBatteryVoltage()
 {
+  float volt;
+
 #ifdef ES3ink
   esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 0, &adc_cal);
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_11);
@@ -375,11 +377,11 @@ uint8_t getBatteryVoltage()
   Serial.println(millivolts);
   const uint32_t upper_divider = 1000;
   const uint32_t lower_divider = 1000;
-  d_volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
+  volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
   digitalWrite(enableBattery, LOW);
 
 #elif defined MakerBadge_revB
-  d_volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
+  volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
 
 #elif defined MakerBadge_revD
   // Borrowed from @Yourigh
@@ -392,19 +394,19 @@ uint8_t getBatteryVoltage()
 
   digitalWrite(IO_BAT_meas_disable, LOW);
   delayMicroseconds(150);
-  d_volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
+  volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
   digitalWrite(IO_BAT_meas_disable, HIGH);
 
 #else
   // attach ADC input
   adc.attach(vBatPin);
   // battery voltage measurement
-  d_volt = (float)(adc.readVoltage() * dividerRatio);
+  volt = (float)(adc.readVoltage() * dividerRatio);
 #endif
 
-  Serial.println("Battery voltage: " + String(d_volt) + " V");
+  Serial.println("Battery voltage: " + String(volt) + " V");
 
-  return (uint8_t)d_volt;
+  return volt;
 }
 
 void displayInit()
@@ -533,7 +535,7 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
   // Make an url
   String url = "index.php?mac=" + WiFi.macAddress() +
                (checkTimestamp ? "&timestamp_check=1" : "") +
-               "&rssi=" + String(strength) +
+               "&rssi=" + String(rssi) +
                "&v=" + String(d_volt) +
                "&x=" + String(DISPLAY_RESOLUTION_X) +
                "&y=" + String(DISPLAY_RESOLUTION_Y) +
@@ -1139,7 +1141,7 @@ void setup()
 #endif
 
   // Battery voltage measurement
-  getBatteryVoltage();
+  d_volt = getBatteryVoltage();
 
   // ePaper init
   displayInit();
@@ -1149,7 +1151,7 @@ void setup()
   WiFiInit();
 
   // WiFi strength - so you will know how good your signal is
-  getWifiStrength();
+  rssi = getWifiStrength();
 
   // Do we need to update the screen?
   if (checkForNewTimestampOnServer())
