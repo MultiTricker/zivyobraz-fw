@@ -363,25 +363,20 @@ int8_t getWifiStrength()
 uint8_t getBatteryVoltage()
 {
 #ifdef ES3ink
-
   esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 0, &adc_cal);
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_11);
 
   Serial.println("Reading battery on ES3ink board");
-  bool readBattery = false;
-  do
-  {
-    digitalWrite(enableBattery, LOW);
-    uint32_t raw = adc1_get_raw(vBatPin);
-    Serial.println(raw);
-    uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw, &adc_cal);
-    Serial.println(millivolts);
-    const uint32_t upper_divider = 1000;
-    const uint32_t lower_divider = 1000;
-    d_volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
-    readBattery = true;
-    digitalWrite(enableBattery, LOW);
-  } while (!readBattery);
+
+  digitalWrite(enableBattery, LOW);
+  uint32_t raw = adc1_get_raw(vBatPin);
+  Serial.println(raw);
+  uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw, &adc_cal);
+  Serial.println(millivolts);
+  const uint32_t upper_divider = 1000;
+  const uint32_t lower_divider = 1000;
+  d_volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
+  digitalWrite(enableBattery, LOW);
 
 #elif defined MakerBadge_revB
   d_volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
