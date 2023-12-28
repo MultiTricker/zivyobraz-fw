@@ -342,6 +342,16 @@ float d_volt; // indoor battery voltage
 RTC_DATA_ATTR uint64_t timestamp = 0;
 uint64_t timestampNow = 1; // initialize value for timestamp from server
 
+void setEPaperPowerOn(bool on)
+{
+  // use HIGH/LOW notation for better readability
+#ifdef ES3ink
+  digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
+#else
+  digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
+#endif
+}
+
 int8_t getWifiStrength()
 {
   strength = WiFi.RSSI();
@@ -450,13 +460,7 @@ void WiFiInit()
   // Check if Wi-Fi is configured or connection to AP failed - show on ePaper
   if (!wm.getWiFiIsSaved() or !res)
   {
-    displayInit();
-    pinMode(ePaperPowerPin, OUTPUT);
-#ifdef ES3ink
-    digitalWrite(ePaperPowerPin, LOW);
-#else
-    digitalWrite(ePaperPowerPin, HIGH);
-#endif
+    setEPaperPowerOn(true);
     delay(500);
 
     display.setFont(&OpenSansSB_12px);
@@ -470,7 +474,7 @@ void WiFiInit()
     display.print(hostname);
 
     display.display(false); // update screen
-    digitalWrite(ePaperPowerPin, LOW);
+    setEPaperPowerOn(false);
 
     timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
   }
@@ -668,10 +672,11 @@ bool checkForNewTimestampOnServer()
   ////////////////////////////////////////
 
 #ifdef SHT40
-  // LaskaKit ESPInk 2.5 needst to power up uSup
-  pinMode(ePaperPowerPin, OUTPUT);
-  digitalWrite(ePaperPowerPin, HIGH);
+  #ifdef ESPink
+  // LaskaKit ESPInk 2.5 needs to power up uSup
+  setEPaperPowerOn(true);
   delay(50);
+  #endif
 
   if (!sht4.begin())
   {
@@ -695,11 +700,11 @@ bool checkForNewTimestampOnServer()
     extraParams += "&temp=" + String(temperature) + "&hum=" + String(humidity);
   }
 
+  #ifdef ESPink
   // Power down for now
-  digitalWrite(ePaperPowerPin, LOW);
+  setEPaperPowerOn(false);
+  #endif
 #endif
-
-  ////////////////////////////////////////
 
   return createHttpRequest(client, connection_ok, true, extraParams);
 }
@@ -1143,6 +1148,7 @@ void setup()
 
   // ePaper init
   displayInit();
+  pinMode(ePaperPowerPin, OUTPUT);
 
   // Wifi init
   WiFiInit();
@@ -1153,12 +1159,8 @@ void setup()
   // Do we need to update the screen?
   if (checkForNewTimestampOnServer())
   {
-    pinMode(ePaperPowerPin, OUTPUT);
-#ifdef ES3ink
-    digitalWrite(ePaperPowerPin, LOW);
-#else
-    digitalWrite(ePaperPowerPin, HIGH);
-#endif
+    // Enable power supply for ePaper
+    setEPaperPowerOn(true);
     delay(500);
 
     // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
@@ -1172,12 +1174,8 @@ void setup()
       readBitmapData();
     } while (display.nextPage());
 
-// Disable power supply for ePaper
-#ifdef ES3ink
-    digitalWrite(ePaperPowerPin, HIGH);
-#else
-    digitalWrite(ePaperPowerPin, LOW);
-#endif
+    // Disable power supply for ePaper
+    setEPaperPowerOn(false);
   }
 
   // Deep sleep mode
