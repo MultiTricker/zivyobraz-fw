@@ -529,11 +529,8 @@ uint32_t read32(WiFiClient& client)
   return result;
 }
 
-bool createHttpRequest(bool &connStatus, bool checkTimestamp, const String &extraParams)
+bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp, const String &extraParams)
 {
-  // Connect to the HOST and read data via GET method
-  WiFiClient client; // Use WiFiClient class to create TCP connections
-
   // Make an url
   String url = "index.php?mac=" + WiFi.macAddress() +
                (checkTimestamp ? "&timestamp_check=1" : "") +
@@ -704,7 +701,7 @@ bool checkForNewTimestampOnServer()
 
   ////////////////////////////////////////
 
-  return createHttpRequest(connection_ok, true, extraParams);
+  return createHttpRequest(client, connection_ok, true, extraParams);
 }
 
 void readBitmapData()
@@ -759,7 +756,7 @@ void readBitmapData()
 
   uint32_t startTime = millis();
   if ((x >= display.width()) || (y >= display.height())) return;
-  if (!createHttpRequest(connection_ok, false, "")) return;
+  if (!createHttpRequest(client, connection_ok, false, "")) return;
 
   // Parse header
   uint16_t header = read16(client);
