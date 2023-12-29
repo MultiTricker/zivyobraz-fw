@@ -90,7 +90,7 @@
   #define PIN_RST 16 // RES
   #define PIN_BUSY 4 // PIN_BUSY
   #define ePaperPowerPin 2
-#elif ES3ink
+#elif defined ES3ink
   // for version P1.1
   #define PIN_SS 10  // SS
   #define PIN_DC 7   // D/C
@@ -104,14 +104,14 @@
   #include <soc/adc_channel.h>
 esp_adc_cal_characteristics_t adc_cal;
 
-#elif MakerBadge_revB
+#elif defined MakerBadge_revB
   #define PIN_SS 41   // SS
   #define PIN_DC 40   // D/C
   #define PIN_RST 39  // RES
   #define PIN_BUSY 42 // PIN_BUSY
   #define ePaperPowerPin 16
 
-#elif MakerBadge_revD
+#elif defined MakerBadge_revD
   #define PIN_SS 41   // SS
   #define PIN_DC 40   // D/C
   #define PIN_RST 39  // RES
@@ -151,18 +151,18 @@ PIN_BUSY = GPIO4
 static const char *defined_color_type = "BW";
 
 // 3 colors (Black, White and Red/Yellow)
-#elif TYPE_3C
+#elif defined TYPE_3C
   #include <GxEPD2_3C.h>
 static const char *defined_color_type = "3C";
 
 // 4 colors (Grayscale - Black, Darkgrey, Lightgrey, White) (https://github.com/ZinggJM/GxEPD2_4G)
-#elif TYPE_GRAYSCALE
+#elif defined TYPE_GRAYSCALE
   #include "../lib/GxEPD2_4G/src/GxEPD2_4G_4G.h"
   #include "../lib/GxEPD2_4G/src/GxEPD2_4G_BW.h"
 static const char *defined_color_type = "4G";
 
 // 7 colors
-#elif TYPE_7C
+#elif defined TYPE_7C
   #include <GxEPD2_7C.h>
 static const char *defined_color_type = "7C";
 #else
@@ -187,31 +187,31 @@ static const char *defined_color_type = "7C";
 GxEPD2_BW<GxEPD2_213_B74, GxEPD2_213_B74::HEIGHT> display(GxEPD2_213_B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY0213B7 - BW, 122x250px, 2.13"
-#elif D_GDEY0213B7
+#elif defined D_GDEY0213B7
 GxEPD2_BW<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY027T91 - BW, 176x264px, 2.7"
-#elif D_GDEY027T91
+#elif defined D_GDEY027T91
 GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEW0154T8 - BW, 152x152px, 1.54"
-#elif D_GDEW0154T8
+#elif defined D_GDEW0154T8
 GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEW042T2 - BW, 400x300px, 4.2"
-#elif D_GDEW042T2
+#elif defined D_GDEW042T2
 GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ042T81 - BW, 400x300px, 4.2"
-#elif D_GDEQ042T81
+#elif defined D_GDEQ042T81
 GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> display(GxEPD2_420_GDEY042T81(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ0583T31 - BW, 648x480px, 5.83"
-#elif D_GDEQ0583T31
+#elif defined D_GDEQ0583T31
 GxEPD2_BW<GxEPD2_583_GDEQ0583T31, GxEPD2_583_GDEQ0583T31::HEIGHT> display(GxEPD2_583_GDEQ0583T31(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEW075T7 - BW, 800x480px, 7.5"
-#elif D_GDEW075T7
+#elif defined D_GDEW075T7
 // Good display - 7.5", but only 640x384, leaving this here for now, might be usefull one day
 // GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 // Waveshare displays
@@ -219,7 +219,7 @@ GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> display(GxEPD2_750_T7(PIN_SS, PI
 // GxEPD2_BW<GxEPD2_750_YT7, GxEPD2_750_YT7::HEIGHT> display(GxEPD2_750_YT7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY)); // GDEY075T7 800x480, UC8179 (GD7965)
 
 // GDEQ102T90 - BW, 960x640px, 10.2"
-#elif D_GDEQ102T90
+#elif defined D_GDEQ102T90
 GxEPD2_BW<GxEPD2_1160_T91, GxEPD2_1160_T91::HEIGHT / 2> display(GxEPD2_1160_T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 ///////////////////////
@@ -227,11 +227,11 @@ GxEPD2_BW<GxEPD2_1160_T91, GxEPD2_1160_T91::HEIGHT / 2> display(GxEPD2_1160_T91(
 ///////////////////////
 
 // GDEW042T2_G - Grayscale, 400x300px, 4.2"
-#elif D_GDEW042T2_G
+#elif defined D_GDEW042T2_G
 GxEPD2_4G_4G<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075T7 - Grayscale, 800x480px, 7.5"
-#elif D_GDEY075T7
+#elif defined D_GDEY075T7
 GxEPD2_4G_4G<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 ///////////////////////
@@ -239,23 +239,23 @@ GxEPD2_4G_4G<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(PIN
 ///////////////////////
 
 // Waveshare42YBW400300 - 3C, 400x300px, 4.2"
-#elif D_Waveshare42YBW400300
+#elif defined D_Waveshare42YBW400300
 GxEPD2_3C<GxEPD2_420c, GxEPD2_420c::HEIGHT> display(GxEPD2_420c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ042Z21 - 3C, 400x300px, 4.2"
-#elif D_GDEQ042Z21
+#elif defined D_GDEQ042Z21
 GxEPD2_3C<GxEPD2_420c_Z21, GxEPD2_420c_Z21::HEIGHT> display(GxEPD2_420c_Z21(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // HINK_E075A01 - 3C, 640x384px, 7.5"
-#elif D_HINK_E075A01
+#elif defined D_HINK_E075A01
 GxEPD2_3C<GxEPD2_750c, GxEPD2_750c::HEIGHT> display(GxEPD2_750c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ0583Z31 - 3C, 648x480px, 5.83"
-#elif D_GDEQ0583Z31
+#elif defined D_GDEQ0583Z31
 GxEPD2_3C<GxEPD2_583c, GxEPD2_583c::HEIGHT> display(GxEPD2_583c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075Z08 - 3C, 800x480px, 7.5"
-#elif D_GDEY075Z08
+#elif defined D_GDEY075Z08
 GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 ///////////////////////
@@ -263,7 +263,7 @@ GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(
 ///////////////////////
 
 // GDEY073D46 - 7C, 800x480px, 7.3"
-#elif D_GDEY073D46
+#elif defined D_GDEY073D46
 GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(GxEPD2_730c_GDEY073D46(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 #else
   #error "ePaper display not defined!"
@@ -736,12 +736,12 @@ void readBitmapData()
   has_multicolors = false;
   grayscale = true;
 
-#elif TYPE_7C
+#elif defined TYPE_7C
   with_color = true;
   has_multicolors = true;
   grayscale = false;
 
-#elif TYPE_3C
+#elif defined TYPE_3C
   with_color = true;
   has_multicolors = false;
   grayscale = false;
@@ -1019,7 +1019,7 @@ void readBitmapData()
     color2 = GxEPD_RED;
     color3 = GxEPD_YELLOW;
 
-#elif TYPE_7C
+#elif defined TYPE_7C
     color2 = GxEPD_RED;
     color3 = GxEPD_YELLOW;
 #endif
