@@ -90,7 +90,7 @@
   #define PIN_RST 16 // RES
   #define PIN_BUSY 4 // PIN_BUSY
   #define ePaperPowerPin 2
-#elif ES3ink
+#elif defined ES3ink
   // for version P1.1
   #define PIN_SS 10  // SS
   #define PIN_DC 7   // D/C
@@ -104,14 +104,14 @@
   #include <soc/adc_channel.h>
 esp_adc_cal_characteristics_t adc_cal;
 
-#elif MakerBadge_revB
+#elif defined MakerBadge_revB
   #define PIN_SS 41   // SS
   #define PIN_DC 40   // D/C
   #define PIN_RST 39  // RES
   #define PIN_BUSY 42 // PIN_BUSY
   #define ePaperPowerPin 16
 
-#elif MakerBadge_revD
+#elif defined MakerBadge_revD
   #define PIN_SS 41   // SS
   #define PIN_DC 40   // D/C
   #define PIN_RST 39  // RES
@@ -151,18 +151,18 @@ PIN_BUSY = GPIO4
 static const char *defined_color_type = "BW";
 
 // 3 colors (Black, White and Red/Yellow)
-#elif TYPE_3C
+#elif defined TYPE_3C
   #include <GxEPD2_3C.h>
 static const char *defined_color_type = "3C";
 
 // 4 colors (Grayscale - Black, Darkgrey, Lightgrey, White) (https://github.com/ZinggJM/GxEPD2_4G)
-#elif TYPE_GRAYSCALE
+#elif defined TYPE_GRAYSCALE
   #include "../lib/GxEPD2_4G/src/GxEPD2_4G_4G.h"
   #include "../lib/GxEPD2_4G/src/GxEPD2_4G_BW.h"
 static const char *defined_color_type = "4G";
 
 // 7 colors
-#elif TYPE_7C
+#elif defined TYPE_7C
   #include <GxEPD2_7C.h>
 static const char *defined_color_type = "7C";
 #else
@@ -187,31 +187,31 @@ static const char *defined_color_type = "7C";
 GxEPD2_BW<GxEPD2_213_B74, GxEPD2_213_B74::HEIGHT> display(GxEPD2_213_B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY0213B7 - BW, 122x250px, 2.13"
-#elif D_GDEY0213B7
+#elif defined D_GDEY0213B7
 GxEPD2_BW<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY027T91 - BW, 176x264px, 2.7"
-#elif D_GDEY027T91
+#elif defined D_GDEY027T91
 GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEW0154T8 - BW, 152x152px, 1.54"
-#elif D_GDEW0154T8
+#elif defined D_GDEW0154T8
 GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEW042T2 - BW, 400x300px, 4.2"
-#elif D_GDEW042T2
+#elif defined D_GDEW042T2
 GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ042T81 - BW, 400x300px, 4.2"
-#elif D_GDEQ042T81
+#elif defined D_GDEQ042T81
 GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> display(GxEPD2_420_GDEY042T81(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ0583T31 - BW, 648x480px, 5.83"
-#elif D_GDEQ0583T31
+#elif defined D_GDEQ0583T31
 GxEPD2_BW<GxEPD2_583_GDEQ0583T31, GxEPD2_583_GDEQ0583T31::HEIGHT> display(GxEPD2_583_GDEQ0583T31(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEW075T7 - BW, 800x480px, 7.5"
-#elif D_GDEW075T7
+#elif defined D_GDEW075T7
 // Good display - 7.5", but only 640x384, leaving this here for now, might be usefull one day
 // GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 // Waveshare displays
@@ -219,7 +219,7 @@ GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> display(GxEPD2_750_T7(PIN_SS, PI
 // GxEPD2_BW<GxEPD2_750_YT7, GxEPD2_750_YT7::HEIGHT> display(GxEPD2_750_YT7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY)); // GDEY075T7 800x480, UC8179 (GD7965)
 
 // GDEQ102T90 - BW, 960x640px, 10.2"
-#elif D_GDEQ102T90
+#elif defined D_GDEQ102T90
 GxEPD2_BW<GxEPD2_1160_T91, GxEPD2_1160_T91::HEIGHT / 2> display(GxEPD2_1160_T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 ///////////////////////
@@ -227,11 +227,11 @@ GxEPD2_BW<GxEPD2_1160_T91, GxEPD2_1160_T91::HEIGHT / 2> display(GxEPD2_1160_T91(
 ///////////////////////
 
 // GDEW042T2_G - Grayscale, 400x300px, 4.2"
-#elif D_GDEW042T2_G
+#elif defined D_GDEW042T2_G
 GxEPD2_4G_4G<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075T7 - Grayscale, 800x480px, 7.5"
-#elif D_GDEY075T7
+#elif defined D_GDEY075T7
 GxEPD2_4G_4G<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 ///////////////////////
@@ -239,23 +239,23 @@ GxEPD2_4G_4G<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(PIN
 ///////////////////////
 
 // Waveshare42YBW400300 - 3C, 400x300px, 4.2"
-#elif D_Waveshare42YBW400300
+#elif defined D_Waveshare42YBW400300
 GxEPD2_3C<GxEPD2_420c, GxEPD2_420c::HEIGHT> display(GxEPD2_420c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ042Z21 - 3C, 400x300px, 4.2"
-#elif D_GDEQ042Z21
+#elif defined D_GDEQ042Z21
 GxEPD2_3C<GxEPD2_420c_Z21, GxEPD2_420c_Z21::HEIGHT> display(GxEPD2_420c_Z21(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // HINK_E075A01 - 3C, 640x384px, 7.5"
-#elif D_HINK_E075A01
+#elif defined D_HINK_E075A01
 GxEPD2_3C<GxEPD2_750c, GxEPD2_750c::HEIGHT> display(GxEPD2_750c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ0583Z31 - 3C, 648x480px, 5.83"
-#elif D_GDEQ0583Z31
+#elif defined D_GDEQ0583Z31
 GxEPD2_3C<GxEPD2_583c, GxEPD2_583c::HEIGHT> display(GxEPD2_583c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075Z08 - 3C, 800x480px, 7.5"
-#elif D_GDEY075Z08
+#elif defined D_GDEY075Z08
 GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 ///////////////////////
@@ -263,7 +263,7 @@ GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(
 ///////////////////////
 
 // GDEY073D46 - 7C, 800x480px, 7.3"
-#elif D_GDEY073D46
+#elif defined D_GDEY073D46
 GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(GxEPD2_730c_GDEY073D46(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 #else
   #error "ePaper display not defined!"
@@ -337,44 +337,51 @@ uint64_t deepSleepTime = defaultDeepSleepTime; // actual sleep time in minutes, 
 /* ---------------------------------------------- */
 
 /* variables */
-int8_t strength; // Wi-Fi signal strength
+int8_t rssi; // Wi-Fi signal strength
 float d_volt; // indoor battery voltage
 RTC_DATA_ATTR uint64_t timestamp = 0;
 uint64_t timestampNow = 1; // initialize value for timestamp from server
 
-int8_t getWifiStrength()
+void setEPaperPowerOn(bool on)
 {
-  strength = WiFi.RSSI();
-  Serial.println("Wifi Strength: " + String(strength) + " dB");
-
-  return strength;
+  // use HIGH/LOW notation for better readability
+#ifdef ES3ink
+  digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
+#else
+  digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
+#endif
 }
 
-uint8_t getBatteryVoltage()
+int8_t getWifiStrength()
 {
-#ifdef ES3ink
+  int8_t rssi = WiFi.RSSI();
+  Serial.println("Wifi Strength: " + String(rssi) + " dB");
 
+  return rssi;
+}
+
+float getBatteryVoltage()
+{
+  float volt;
+
+#ifdef ES3ink
   esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 0, &adc_cal);
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_11);
 
   Serial.println("Reading battery on ES3ink board");
-  bool readBattery = false;
-  do
-  {
-    digitalWrite(enableBattery, LOW);
-    uint32_t raw = adc1_get_raw(vBatPin);
-    Serial.println(raw);
-    uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw, &adc_cal);
-    Serial.println(millivolts);
-    const uint32_t upper_divider = 1000;
-    const uint32_t lower_divider = 1000;
-    d_volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
-    readBattery = true;
-    digitalWrite(enableBattery, LOW);
-  } while (!readBattery);
+
+  digitalWrite(enableBattery, LOW);
+  uint32_t raw = adc1_get_raw(vBatPin);
+  Serial.println(raw);
+  uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw, &adc_cal);
+  Serial.println(millivolts);
+  const uint32_t upper_divider = 1000;
+  const uint32_t lower_divider = 1000;
+  volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
+  digitalWrite(enableBattery, LOW);
 
 #elif defined MakerBadge_revB
-  d_volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
+  volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
 
 #elif defined MakerBadge_revD
   // Borrowed from @Yourigh
@@ -387,19 +394,19 @@ uint8_t getBatteryVoltage()
 
   digitalWrite(IO_BAT_meas_disable, LOW);
   delayMicroseconds(150);
-  d_volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
+  volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
   digitalWrite(IO_BAT_meas_disable, HIGH);
 
 #else
   // attach ADC input
   adc.attach(vBatPin);
   // battery voltage measurement
-  d_volt = (float)(adc.readVoltage() * dividerRatio);
+  volt = (float)(adc.readVoltage() * dividerRatio);
 #endif
 
-  Serial.println("Battery voltage: " + String(d_volt) + " V");
+  Serial.println("Battery voltage: " + String(volt) + " V");
 
-  return (uint8_t)d_volt;
+  return volt;
 }
 
 void displayInit()
@@ -450,13 +457,7 @@ void WiFiInit()
   // Check if Wi-Fi is configured or connection to AP failed - show on ePaper
   if (!wm.getWiFiIsSaved() or !res)
   {
-    displayInit();
-    pinMode(ePaperPowerPin, OUTPUT);
-#ifdef ES3ink
-    digitalWrite(ePaperPowerPin, LOW);
-#else
-    digitalWrite(ePaperPowerPin, HIGH);
-#endif
+    setEPaperPowerOn(true);
     delay(500);
 
     display.setFont(&OpenSansSB_12px);
@@ -470,7 +471,7 @@ void WiFiInit()
     display.print(hostname);
 
     display.display(false); // update screen
-    digitalWrite(ePaperPowerPin, LOW);
+    setEPaperPowerOn(false);
 
     timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
   }
@@ -534,7 +535,7 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
   // Make an url
   String url = "index.php?mac=" + WiFi.macAddress() +
                (checkTimestamp ? "&timestamp_check=1" : "") +
-               "&rssi=" + String(strength) +
+               "&rssi=" + String(rssi) +
                "&v=" + String(d_volt) +
                "&x=" + String(DISPLAY_RESOLUTION_X) +
                "&y=" + String(DISPLAY_RESOLUTION_Y) +
@@ -668,10 +669,11 @@ bool checkForNewTimestampOnServer()
   ////////////////////////////////////////
 
 #ifdef SHT40
-  // LaskaKit ESPInk 2.5 needst to power up uSup
-  pinMode(ePaperPowerPin, OUTPUT);
-  digitalWrite(ePaperPowerPin, HIGH);
+  #ifdef ESPink
+  // LaskaKit ESPInk 2.5 needs to power up uSup
+  setEPaperPowerOn(true);
   delay(50);
+  #endif
 
   if (!sht4.begin())
   {
@@ -695,11 +697,11 @@ bool checkForNewTimestampOnServer()
     extraParams += "&temp=" + String(temperature) + "&hum=" + String(humidity);
   }
 
+  #ifdef ESPink
   // Power down for now
-  digitalWrite(ePaperPowerPin, LOW);
+  setEPaperPowerOn(false);
+  #endif
 #endif
-
-  ////////////////////////////////////////
 
   return createHttpRequest(client, connection_ok, true, extraParams);
 }
@@ -734,12 +736,12 @@ void readBitmapData()
   has_multicolors = false;
   grayscale = true;
 
-#elif TYPE_7C
+#elif defined TYPE_7C
   with_color = true;
   has_multicolors = true;
   grayscale = false;
 
-#elif TYPE_3C
+#elif defined TYPE_3C
   with_color = true;
   has_multicolors = false;
   grayscale = false;
@@ -1017,7 +1019,7 @@ void readBitmapData()
     color2 = GxEPD_RED;
     color3 = GxEPD_YELLOW;
 
-#elif TYPE_7C
+#elif defined TYPE_7C
     color2 = GxEPD_RED;
     color3 = GxEPD_YELLOW;
 #endif
@@ -1139,26 +1141,23 @@ void setup()
 #endif
 
   // Battery voltage measurement
-  getBatteryVoltage();
+  d_volt = getBatteryVoltage();
 
   // ePaper init
   displayInit();
+  pinMode(ePaperPowerPin, OUTPUT);
 
   // Wifi init
   WiFiInit();
 
   // WiFi strength - so you will know how good your signal is
-  getWifiStrength();
+  rssi = getWifiStrength();
 
   // Do we need to update the screen?
   if (checkForNewTimestampOnServer())
   {
-    pinMode(ePaperPowerPin, OUTPUT);
-#ifdef ES3ink
-    digitalWrite(ePaperPowerPin, LOW);
-#else
-    digitalWrite(ePaperPowerPin, HIGH);
-#endif
+    // Enable power supply for ePaper
+    setEPaperPowerOn(true);
     delay(500);
 
     // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
@@ -1172,12 +1171,8 @@ void setup()
       readBitmapData();
     } while (display.nextPage());
 
-// Disable power supply for ePaper
-#ifdef ES3ink
-    digitalWrite(ePaperPowerPin, HIGH);
-#else
-    digitalWrite(ePaperPowerPin, LOW);
-#endif
+    // Disable power supply for ePaper
+    setEPaperPowerOn(false);
   }
 
   // Deep sleep mode
