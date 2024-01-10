@@ -510,12 +510,20 @@ uint32_t skip(WiFiClient& client, int32_t bytes)
   return read8n(client, NULL, bytes);
 }
 
+// read one byte safely from WiFiClient, wait a while if data are not available immediately
+uint8_t safe_read(WiFiClient& client)
+{
+  uint8_t ret;
+  read8n(client, &ret, 1);
+  return ret;
+}
+
 uint16_t read16(WiFiClient& client)
 {
   // BMP data is stored little-endian, same as Arduino.
   uint16_t result;
-  ((uint8_t *)&result)[0] = client.read(); // LSB
-  ((uint8_t *)&result)[1] = client.read(); // MSB
+  ((uint8_t *)&result)[0] = safe_read(client); // LSB
+  ((uint8_t *)&result)[1] = safe_read(client); // MSB
   return result;
 }
 
@@ -523,10 +531,10 @@ uint32_t read32(WiFiClient& client)
 {
   // BMP data is stored little-endian, same as Arduino.
   uint32_t result;
-  ((uint8_t *)&result)[0] = client.read(); // LSB
-  ((uint8_t *)&result)[1] = client.read();
-  ((uint8_t *)&result)[2] = client.read();
-  ((uint8_t *)&result)[3] = client.read(); // MSB
+  ((uint8_t *)&result)[0] = safe_read(client); // LSB
+  ((uint8_t *)&result)[1] = safe_read(client);
+  ((uint8_t *)&result)[2] = safe_read(client);
+  ((uint8_t *)&result)[3] = safe_read(client); // MSB
   return result;
 }
 
@@ -824,10 +832,10 @@ void readBitmapData()
           bytes_read += skip(client, (int32_t)(imageOffset - (4 << depth) - bytes_read)); // 54 for regular, diff for colorsimportant
           for (uint16_t pn = 0; pn < (1 << depth); pn++)
           {
-            blue = client.read();
-            green = client.read();
-            red = client.read();
-            client.read();
+            blue  = safe_read(client);
+            green = safe_read(client);
+            red   = safe_read(client);
+            skip(client, 1);
             bytes_read += 4;
             whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
             colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
