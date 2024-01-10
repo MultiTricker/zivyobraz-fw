@@ -1059,14 +1059,14 @@ void readBitmapData()
         // Z1
         if (header == 0x315A)
         {
-          pixel_color = client.read();
-          count = client.read();
+          pixel_color = safe_read(client);
+          count = safe_read(client);
           bytes_read += 2;
         }
         else if (header == 0x325A)
         {
           // Z2
-          compressed = client.read();
+          compressed = safe_read(client);
           count = compressed & 0b00111111;
           pixel_color = (compressed & 0b11000000) >> 6;
           bytes_read++;
