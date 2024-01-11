@@ -41,30 +41,29 @@
 //#define ES3ink // options are ESPink, ESP32Dev, ES3ink, REMAP_SPI
 
 #ifdef ESPink
-#define PIN_SS 5   // SS
-#define PIN_DC 17  // D/C
-#define PIN_RST 16 // RES
-#define PIN_BUSY 4 // PIN_BUSY
-#define ePaperPowerPin 2
+#define ePaperPowerPin  2
+#define PIN_BUSY        4 // PIN_BUSY
+#define PIN_SS          5   // SS
+#define PIN_RST         16 // RES
+#define PIN_DC          17  // D/C
 #endif
 
 #ifdef ESP32Dev
-#define PIN_SS 5
-#define PIN_DC 17
-#define PIN_RST 16
-#define PIN_BUSY 4
 #define ePaperPowerPin -1
+#define PIN_BUSY        4
+#define PIN_SS          5
+#define PIN_RST         16
+#define PIN_DC          17
 #endif
 
 #ifdef ES3ink
 //for version P1.1
-#define PIN_SS 10   // SS
-#define PIN_DC 7  // D/C
-#define PIN_RST 5  // RES
-#define PIN_BUSY 6 // PIN_BUSY
-#define ePaperPowerPin 46
-//ePaperPowerPin IO46 default, rework to 3 if problems occur. Maybe IO3 in next version (IO46 is not ideal because it is a strapping pin)?
-#define enableBattery 40 
+#define ePaperPowerPin  3
+#define PIN_RST         5  // RES
+#define PIN_BUSY        6 // PIN_BUSY
+#define PIN_DC          7  // D/C
+#define PIN_SS          10   // SS
+#define enableBattery   40 
 
 #include <esp_adc_cal.h>
 #include <soc/adc_channel.h>
@@ -73,10 +72,10 @@ esp_adc_cal_characteristics_t adc_cal;
 
 // #define REMAP_SPI
 #ifdef REMAP_SPI
-#define PIN_SPI_CLK 13  // CLK
-#define PIN_SPI_MISO 14 // unused
-#define PIN_SPI_MOSI 12 // DIN
-#define PIN_SPI_SS 15   // unused
+#define PIN_SPI_MOSI  12 // DIN
+#define PIN_SPI_CLK   13  // CLK
+#define PIN_SPI_MISO  14 // unused
+#define PIN_SPI_SS    15   // unused
 #endif
 /* ---------------------------------------------- */
 
@@ -364,12 +363,12 @@ void WiFiInit()
   if (!wm.getWiFiIsSaved() or !res)
   {
     displayInit();
-#ifdef ES3ink
-    digitalWrite(ePaperPowerPin, LOW);
-#elif M5StackCoreInk
-#else    
-    digitalWrite(ePaperPowerPin, HIGH);
-#endif
+// #ifdef ES3ink
+//     digitalWrite(ePaperPowerPin, LOW);
+// #elif M5StackCoreInk
+// #else    
+//     digitalWrite(ePaperPowerPin, HIGH);
+// #endif
     delay(500);
 
     display.setFont(&OpenSansSB_12px);
@@ -1162,6 +1161,16 @@ void setup()
   printf("HELLO=<%s>\n", HELLO);
 #endif
 
+#ifndef M5StackCoreInk	  
+    pinMode(ePaperPowerPin, OUTPUT);
+#endif    
+#ifdef ES3ink
+    digitalWrite(ePaperPowerPin, LOW);
+#elif M5StackCoreInk
+#else    
+    digitalWrite(ePaperPowerPin, HIGH);
+#endif
+
   // Battery voltage - you deserve to know in advance
   getBatteryVoltage();
 
@@ -1177,15 +1186,6 @@ void setup()
   // Do we need to update the screen?
   if (checkForNewTimestampOnServer())
   {
-#ifndef M5StackCoreInk	  
-    pinMode(ePaperPowerPin, OUTPUT);
-#endif    
-#ifdef ES3ink
-    digitalWrite(ePaperPowerPin, LOW);
-#elif M5StackCoreInk
-#else    
-    digitalWrite(ePaperPowerPin, HIGH);
-#endif
     delay(500);
 
     // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
