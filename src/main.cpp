@@ -256,7 +256,7 @@ GxEPD2_3C<GxEPD2_750c, GxEPD2_750c::HEIGHT> display(GxEPD2_750c(PIN_SS, PIN_DC, 
 GxEPD2_3C<GxEPD2_583c, GxEPD2_583c::HEIGHT> display(GxEPD2_583c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEW0583Z83 - 3C, 648x480px, 5.83"
-#elif defined(D_GDEW0583Z83)
+#elif defined D_GDEW0583Z83
 GxEPD2_3C<GxEPD2_583c_Z83, GxEPD2_583c_Z83::HEIGHT> display(GxEPD2_583c_Z83(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075Z08 - 3C, 800x480px, 7.5"
@@ -449,19 +449,18 @@ void WiFiInit()
   // reset settings - wipe stored credentials for testing
   //wm.resetSettings();
 
-  wm.setConfigPortalTimeout(300); // set portal time to 5 min, then sleep/try again.
-  bool res;
-  // Set network name to wi-fi mac address
-  String hostname = "INK_";
-  hostname += WiFi.macAddress();
-  // Replace colon with nothing
-  hostname.replace(":", "");
+  wm.setConfigPortalTimeout(5); // 5s timeout for first time connection
+  bool res = wm.autoConnect();
 
-  res = wm.autoConnect(hostname.c_str(), "zivyobraz"); // password protected ap
-
-  // Check if Wi-Fi is configured or connection to AP failed - show on ePaper
-  if (!wm.getWiFiIsSaved() or !res)
+  // Check if connection to AP failed - show on ePaper
+  if (!res)
   {
+    // Set network name to wi-fi mac address
+    String hostname = "INK_";
+    hostname += WiFi.macAddress();
+    // Replace colon with nothing
+    hostname.replace(":", "");
+
     setEPaperPowerOn(true);
     delay(500);
 
@@ -479,6 +478,10 @@ void WiFiInit()
     setEPaperPowerOn(false);
 
     timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
+
+    if (!wm.getWiFiIsSaved()) wm.setConfigPortalTimeout(300); // set connection timeout to 5min if Wifi settings is not set
+    // start portal or try to connect it again
+    res = wm.autoConnect(hostname.c_str(), "zivyobraz"); // password protected ap);
   }
 
   if (!res)
