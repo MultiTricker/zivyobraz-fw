@@ -449,19 +449,18 @@ void WiFiInit()
   // reset settings - wipe stored credentials for testing
   //wm.resetSettings();
 
-  wm.setConfigPortalTimeout(300); // set portal time to 5 min, then sleep/try again.
-  bool res;
-  // Set network name to wi-fi mac address
-  String hostname = "INK_";
-  hostname += WiFi.macAddress();
-  // Replace colon with nothing
-  hostname.replace(":", "");
+  wm.setConfigPortalTimeout(5); // 5s timeout for first time connection
+  bool res = wm.autoConnect();
 
-  res = wm.autoConnect(hostname.c_str(), "zivyobraz"); // password protected ap
-
-  // Check if Wi-Fi is configured or connection to AP failed - show on ePaper
-  if (!wm.getWiFiIsSaved() or !res)
+  // Check if connection to AP failed - show on ePaper
+  if (!res)
   {
+    // Set network name to wi-fi mac address
+    String hostname = "INK_";
+    hostname += WiFi.macAddress();
+    // Replace colon with nothing
+    hostname.replace(":", "");
+
     setEPaperPowerOn(true);
     delay(500);
 
@@ -479,6 +478,10 @@ void WiFiInit()
     setEPaperPowerOn(false);
 
     timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
+
+    if (!wm.getWiFiIsSaved()) wm.setConfigPortalTimeout(300); // set connection timeout to 5min if Wifi settings is not set
+    // start portal or try to connect it again
+    res = wm.autoConnect(hostname.c_str(), "zivyobraz"); // password protected ap);
   }
 
   if (!res)
