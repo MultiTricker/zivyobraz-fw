@@ -97,7 +97,7 @@
   #define PIN_DC 7   // D/C
   #define PIN_RST 5  // RES
   #define PIN_BUSY 6 // PIN_BUSY
-  #define ePaperPowerPin 46
+  #define ePaperPowerPin 3
   // ePaperPowerPin IO46 default, rework to 3 if problems occur. Maybe IO3 in next version (IO46 is not ideal because it is a strapping pin)?
   #define enableBattery 40
 
@@ -326,7 +326,7 @@ ESP32AnalogRead adc;
 
 /* ---- Server Zivy obraz ----------------------- */
 const char *host = "cdn.zivyobraz.eu";
-const char *firmware = "2.0";
+const char *firmware = "2.1";
 
 /* ---------- Deepsleep time in minutes --------- */
 uint64_t defaultDeepSleepTime = 2; // if there is a problem with loading images,
@@ -572,7 +572,7 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
       {
         deepSleepTime = defaultDeepSleepTime;
         if (!checkTimestamp) return false;
-        delay(200);
+        delay(500);
       }
       if (!checkTimestamp) delay(200);
     }
@@ -1014,12 +1014,14 @@ void readBitmapData()
       Serial.println(bytes_read);
     }
   }
-  else if (header == 0x315A || header == 0x325A) // ZivyObraz RLE data Z1 or Z2
+  else if (header == 0x315A || header == 0x325A || header == 0x335A) // ZivyObraz RLE data Z1 or Z3
   {
     // Z1 - 1 byte for color, 1 byte for number of repetition
-    // Z2 - 2 bits for color, 6 bits for number of repetition
+    // Z3 - 2 bits for color, 6 bits for number of repetition
+    // Z3 - 3 bits for color, 5 bits for number of repetition
     if (header == 0x315A) Serial.println("Got format Z1, processing");
     if (header == 0x325A) Serial.println("Got format Z2, processing");
+    if (header == 0x335A) Serial.println("Got format Z3, processing");
 
     uint32_t bytes_read = 2; // read so far
     uint16_t w = display.width();
@@ -1043,7 +1045,6 @@ void readBitmapData()
     for (uint16_t row = 0; row < h; row++) // for each line
     {
       if (!connection_ok || !(client.connected() || client.available())) break;
-      delay(1); // yield() to avoid WDT
 
       for (uint16_t col = 0; col < w; col++) // for each pixel
       {
@@ -1059,7 +1060,7 @@ void readBitmapData()
 
         if (!(client.connected() || client.available()))
         {
-          Serial.println("Client got disconnected after bytes:");
+          Serial.print("Client got disconnected after bytes:");
           Serial.println(bytes_read);
           break;
         }
@@ -1077,6 +1078,13 @@ void readBitmapData()
           compressed = safe_read(client);
           count = compressed & 0b00111111;
           pixel_color = (compressed & 0b11000000) >> 6;
+          bytes_read++;
+        } else if (header == 0x335A)
+        {
+          // Z3
+          compressed = safe_read(client);
+          count = compressed & 0b00011111;
+          pixel_color = (compressed & 0b11100000) >> 5;
           bytes_read++;
         }
 
@@ -1117,6 +1125,8 @@ void readBitmapData()
 
         for (uint8_t i = 0; i < count - 1; i++)
         {
+          yield();
+
           display.drawPixel(col, row, color);
 
           if ((count > 1) && (++col == w))
@@ -1187,6 +1197,7 @@ void setup()
       readBitmapData();
     } while (display.nextPage());
 
+    delay(100);
     // Disable power supply for ePaper
     setEPaperPowerOn(false);
   }
