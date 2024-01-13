@@ -212,7 +212,16 @@ GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(Gx
 // ADC reading
 #include <ESP32AnalogRead.h>
 // Font
-#include "OpenSansSB_12px.h"
+#include "fonts/OpenSansSB_12px.h"
+#include "fonts/OpenSansSB_14px.h"
+#include "fonts/OpenSansSB_16px.h"
+#include "fonts/OpenSansSB_18px.h"
+#include "fonts/OpenSansSB_20px.h"
+#include "fonts/OpenSansSB_22px.h"
+#include "fonts/OpenSansSB_24px.h"
+
+#include <QRCodeGenerator.h>
+QRCode qrcode;
 
 #ifdef REMAP_SPI
 SPIClass hspi(HSPI);
@@ -260,6 +269,47 @@ int strength; // Wi-Fi signal strength
 float d_volt; // indoor battery voltage
 RTC_DATA_ATTR uint64_t timestamp = 0;
 uint64_t timestampNow = 1; // initialize value for timestamp from server
+
+
+void drawQrCode(const char* qrStr, int qrSize, int yCord, int xCord, byte qrSizeMulti = 1 ) {
+  uint8_t qrcodeData[qrcode_getBufferSize(qrSize)];
+  qrcode_initText(&qrcode, qrcodeData, qrSize, ECC_LOW, qrStr);
+
+  int qrSizeTemp = (4 * qrSize) + 17;
+  // QR Code Starting Point
+  int offset_x = xCord - (qrSizeTemp * 2);
+  int offset_y = yCord - (qrSizeTemp * 2);
+
+  for (int y = 0; y < qrcode.size; y++) {
+    for (int x = 0; x < qrcode.size; x++) {
+      int newX = offset_x + (x * qrSizeMulti);
+      int newY = offset_y + (y * qrSizeMulti);
+
+      if (qrcode_getModule(&qrcode, x, y)) {
+        display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, 0);
+      }
+      else {
+        display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, 1);
+      }
+    }
+  }
+}
+
+void setTextPos(String text, int xCord, int yCord) {
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  display.setCursor(xCord, (yCord + (h / 2)));
+  display.print(text);
+}
+
+void centeredText(String text, int xCord, int yCord) {
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  display.setCursor(xCord - (w / 2), (yCord + (h / 2)));
+  display.println(text);
+}
 
 int8_t getWifiStrength()
 {
@@ -322,15 +372,105 @@ void displayInit()
 #else
   display.init();
 #endif
-#ifdef M5StackCoreInk  
+#ifdef M5StackCoreInk
   display.setRotation(0);
-#else  
-  display.setRotation(2);
+#else
+  display.setRotation(0);
 #endif
   display.fillScreen(GxEPD_WHITE);   // white background
   display.setTextColor(GxEPD_BLACK); // black font
 }
 
+// This is called if the WifiManager is in config mode (AP open)
+void configModeCallback (WiFiManager *myWiFiManager) {
+
+  // Set network name to wi-fi mac address
+  String hostname = "INK_";
+  hostname += WiFi.macAddress();
+  // Replace colon with nothing
+  hostname.replace(":", "");
+
+  displayInit();
+  delay(500);
+
+  if (DISPLAY_RESOLUTION_X >= 800) {
+    display.setFont(&OpenSansSB_24px);
+    centeredText("WiFi connection setup", DISPLAY_RESOLUTION_X / 2, 20);
+    centeredText("Step 1:", DISPLAY_RESOLUTION_X / 4, 140);
+    centeredText("Step 2:", DISPLAY_RESOLUTION_X * 3 / 4, 140);
+    display.setFont(&OpenSansSB_18px);
+    setTextPos("You may see this screen because of lost connection to the WIFi", 10, 60);
+    setTextPos("Connect this device to the Internet for first time, complete these steps:", 10, 90);
+
+    centeredText("Connect to the following", DISPLAY_RESOLUTION_X / 4, 170);
+    centeredText("access point", DISPLAY_RESOLUTION_X / 4, 190);
+    centeredText("Open web browser, go to this address", DISPLAY_RESOLUTION_X * 3 / 4, 170);
+    centeredText("and set up connection to your WiFi", DISPLAY_RESOLUTION_X * 3 / 4, 190);
+    centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 400);
+    centeredText("password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 420);
+    centeredText("192.168.4.1", DISPLAY_RESOLUTION_X * 3 / 4, 410);
+    centeredText("In case of any trouble please visit wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
+  } else if (DISPLAY_RESOLUTION_X > 600) {
+    Serial.println("Resolution > 600px,");
+    display.setFont(&OpenSansSB_20px);
+    centeredText("WiFi connection setup", DISPLAY_RESOLUTION_X / 2, 15);
+    centeredText("Step 1:", DISPLAY_RESOLUTION_X / 4, 110);
+    centeredText("Step 2:", DISPLAY_RESOLUTION_X * 3 / 4, 110);
+    display.setFont(&OpenSansSB_14px);
+    setTextPos("You may see this screen because of lost connection to the WIFi", 10, 50);
+    setTextPos("Connect this device to the Internet for first time, complete these steps:", 10, 70);
+
+    centeredText("Connect to the following", DISPLAY_RESOLUTION_X / 4, 140);
+    centeredText("access point", DISPLAY_RESOLUTION_X / 4, 160);
+    centeredText("Open web browser, go to this address", DISPLAY_RESOLUTION_X * 3 / 4, 140);
+    centeredText("and set up connection to your WiFi", DISPLAY_RESOLUTION_X * 3 / 4, 160);
+    centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 300);
+    centeredText("password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 320);
+    centeredText("192.168.4.1", DISPLAY_RESOLUTION_X * 3 / 4, 310);
+    centeredText("In case of any trouble please visit wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
+  } else if (DISPLAY_RESOLUTION_X >= 400) {
+
+  } else if (DISPLAY_RESOLUTION_X < 400) {
+
+  } else {
+    //some special case
+  }
+
+
+
+  // Create the QR code
+
+  /*QR code hint
+
+    Common format: WIFI:S:<SSID>;T:<WEP|WPA|nopass>;P:<PASSWORD>;H:<true|false|blank>;;
+
+    Sample: WIFI:S:MySSID;T:WPA;P:MyPassW0rd;;
+
+  */
+
+  String qrString = "WIFI:S:";
+  qrString += hostname;
+  qrString += ";T:WPA;P:zivyobraz;;";
+  //Serial.println(qrString);
+
+  if (DISPLAY_RESOLUTION_X >= 800) {
+    drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 50, DISPLAY_RESOLUTION_X / 4, 4);
+    String ipAddress = "192.168.4.1";
+    drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 50, DISPLAY_RESOLUTION_X * 3 / 4, 4);
+    display.display(false); // update screen
+  } else if (DISPLAY_RESOLUTION_X > 600) {
+    drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 55, DISPLAY_RESOLUTION_X / 4 + 18, 3);
+    String ipAddress = "192.168.4.1";
+    drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 55, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
+    display.display(false); // update screen
+  } else if (DISPLAY_RESOLUTION_X >= 400 && DISPLAY_RESOLUTION_X < 600) {
+
+  } else if (DISPLAY_RESOLUTION_X < 400) {
+
+  } else {
+    //some special case
+  }
+}
 void WiFiInit()
 {
   // Connecting to WiFi
@@ -346,57 +486,17 @@ void WiFiInit()
   wm.setConnectTimeout(3);
   wm.setSaveConnectTimeout(3);
 
-  // reset settings - wipe stored credentials for testing
-  // wm.resetSettings();
-
-  wm.setConfigPortalTimeout(300); // set portal time to 5 min, then sleep/try again.
-  bool res;
   // Set network name to wi-fi mac address
   String hostname = "INK_";
   hostname += WiFi.macAddress();
   // Replace colon with nothing
-  hostname.replace(":", "");
-
-  res = wm.autoConnect(hostname.c_str(), "zivyobraz"); // password protected ap
-
-  // Check if Wi-Fi is configured or connection to AP failed - show on ePaper
-  if (!wm.getWiFiIsSaved() or !res)
-  {
-    displayInit();
-// #ifdef ES3ink
-//     digitalWrite(ePaperPowerPin, LOW);
-// #elif M5StackCoreInk
-// #else    
-//     digitalWrite(ePaperPowerPin, HIGH);
-// #endif
-    delay(500);
-
-    display.setFont(&OpenSansSB_12px);
-    display.setCursor(10, 20);
-    display.print("No Wi-Fi configuration/connection.");
-    display.setCursor(10, 40);
-    display.print("Configuration portal has been started!");
-    display.setCursor(10, 60);
-    display.print("Connect to AP and (re)configure Wi-Fi connection:");
-    display.setCursor((DISPLAY_RESOLUTION_X / 2) - 70, 100);
-    display.print(hostname);
-
-    display.display(false); // update screen
-#ifndef M5StackCoreInk
-    digitalWrite(ePaperPowerPin, LOW);
-#endif
-    timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
-  }
-
-  if (!res)
-  {
-    Serial.println("Failed to connect to Wi-Fi, starting portal");
-  }
-  else
-  {
-    // if you get here you have connected to the WiFi
-    Serial.println("Wi-Fi connected successfully");
-  }
+  hostname.replace(":", "");						   
+  // reset settings - wipe stored credentials for testing
+  wm.resetSettings();
+  wm.setConfigPortalTimeout(300); // set portal time to 5 min, then sleep/try again.
+  //  bool res;
+  wm.setAPCallback(configModeCallback);
+  wm.autoConnect(hostname.c_str(), "zivyobraz");																					
 }
 
 uint32_t skip(WiFiClient &client, int32_t bytes)
