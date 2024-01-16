@@ -220,7 +220,7 @@ GxEPD2_BW<GxEPD2_583_GDEQ0583T31, GxEPD2_583_GDEQ0583T31::HEIGHT> display(GxEPD2
 // GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 // Waveshare displays
 GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> display(GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY)); // GDEW075T7 800x480, EK79655 (GD7965)
-// GxEPD2_BW<GxEPD2_750_YT7, GxEPD2_750_YT7::HEIGHT> display(GxEPD2_750_YT7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY)); // GDEY075T7 800x480, UC8179 (GD7965)
+// GxEPD2_BW<GxEPD2_750_GDEY075T7, GxEPD2_750_GDEY075T7::HEIGHT> display(GxEPD2_750_GDEY075T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY)); // GDEY075T7 800x480, UC8179 (GD7965)
 
 // GDEQ102T90 - BW, 960x640px, 10.2"
 #elif defined D_GDEQ102T90
@@ -444,7 +444,7 @@ float getBatteryVoltage()
   return volt;
 }
 
-void drawQrCode(const char* qrStr, int qrSize, int yCord, int xCord, byte qrSizeMulti = 1 )
+void drawQrCode(const char* qrStr, int qrSize, int yCord, int xCord, byte qrSizeMulti = 1)
 {
   uint8_t qrcodeData[qrcode_getBufferSize(qrSize)];
   qrcode_initText(&qrcode, qrcodeData, qrSize, ECC_LOW, qrStr);
@@ -524,25 +524,28 @@ void configModeCallback (WiFiManager *myWiFiManager)
   display.firstPage();
   do
   {
-    if (DISPLAY_RESOLUTION_X >= 800) {
+    if (DISPLAY_RESOLUTION_X >= 800)
+    {
       display.setFont(&OpenSansSB_24px);
       centeredText("WiFi connection setup", DISPLAY_RESOLUTION_X / 2, 10);
       centeredText("Step 1:", DISPLAY_RESOLUTION_X / 4, 140);
       centeredText("Step 2:", DISPLAY_RESOLUTION_X * 3 / 4, 140);
       display.setFont(&OpenSansSB_18px);
-      setTextPos("You may see this screen because of lost connection to the WIFi", 10, 40);
-      setTextPos("Please turn off your mobile data connection!", 10, 65);
-      setTextPos("Connect this device to the Internet for first time, complete these steps:", 10, 90);
+      setTextPos("No Wi-Fi connection configured or connection lost.", 10, 40);
+      setTextPos("Please turn off your mobile data connection for configuration!", 10, 65);
+      setTextPos("To connect this device to the Internet for the first time, complete these steps:", 10, 90);
 
       centeredText("Connect to the following", DISPLAY_RESOLUTION_X / 4, 170);
       centeredText("access point", DISPLAY_RESOLUTION_X / 4, 190);
       centeredText("Open web browser, go to this address", DISPLAY_RESOLUTION_X * 3 / 4, 170);
-      centeredText("and set up connection to your WiFi", DISPLAY_RESOLUTION_X * 3 / 4, 190);
+      centeredText("and set up connection to your WiFi.", DISPLAY_RESOLUTION_X * 3 / 4, 190);
       centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 400);
-      centeredText("password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 420);
+      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 420);
       centeredText("192.168.4.1", DISPLAY_RESOLUTION_X * 3 / 4, 410);
-      centeredText("In case of any trouble please visit wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
-    } else if (DISPLAY_RESOLUTION_X > 600) {
+      centeredText("In case of any trouble, please visit https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
+    }
+    else if (DISPLAY_RESOLUTION_X > 600)
+    {
       Serial.println("Resolution > 600px,");
       display.setFont(&OpenSansSB_20px);
       centeredText("WiFi connection setup", DISPLAY_RESOLUTION_X / 2, 15);
@@ -556,14 +559,18 @@ void configModeCallback (WiFiManager *myWiFiManager)
       centeredText("Connect to the following", DISPLAY_RESOLUTION_X / 4, 140);
       centeredText("access point", DISPLAY_RESOLUTION_X / 4, 160);
       centeredText("Open web browser, go to this address", DISPLAY_RESOLUTION_X * 3 / 4, 140);
-      centeredText("and set up connection to your WiFi", DISPLAY_RESOLUTION_X * 3 / 4, 160);
+      centeredText("and set up connection to your WiFi.", DISPLAY_RESOLUTION_X * 3 / 4, 160);
       centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 300);
-      centeredText("password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 320);
+      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 320);
       centeredText("192.168.4.1", DISPLAY_RESOLUTION_X * 3 / 4, 310);
-      centeredText("In case of any trouble please visit wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
-    } else if (DISPLAY_RESOLUTION_X >= 400) {
+      centeredText("In case of any trouble please, visit: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
+    }
+    else if (DISPLAY_RESOLUTION_X >= 400)
+    {
       //TODO for 4" display
-    } else if (DISPLAY_RESOLUTION_X < 400) {
+    }
+    else if (DISPLAY_RESOLUTION_X < 400)
+    {
       //TODO for 2.13" display
     } else {
       //some special case
@@ -582,19 +589,26 @@ void configModeCallback (WiFiManager *myWiFiManager)
     qrString += ";T:WPA;P:zivyobraz;;";
     //Serial.println(qrString);
 
-    if (DISPLAY_RESOLUTION_X >= 800) {
+    if (DISPLAY_RESOLUTION_X >= 800)
+    {
       drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 50, DISPLAY_RESOLUTION_X / 4, 4);
       String ipAddress = "192.168.4.1";
       drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 50, DISPLAY_RESOLUTION_X * 3 / 4, 4);
       //display.display(false); // update screen
-    } else if (DISPLAY_RESOLUTION_X > 600) {
+    }
+    else if (DISPLAY_RESOLUTION_X > 600)
+    {
       drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 55, DISPLAY_RESOLUTION_X / 4 + 18, 3);
       String ipAddress = "192.168.4.1";
       drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 55, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
       //display.display(false); // update screen
-    } else if (DISPLAY_RESOLUTION_X >= 400 && DISPLAY_RESOLUTION_X < 600) {
+    }
+    else if (DISPLAY_RESOLUTION_X >= 400 && DISPLAY_RESOLUTION_X < 600)
+    {
 
-    } else if (DISPLAY_RESOLUTION_X < 400) {
+    }
+    else if (DISPLAY_RESOLUTION_X < 400)
+    {
 
     } else {
       //some special case
