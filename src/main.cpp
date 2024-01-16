@@ -28,9 +28,9 @@
 
 //#define ESPink
 //#define ES3ink
-//#define REMAP_SPI
 //#define MakerBadge_revB //also works with A and C
 //#define MakerBadge_revD
+//#define REMAP_SPI
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Uncomment if you have connected SHT40 sensor for sending temperature and humidity
@@ -77,20 +77,30 @@
 // 7C
 //#define D_GDEY073D46    // 800x480, 7.3"
 
+// ...
+// More supported display classes in GxEPD2 can be found example here:
+// https://github.com/ZinggJM/GxEPD2/blob/master/examples/GxEPD2_Example/GxEPD2_display_selection.h
+// If you need, you can get definition from there and define your own display
+
+///////////////////////////////////////////////
+// That's all!
+// Code of ZivyObraz follows
+///////////////////////////////////////////////
+
 ////////////
 // Board
 ////////////
 
 // https://www.laskakit.cz/laskakit-espink-esp32-e-paper-pcb-antenna/?variantId=12419
-// Also ESPInk-42 all-in-one board
+// + LaskaKit ESPInk-42 all-in-one board
 
-/* ---------------- Pinout of ESPink ------------ */
 #ifdef ESPink
   #define PIN_SS 5   // SS
   #define PIN_DC 17  // D/C
   #define PIN_RST 16 // RES
   #define PIN_BUSY 4 // PIN_BUSY
   #define ePaperPowerPin 2
+
 #elif defined ES3ink
   // for version P1.1
   #define PIN_SS 10  // SS
@@ -98,12 +108,11 @@
   #define PIN_RST 5  // RES
   #define PIN_BUSY 6 // PIN_BUSY
   #define ePaperPowerPin 3
-  // ePaperPowerPin IO46 default, rework to 3 if problems occur. Maybe IO3 in next version (IO46 is not ideal because it is a strapping pin)?
   #define enableBattery 40
 
   #include <esp_adc_cal.h>
   #include <soc/adc_channel.h>
-esp_adc_cal_characteristics_t adc_cal;
+  esp_adc_cal_characteristics_t adc_cal;
 
 #elif defined MakerBadge_revB
   #define PIN_SS 41   // SS
@@ -130,7 +139,6 @@ esp_adc_cal_characteristics_t adc_cal;
   #define PIN_SPI_MOSI 12 // DIN
   #define PIN_SPI_SS 15   // unused
 #endif
-/* ---------------------------------------------- */
 
 // For LaskaKit ESP32-Dev kit use pins:
 /*
@@ -170,14 +178,9 @@ static const char *defined_color_type = "7C";
   #error "ePaper type not defined!"
 #endif
 
-/////////////////////////////////
-// Use ePaper uncommented above
-/////////////////////////////////
-
-// Supported display classes can be found for example here:
-// https://github.com/ZinggJM/GxEPD2/blob/master/examples/GxEPD2_Example/GxEPD2_display_selection.h
-// If you need, you can get definition from there and then use it here
-// without uncommenting any particular display above
+///////////////////////
+// Displays
+///////////////////////
 
 ///////////////////////
 // BW
@@ -274,14 +277,14 @@ GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(Gx
   #error "ePaper display not defined!"
 #endif
 
-///////////////////////////////////////////////
-// That's all!
-// Code of ZivyObraz follows
-///////////////////////////////////////////////
-
 ////////////////////////////
 // Library etc. includes
 ////////////////////////////
+
+// M5Stack CoreInk
+#ifdef M5StackCoreInk
+  #include <M5CoreInk.h>
+#endif
 
 // WiFi
 #include <WiFi.h>
@@ -292,7 +295,16 @@ GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(Gx
 // ADC reading
 #include <ESP32AnalogRead.h>
 // Font
-#include "OpenSansSB_12px.h"
+#include "fonts/OpenSansSB_12px.h"
+#include "fonts/OpenSansSB_14px.h"
+#include "fonts/OpenSansSB_16px.h"
+#include "fonts/OpenSansSB_18px.h"
+#include "fonts/OpenSansSB_20px.h"
+#include "fonts/OpenSansSB_22px.h"
+#include "fonts/OpenSansSB_24px.h"
+
+#include <QRCodeGenerator.h>
+QRCode qrcode;
 
 #ifdef REMAP_SPI
 SPIClass hspi(HSPI);
@@ -302,13 +314,16 @@ SPIClass hspi(HSPI);
 #ifdef SHT40
   #include <Wire.h>
   #include "Adafruit_SHT4x.h"
-Adafruit_SHT4x sht4 = Adafruit_SHT4x();
+  Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 #endif
 
 /* ---- ADC reading - indoor Battery voltage ---- */
 #ifdef ES3ink
   #define vBatPin ADC1_GPIO2_CHANNEL
   #define dividerRatio 2.018
+
+#elif defined M5StackCoreInk
+  #define vBatPin 35
 
 #elif defined MakerBadge_revB
   #define vBatPin 6
@@ -319,7 +334,7 @@ Adafruit_SHT4x sht4 = Adafruit_SHT4x();
   #define BATT_V_CAL_SCALE 1.05
 
 #else
-ESP32AnalogRead adc;
+  ESP32AnalogRead adc;
   #define dividerRatio 1.769
   #define vBatPin 34
 #endif
@@ -352,6 +367,8 @@ void setEPaperPowerOn(bool on)
   // use HIGH/LOW notation for better readability
 #ifdef ES3ink
   digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
+#elif defined M5StackCoreInk
+  // void
 #else
   digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
 #endif
@@ -374,16 +391,29 @@ float getBatteryVoltage()
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_11);
 
   Serial.println("Reading battery on ES3ink board");
-
+  
   digitalWrite(enableBattery, LOW);
   uint32_t raw = adc1_get_raw(vBatPin);
-  Serial.println(raw);
+  //Serial.println(raw);
   uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw, &adc_cal);
-  Serial.println(millivolts);
+  //Serial.println(millivolts);
   const uint32_t upper_divider = 1000;
   const uint32_t lower_divider = 1000;
   volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
-  digitalWrite(enableBattery, LOW);
+  digitalWrite(enableBattery, HIGH);
+
+#elif defined M5StackCoreInk
+  analogSetPinAttenuation(vBatPin, ADC_11db);
+  esp_adc_cal_characteristics_t *adc_chars =
+    (esp_adc_cal_characteristics_t *)calloc(
+      1, sizeof(esp_adc_cal_characteristics_t));
+  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12,
+                           3600, adc_chars);
+  uint16_t ADCValue = analogRead(vBatPin);
+
+  uint32_t BatVolmV = esp_adc_cal_raw_to_voltage(ADCValue, adc_chars);
+  volt = float(BatVolmV) * 25.1 / 5.1 / 1000;
+  free(adc_chars);
 
 #elif defined MakerBadge_revB
   volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
@@ -414,6 +444,49 @@ float getBatteryVoltage()
   return volt;
 }
 
+void drawQrCode(const char* qrStr, int qrSize, int yCord, int xCord, byte qrSizeMulti = 1 )
+{
+  uint8_t qrcodeData[qrcode_getBufferSize(qrSize)];
+  qrcode_initText(&qrcode, qrcodeData, qrSize, ECC_LOW, qrStr);
+
+  int qrSizeTemp = (4 * qrSize) + 17;
+  // QR Code Starting Point
+  int offset_x = xCord - (qrSizeTemp * 2);
+  int offset_y = yCord - (qrSizeTemp * 2);
+
+  for (int y = 0; y < qrcode.size; y++) {
+    for (int x = 0; x < qrcode.size; x++) {
+      int newX = offset_x + (x * qrSizeMulti);
+      int newY = offset_y + (y * qrSizeMulti);
+
+      if (qrcode_getModule(&qrcode, x, y)) {
+        display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, 0);
+      }
+      else {
+        display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, 1);
+      }
+    }
+  }
+}
+
+void setTextPos(String text, int xCord, int yCord)
+{
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  display.setCursor(xCord, (yCord + (h / 2)));
+  display.print(text);
+}
+
+void centeredText(String text, int xCord, int yCord)
+{
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  display.setCursor(xCord - (w / 2), (yCord + (h / 2)));
+  display.println(text);
+}
+
 void displayInit()
 {
 #ifdef REMAP_SPI
@@ -432,12 +505,107 @@ void displayInit()
   display.setTextColor(GxEPD_BLACK); // black font
 }
 
+// This is called if the WifiManager is in config mode (AP open)
+void configModeCallback (WiFiManager *myWiFiManager)
+{
+  // Set network name to wi-fi mac address
+  String hostname = "INK_";
+  hostname += WiFi.macAddress();
+  // Replace colon with nothing
+  hostname.replace(":", "");
+
+  timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
+
+  displayInit();
+  delay(500);
+
+  if (DISPLAY_RESOLUTION_X >= 800) {
+    display.setFont(&OpenSansSB_24px);
+    centeredText("WiFi connection setup", DISPLAY_RESOLUTION_X / 2, 10);
+    centeredText("Step 1:", DISPLAY_RESOLUTION_X / 4, 140);
+    centeredText("Step 2:", DISPLAY_RESOLUTION_X * 3 / 4, 140);
+    display.setFont(&OpenSansSB_18px);
+    setTextPos("You may see this screen because of lost connection to the WIFi", 10, 40);
+    setTextPos("Please turn off your mobile data connection!", 10, 65);
+    setTextPos("Connect this device to the Internet for first time, complete these steps:", 10, 90);
+
+    centeredText("Connect to the following", DISPLAY_RESOLUTION_X / 4, 170);
+    centeredText("access point", DISPLAY_RESOLUTION_X / 4, 190);
+    centeredText("Open web browser, go to this address", DISPLAY_RESOLUTION_X * 3 / 4, 170);
+    centeredText("and set up connection to your WiFi", DISPLAY_RESOLUTION_X * 3 / 4, 190);
+    centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 400);
+    centeredText("password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 420);
+    centeredText("192.168.4.1", DISPLAY_RESOLUTION_X * 3 / 4, 410);
+    centeredText("In case of any trouble please visit wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
+  } else if (DISPLAY_RESOLUTION_X > 600) {
+    Serial.println("Resolution > 600px,");
+    display.setFont(&OpenSansSB_20px);
+    centeredText("WiFi connection setup", DISPLAY_RESOLUTION_X / 2, 15);
+    centeredText("Step 1:", DISPLAY_RESOLUTION_X / 4, 110);
+    centeredText("Step 2:", DISPLAY_RESOLUTION_X * 3 / 4, 110);
+    display.setFont(&OpenSansSB_14px);
+    setTextPos("You may see this screen because of lost connection to the WIFi", 10, 40);
+    setTextPos("Please turn off your mobile data connection!", 10, 60);
+    setTextPos("Connect this device to the Internet for first time, complete these steps:", 10, 80);
+
+    centeredText("Connect to the following", DISPLAY_RESOLUTION_X / 4, 140);
+    centeredText("access point", DISPLAY_RESOLUTION_X / 4, 160);
+    centeredText("Open web browser, go to this address", DISPLAY_RESOLUTION_X * 3 / 4, 140);
+    centeredText("and set up connection to your WiFi", DISPLAY_RESOLUTION_X * 3 / 4, 160);
+    centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 300);
+    centeredText("password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 320);
+    centeredText("192.168.4.1", DISPLAY_RESOLUTION_X * 3 / 4, 310);
+    centeredText("In case of any trouble please visit wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
+  } else if (DISPLAY_RESOLUTION_X >= 400) {
+    //TODO for 4" display
+  } else if (DISPLAY_RESOLUTION_X < 400) {
+    //TODO for 2.13" display
+  } else {
+    //some special case
+  }
+
+  // Create the QR code
+
+  /*
+    QR code hint
+    Common format: WIFI:S:<SSID>;T:<WEP|WPA|nopass>;P:<PASSWORD>;H:<true|false|blank>;;
+    Sample: WIFI:S:MySSID;T:WPA;P:MyPassW0rd;;
+  */
+
+  String qrString = "WIFI:S:";
+  qrString += hostname;
+  qrString += ";T:WPA;P:zivyobraz;;";
+  //Serial.println(qrString);
+
+  setEPaperPowerOn(true);
+  delay(500);
+
+  if (DISPLAY_RESOLUTION_X >= 800) {
+    drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 50, DISPLAY_RESOLUTION_X / 4, 4);
+    String ipAddress = "192.168.4.1";
+    drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 50, DISPLAY_RESOLUTION_X * 3 / 4, 4);
+    display.display(false); // update screen
+  } else if (DISPLAY_RESOLUTION_X > 600) {
+    drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 55, DISPLAY_RESOLUTION_X / 4 + 18, 3);
+    String ipAddress = "192.168.4.1";
+    drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 55, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
+    display.display(false); // update screen
+  } else if (DISPLAY_RESOLUTION_X >= 400 && DISPLAY_RESOLUTION_X < 600) {
+
+  } else if (DISPLAY_RESOLUTION_X < 400) {
+
+  } else {
+    //some special case
+  }
+
+  setEPaperPowerOn(false);
+}
+
 void WiFiInit()
 {
   // Connecting to WiFi
   Serial.println();
   Serial.print("Connecting... ");
-  //WiFi.begin(ssid, pass);
   WiFi.mode(WIFI_STA);
   WiFiManager wm;
   wm.setWiFiAutoReconnect(true);
@@ -446,53 +614,18 @@ void WiFiInit()
   wm.setConnectTimeout(3);
   wm.setSaveConnectTimeout(3);
 
+  // Set network name to wi-fi mac address
+  String hostname = "INK_";
+  hostname += WiFi.macAddress();
+  // Replace colon with nothing
+  hostname.replace(":", "");
+
   // reset settings - wipe stored credentials for testing
   //wm.resetSettings();
 
-  wm.setConfigPortalTimeout(5); // 5s timeout for first time connection
-  bool res = wm.autoConnect();
-
-  // Check if connection to AP failed - show on ePaper
-  if (!res)
-  {
-    // Set network name to wi-fi mac address
-    String hostname = "INK_";
-    hostname += WiFi.macAddress();
-    // Replace colon with nothing
-    hostname.replace(":", "");
-
-    setEPaperPowerOn(true);
-    delay(500);
-
-    display.setFont(&OpenSansSB_12px);
-    display.setCursor(10, 20);
-    display.print("No Wi-Fi configuration/connection.");
-    display.setCursor(10, 40);
-    display.print("Configuration portal has been started!");
-    display.setCursor(10, 60);
-    display.print("Connect to AP and (re)configure Wi-Fi connection:");
-    display.setCursor((DISPLAY_RESOLUTION_X / 2) - 70, 100);
-    display.print(hostname);
-
-    display.display(false); // update screen
-    setEPaperPowerOn(false);
-
-    timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
-
-    if (!wm.getWiFiIsSaved()) wm.setConfigPortalTimeout(300); // set connection timeout to 5min if Wifi settings is not set
-    // start portal or try to connect it again
-    res = wm.autoConnect(hostname.c_str(), "zivyobraz"); // password protected ap);
-  }
-
-  if (!res)
-  {
-    Serial.println("Failed to connect to Wi-Fi, starting portal");
-  }
-  else
-  {
-    // if you get here you have connected to the WiFi
-    Serial.println("Wi-Fi connected successfully");
-  }
+  wm.setConfigPortalTimeout(300); // set portal time to 5 min, then sleep/try again.
+  wm.setAPCallback(configModeCallback);
+  wm.autoConnect(hostname.c_str(), "zivyobraz");
 }
 
 uint32_t read8n(WiFiClient& client, uint8_t *buffer, int32_t bytes)
@@ -1163,15 +1296,33 @@ void setup()
   Serial.begin(115200);
 
 #ifdef ES3ink
-  pinMode(enableBattery, OUTPUT);
+  // Battery voltage reading via PMOS switch with series capacitor to gate.
+  // can be read right after High->Low transition of enableBattery
+  // Here, pin should not go LOW, so intentionally digitalWrite called as first.
+  // First write output register (PORTx) then activate output direction (DDRx). Pin will go from highZ(sleep) to HIGH without LOW pulse.
+  digitalWrite(enableBattery,HIGH); 
+  pinMode(enableBattery,OUTPUT); 
 #endif
+
+#ifdef M5StackCoreInk
+  M5.begin(false, false, true);
+  display.init(115200, false);
+  M5.update();
+#else
+  Serial.begin(115200);
+#endif
+
+  Serial.println("Starting firmware for Zivy Obraz service");
 
   // Battery voltage measurement
   d_volt = getBatteryVoltage();
 
   // ePaper init
   displayInit();
+
+#ifndef M5StackCoreInk
   pinMode(ePaperPowerPin, OUTPUT);
+#endif
 
   // Wifi init
   WiFiInit();
@@ -1205,9 +1356,15 @@ void setup()
   // Deep sleep mode
   Serial.print("Going to sleep now for (minutes): ");
   Serial.println(deepSleepTime);
+
+#ifdef M5StackCoreInk
+  display.powerOff();
+  M5.shutdown(deepSleepTime*60);
+#else  
   esp_sleep_enable_timer_wakeup(deepSleepTime * 60 * 1000000);
   delay(200);
   esp_deep_sleep_start();
+#endif
 }
 
 void loop()
