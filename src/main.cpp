@@ -52,13 +52,14 @@
 //////////////////////////////////////////////////////////////
 
 // BW
-//#define D_B74           // 122x250, 2.13" Maker badge all versions
-//#define D_GDEY0213B7    // 122x250, 2.13"
-//#define D_GDEY027T91    // 176x264, 2.7"
 //#define D_GDEW0154T8    // 152x152, 1.54"
-//#define D_GDEW042T2     // 400x300, 4.2"
+//#define D_GDEY0213B74   // 128x250, 2.13"
+//#define D_GDEY027T91    // 176x264, 2.7"
+//#define D_GDEY0154D67   // 200x200, 1.54"
+//#define D_GDEQ031T10    // 240x320, 3.1"
 //#define D_GDEQ042T81    // 400x300, 4.2"
 //#define D_GDEQ0583T31   // 648x480, 5.83"
+//#define D_GDEQ0426T82   // 800x480, 4.26"
 //#define D_GDEW075T7     // 800x480, 7.5"
 //#define D_GDEQ102T90    // 960x640, 10.2"
 
@@ -67,14 +68,15 @@
 //#define D_GDEY075T7     // 800x480, 7.5"
 
 // 3C
-//#define D_Waveshare42YBW400300 // 400x300, 4.2"
+//#define D_GDEY0154Z90   // 200x200, 1.54"
+//#define D_WS42YBW400300 // 400x300, 4.2"
 //#define D_GDEQ042Z21    // 400x300, 4.2"
 //#define D_HINK_E075A01  // 640x384, 7.5"
 //#define D_GDEQ0583Z31   // 648x480, 5.83"
-//#define D_GDEW0583Z83   // 648x480, 5.83"
 //#define D_GDEY075Z08    // 800x480, 7.5"
 
 // 7C
+//#define D_GDEP0565D90   // 600x448, 5.65"
 //#define D_GDEY073D46    // 800x480, 7.3"
 
 // ...
@@ -186,41 +188,41 @@ static const char *defined_color_type = "7C";
 // BW
 ///////////////////////
 
-// B74 - BW, 122x250, 2.13" Maker badge all versions
-#ifdef D_B74
-GxEPD2_BW<GxEPD2_213_B74, GxEPD2_213_B74::HEIGHT> display(GxEPD2_213_B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+// GDEW0154T8 - BW, 152x152px, 1.54"
+#ifdef D_GDEW0154T8
+GxEPD2_BW<GxEPD2_154_T8, GxEPD2_154_T8::HEIGHT> display(GxEPD2_154_T8(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
-// GDEY0213B7 - BW, 122x250px, 2.13"
-#elif defined D_GDEY0213B7
+// GDEY0213B74 - BW, 128x250px, 2.13"
+#elif defined D_GDEY0213B74
 GxEPD2_BW<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY027T91 - BW, 176x264px, 2.7"
 #elif defined D_GDEY027T91
 GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
-// GDEW0154T8 - BW, 152x152px, 1.54"
-#elif defined D_GDEW0154T8
-GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+// GDEY0154D67 - BW, 200x200px, 1.54"
+#elif defined D_GDEY0154D67
+GxEPD2_BW<GxEPD2_154_GDEY0154D67, GxEPD2_154_GDEY0154D67::HEIGHT> display(GxEPD2_154_GDEY0154D67(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
-// GDEW042T2 - BW, 400x300px, 4.2"
-#elif defined D_GDEW042T2
-GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+// GDEQ031T10 - BW, 240x320px, 3.1"
+#elif defined D_GDEQ031T10
+GxEPD2_BW<GxEPD2_310_GDEQ031T10, GxEPD2_310_GDEQ031T10::HEIGHT> display(GxEPD2_310_GDEQ031T10(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ042T81 - BW, 400x300px, 4.2"
 #elif defined D_GDEQ042T81
-GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> display(GxEPD2_420_GDEY042T81(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_BW<GxEPD2_420_GDEY042T91, GxEPD2_420_GDEY042T91::HEIGHT> display(GxEPD2_420_GDEY042T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ0583T31 - BW, 648x480px, 5.83"
 #elif defined D_GDEQ0583T31
 GxEPD2_BW<GxEPD2_583_GDEQ0583T31, GxEPD2_583_GDEQ0583T31::HEIGHT> display(GxEPD2_583_GDEQ0583T31(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
+// GDEQ0426T82 - BW, 800x480px, 4.26"
+#elif defined D_GDEQ0426T82
+GxEPD2_BW<GxEPD2_426_GDEQ0426T82, GxEPD2_426_GDEQ0426T82::HEIGHT> display(GxEPD2_426_GDEQ0426T82(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+
 // GDEW075T7 - BW, 800x480px, 7.5"
 #elif defined D_GDEW075T7
-// Good display - 7.5", but only 640x384, leaving this here for now, might be usefull one day
-// GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
-// Waveshare displays
-GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> display(GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY)); // GDEW075T7 800x480, EK79655 (GD7965)
-// GxEPD2_BW<GxEPD2_750_GDEY075T7, GxEPD2_750_GDEY075T7::HEIGHT> display(GxEPD2_750_GDEY075T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY)); // GDEY075T7 800x480, UC8179 (GD7965)
+GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ102T90 - BW, 960x640px, 10.2"
 #elif defined D_GDEQ102T90
@@ -242,8 +244,12 @@ GxEPD2_4G_4G<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(PIN
 // 3C
 ///////////////////////
 
-// Waveshare42YBW400300 - 3C, 400x300px, 4.2"
-#elif defined D_Waveshare42YBW400300
+// GDEY0154Z90 - 3C, 200x200px, 1.54"
+#elif defined D_GDEY0154Z90
+GxEPD2_3C<GxEPD2_154_Z90c, GxEPD2_154_Z90c::HEIGHT> display(GxEPD2_154_Z90c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+
+// WS42YBW400300 - 3C, 400x300px, 4.2"
+#elif defined D_WS42YBW400300
 GxEPD2_3C<GxEPD2_420c, GxEPD2_420c::HEIGHT> display(GxEPD2_420c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ042Z21 - 3C, 400x300px, 4.2"
@@ -256,10 +262,6 @@ GxEPD2_3C<GxEPD2_750c, GxEPD2_750c::HEIGHT> display(GxEPD2_750c(PIN_SS, PIN_DC, 
 
 // GDEQ0583Z31 - 3C, 648x480px, 5.83"
 #elif defined D_GDEQ0583Z31
-GxEPD2_3C<GxEPD2_583c, GxEPD2_583c::HEIGHT> display(GxEPD2_583c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
-
-// GDEW0583Z83 - 3C, 648x480px, 5.83"
-#elif defined D_GDEW0583Z83
 GxEPD2_3C<GxEPD2_583c_Z83, GxEPD2_583c_Z83::HEIGHT> display(GxEPD2_583c_Z83(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075Z08 - 3C, 800x480px, 7.5"
@@ -270,9 +272,14 @@ GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(
 // 7C
 ///////////////////////
 
+// GDEP0565D90 - 7C, 600x448px, 5.65"
+#elif defined D_GDEP0565D90
+GxEPD2_7C<GxEPD2_565c, GxEPD2_565c::HEIGHT / 2> display(GxEPD2_565c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+
 // GDEY073D46 - 7C, 800x480px, 7.3"
 #elif defined D_GDEY073D46
 GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(GxEPD2_730c_GDEY073D46(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+
 #else
   #error "ePaper display not defined!"
 #endif
@@ -527,43 +534,32 @@ void configModeCallback (WiFiManager *myWiFiManager)
     if (DISPLAY_RESOLUTION_X >= 800)
     {
       display.setFont(&OpenSansSB_24px);
-      centeredText("Wi-Fi connection setup", DISPLAY_RESOLUTION_X / 2, 20);
-      centeredText("Step 1:", DISPLAY_RESOLUTION_X / 4, 145);
-      centeredText("Step 2:", DISPLAY_RESOLUTION_X * 3 / 4, 145);
-
+      centeredText("No Wi-Fi configured OR connection lost", DISPLAY_RESOLUTION_X / 2, 40);
       display.setFont(&OpenSansSB_18px);
-      centeredText("No Wi-Fi connection configured or connection lost.", DISPLAY_RESOLUTION_X / 2, 55);
-      centeredText("Please turn off your mobile data connection for configuration!", DISPLAY_RESOLUTION_X / 2, 80);
-      centeredText("To connect this device to the internet for the first time:", DISPLAY_RESOLUTION_X / 2, 105);
-
-      centeredText("Connect to this", DISPLAY_RESOLUTION_X / 4, 175);
-      centeredText("access point:", DISPLAY_RESOLUTION_X / 4, 195);
-      centeredText("In web browser, open this", DISPLAY_RESOLUTION_X * 3 / 4, 175);
-      centeredText("address and configure Wi-Fi.", DISPLAY_RESOLUTION_X * 3 / 4, 195);
-      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 380);
-      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 405);
-      centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4, 380);
-      centeredText("In case of any trouble, please visit: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 30);
+      centeredText("Retries in a few minutes if lost.", DISPLAY_RESOLUTION_X / 2, 75);
+      centeredText("To setup or change Wi-Fi configuration", DISPLAY_RESOLUTION_X / 2, 120);
+      centeredText("(with mobile data turned off):", DISPLAY_RESOLUTION_X / 2, 145);
+      centeredText("1) Connect to this AP:", DISPLAY_RESOLUTION_X / 4 + 20, 185);
+      centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4 - 20, 185);
+      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4 + 20, 365);
+      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4 + 20, 390);
+      centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4 - 20, 365);
+      centeredText("Documentation: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 30);
     }
     else if (DISPLAY_RESOLUTION_X >= 600)
     {
       display.setFont(&OpenSansSB_20px);
-      centeredText("Wi-Fi connection setup", DISPLAY_RESOLUTION_X / 2, 15);
-      centeredText("Step 1:", DISPLAY_RESOLUTION_X / 4, 110);
-      centeredText("Step 2:", DISPLAY_RESOLUTION_X * 3 / 4, 110);
+      centeredText("No Wi-Fi configured OR connection lost", DISPLAY_RESOLUTION_X / 2, 25);
       display.setFont(&OpenSansSB_14px);
-      setTextPos("No Wi-Fi connection configured or connection lost.", 10, 40);
-      setTextPos("Please turn off your mobile data connection for configuration!", 10, 60);
-      setTextPos("To connect this device to the internet for the first time:", 10, 80);
-
-      centeredText("Connect to the following", DISPLAY_RESOLUTION_X / 4, 140);
-      centeredText("access point:", DISPLAY_RESOLUTION_X / 4, 160);
-      centeredText("In web browser, open this", DISPLAY_RESOLUTION_X * 3 / 4, 140);
-      centeredText("address and configure Wi-Fi.", DISPLAY_RESOLUTION_X * 3 / 4, 160);
-      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 300);
-      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 320);
-      centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4, 300);
-      centeredText("In case of any trouble please, visit: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
+      centeredText("Retries in a few minutes if lost.", DISPLAY_RESOLUTION_X / 2, 55);
+      centeredText("To setup or change Wi-Fi configuration", DISPLAY_RESOLUTION_X / 2, 90);
+      centeredText("(with mobile data turned off):", DISPLAY_RESOLUTION_X / 2, 110);
+      centeredText("1) Connect to this AP", DISPLAY_RESOLUTION_X / 4, 140);
+      centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4, 140);
+      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 280);
+      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 300);
+      centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4, 280);
+      centeredText("Documentation: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
     }
     else if (DISPLAY_RESOLUTION_X >= 400)
     {
@@ -589,15 +585,15 @@ void configModeCallback (WiFiManager *myWiFiManager)
 
     if (DISPLAY_RESOLUTION_X >= 800)
     {
-      drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 50, DISPLAY_RESOLUTION_X / 4, 4);
+      drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 35, DISPLAY_RESOLUTION_X / 4 + 20, 4);
       String ipAddress = "http://192.168.4.1/";
-      drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 50, DISPLAY_RESOLUTION_X * 3 / 4, 4);
+      drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 35, DISPLAY_RESOLUTION_X * 3 / 4 - 20, 4);
     }
     else if (DISPLAY_RESOLUTION_X >= 600)
     {
-      drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 55, DISPLAY_RESOLUTION_X / 4 + 18, 3);
+      drawQrCode(qrString.c_str(), 4, 225, DISPLAY_RESOLUTION_X / 4 + 18, 3);
       String ipAddress = "http://192.168.4.1/";
-      drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 55, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
+      drawQrCode(ipAddress.c_str(), 4, 225, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
     }
     else if (DISPLAY_RESOLUTION_X >= 400)
     {
@@ -836,7 +832,7 @@ bool checkForNewTimestampOnServer()
   {
     Serial.println("SHT4x not found");
     Serial.println("Check the connection");
-    delay(1000);
+    delay(100);
   }
   else
   {
@@ -1370,7 +1366,7 @@ void setup()
   M5.shutdown(deepSleepTime*60);
 #else  
   esp_sleep_enable_timer_wakeup(deepSleepTime * 60 * 1000000);
-  delay(200);
+  delay(100);
   esp_deep_sleep_start();
 #endif
 }
