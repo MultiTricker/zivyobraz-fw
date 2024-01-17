@@ -463,7 +463,7 @@ void drawQrCode(const char* qrStr, int qrSize, int yCord, int xCord, byte qrSize
         display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, 0);
       }
       else {
-        display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, 1);
+        display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, 65535);
       }
     }
   }
@@ -527,53 +527,51 @@ void configModeCallback (WiFiManager *myWiFiManager)
     if (DISPLAY_RESOLUTION_X >= 800)
     {
       display.setFont(&OpenSansSB_24px);
-      centeredText("WiFi connection setup", DISPLAY_RESOLUTION_X / 2, 10);
-      centeredText("Step 1:", DISPLAY_RESOLUTION_X / 4, 140);
-      centeredText("Step 2:", DISPLAY_RESOLUTION_X * 3 / 4, 140);
-      display.setFont(&OpenSansSB_18px);
-      setTextPos("No Wi-Fi connection configured or connection lost.", 10, 40);
-      setTextPos("Please turn off your mobile data connection for configuration!", 10, 65);
-      setTextPos("To connect this device to the Internet for the first time, complete these steps:", 10, 90);
+      centeredText("Wi-Fi connection setup", DISPLAY_RESOLUTION_X / 2, 20);
+      centeredText("Step 1:", DISPLAY_RESOLUTION_X / 4, 145);
+      centeredText("Step 2:", DISPLAY_RESOLUTION_X * 3 / 4, 145);
 
-      centeredText("Connect to the following", DISPLAY_RESOLUTION_X / 4, 170);
-      centeredText("access point", DISPLAY_RESOLUTION_X / 4, 190);
-      centeredText("Open web browser, go to this address", DISPLAY_RESOLUTION_X * 3 / 4, 170);
-      centeredText("and set up connection to your WiFi.", DISPLAY_RESOLUTION_X * 3 / 4, 190);
-      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 400);
-      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 420);
-      centeredText("192.168.4.1", DISPLAY_RESOLUTION_X * 3 / 4, 410);
-      centeredText("In case of any trouble, please visit https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
+      display.setFont(&OpenSansSB_18px);
+      centeredText("No Wi-Fi connection configured or connection lost.", DISPLAY_RESOLUTION_X / 2, 55);
+      centeredText("Please turn off your mobile data connection for configuration!", DISPLAY_RESOLUTION_X / 2, 80);
+      centeredText("To connect this device to the internet for the first time:", DISPLAY_RESOLUTION_X / 2, 105);
+
+      centeredText("Connect to this", DISPLAY_RESOLUTION_X / 4, 175);
+      centeredText("access point:", DISPLAY_RESOLUTION_X / 4, 195);
+      centeredText("In web browser, open this", DISPLAY_RESOLUTION_X * 3 / 4, 175);
+      centeredText("address and configure Wi-Fi.", DISPLAY_RESOLUTION_X * 3 / 4, 195);
+      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 380);
+      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 405);
+      centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4, 380);
+      centeredText("In case of any trouble, please visit: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 30);
     }
-    else if (DISPLAY_RESOLUTION_X > 600)
+    else if (DISPLAY_RESOLUTION_X >= 600)
     {
-      Serial.println("Resolution > 600px,");
       display.setFont(&OpenSansSB_20px);
-      centeredText("WiFi connection setup", DISPLAY_RESOLUTION_X / 2, 15);
+      centeredText("Wi-Fi connection setup", DISPLAY_RESOLUTION_X / 2, 15);
       centeredText("Step 1:", DISPLAY_RESOLUTION_X / 4, 110);
       centeredText("Step 2:", DISPLAY_RESOLUTION_X * 3 / 4, 110);
       display.setFont(&OpenSansSB_14px);
-      setTextPos("You may see this screen because of lost connection to the WIFi", 10, 40);
-      setTextPos("Please turn off your mobile data connection!", 10, 60);
-      setTextPos("Connect this device to the Internet for first time, complete these steps:", 10, 80);
+      setTextPos("No Wi-Fi connection configured or connection lost.", 10, 40);
+      setTextPos("Please turn off your mobile data connection for configuration!", 10, 60);
+      setTextPos("To connect this device to the internet for the first time:", 10, 80);
 
       centeredText("Connect to the following", DISPLAY_RESOLUTION_X / 4, 140);
-      centeredText("access point", DISPLAY_RESOLUTION_X / 4, 160);
-      centeredText("Open web browser, go to this address", DISPLAY_RESOLUTION_X * 3 / 4, 140);
-      centeredText("and set up connection to your WiFi.", DISPLAY_RESOLUTION_X * 3 / 4, 160);
+      centeredText("access point:", DISPLAY_RESOLUTION_X / 4, 160);
+      centeredText("In web browser, open this", DISPLAY_RESOLUTION_X * 3 / 4, 140);
+      centeredText("address and configure Wi-Fi.", DISPLAY_RESOLUTION_X * 3 / 4, 160);
       centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 300);
       centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 320);
-      centeredText("192.168.4.1", DISPLAY_RESOLUTION_X * 3 / 4, 310);
+      centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4, 300);
       centeredText("In case of any trouble please, visit: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
     }
     else if (DISPLAY_RESOLUTION_X >= 400)
     {
       //TODO for 4" display
     }
-    else if (DISPLAY_RESOLUTION_X < 400)
+    else
     {
-      //TODO for 2.13" display
-    } else {
-      //some special case
+      
     }
 
     // Create the QR code
@@ -592,27 +590,20 @@ void configModeCallback (WiFiManager *myWiFiManager)
     if (DISPLAY_RESOLUTION_X >= 800)
     {
       drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 50, DISPLAY_RESOLUTION_X / 4, 4);
-      String ipAddress = "192.168.4.1";
+      String ipAddress = "http://192.168.4.1/";
       drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 50, DISPLAY_RESOLUTION_X * 3 / 4, 4);
-      //display.display(false); // update screen
     }
-    else if (DISPLAY_RESOLUTION_X > 600)
+    else if (DISPLAY_RESOLUTION_X >= 600)
     {
       drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 55, DISPLAY_RESOLUTION_X / 4 + 18, 3);
-      String ipAddress = "192.168.4.1";
+      String ipAddress = "http://192.168.4.1/";
       drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 55, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
-      //display.display(false); // update screen
     }
-    else if (DISPLAY_RESOLUTION_X >= 400 && DISPLAY_RESOLUTION_X < 600)
+    else if (DISPLAY_RESOLUTION_X >= 400)
     {
 
     }
-    else if (DISPLAY_RESOLUTION_X < 400)
-    {
-
-    } else {
-      //some special case
-    }
+    // otherwise no space for QR code
   } while (display.nextPage());
   
   setEPaperPowerOn(false);
