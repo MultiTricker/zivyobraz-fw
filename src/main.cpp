@@ -75,6 +75,9 @@
 //#define D_GDEQ0583Z31   // 648x480, 5.83"
 //#define D_GDEY075Z08    // 800x480, 7.5"
 
+// 4C
+//#define D_WS437YRBW     // 512x368, 4.37"
+
 // 7C
 //#define D_GDEP0565D90   // 600x448, 5.65"
 //#define D_GDEY073D46    // 800x480, 7.3"
@@ -165,6 +168,11 @@ static const char *defined_color_type = "BW";
 #elif defined TYPE_3C
   #include <GxEPD2_3C.h>
 static const char *defined_color_type = "3C";
+
+// 4 colors (Black, White, Red and Yellow)
+#elif defined TYPE_4C
+  #include <GxEPD2_4C.h>
+static const char *defined_color_type = "4C";
 
 // 4 colors (Grayscale - Black, Darkgrey, Lightgrey, White) (https://github.com/ZinggJM/GxEPD2_4G)
 #elif defined TYPE_GRAYSCALE
@@ -267,6 +275,14 @@ GxEPD2_3C<GxEPD2_583c_Z83, GxEPD2_583c_Z83::HEIGHT> display(GxEPD2_583c_Z83(PIN_
 // GDEY075Z08 - 3C, 800x480px, 7.5"
 #elif defined D_GDEY075Z08
 GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+
+///////////////////////
+// 4C
+///////////////////////
+
+// WS437YRBW - 4C, 512x368px, 4.37"
+#elif defined D_WS437YRBW
+GxEPD2_4C<GxEPD2_437c, GxEPD2_437c::HEIGHT / 4> display(GxEPD2_437c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 ///////////////////////
 // 7C
@@ -937,15 +953,21 @@ void readBitmapData()
   has_multicolors = false;
   grayscale = true;
 
+#elif defined TYPE_3C
+  with_color = true;
+  has_multicolors = false;
+  grayscale = false;
+
+#elif defined TYPE_4C
+  with_color = true;
+  has_multicolors = true;
+  grayscale = false;
+
 #elif defined TYPE_7C
   with_color = true;
   has_multicolors = true;
   grayscale = false;
 
-#elif defined TYPE_3C
-  with_color = true;
-  has_multicolors = false;
-  grayscale = false;
 #endif
 
   bool connection_ok = false;
@@ -1218,7 +1240,7 @@ void readBitmapData()
     uint16_t color2 = GxEPD_LIGHTGREY;
     uint16_t color3 = GxEPD_DARKGREY;
 
-#ifdef TYPE_3C
+#ifdef defined TYPE_3C || defined TYPE_4C
     color2 = GxEPD_RED;
     color3 = GxEPD_YELLOW;
 
