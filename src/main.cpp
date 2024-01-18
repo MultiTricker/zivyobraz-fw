@@ -210,7 +210,7 @@ GxEPD2_BW<GxEPD2_310_GDEQ031T10, GxEPD2_310_GDEQ031T10::HEIGHT> display(GxEPD2_3
 
 // GDEQ042T81 - BW, 400x300px, 4.2"
 #elif defined D_GDEQ042T81
-GxEPD2_BW<GxEPD2_420_GDEY042T91, GxEPD2_420_GDEY042T91::HEIGHT> display(GxEPD2_420_GDEY042T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> display(GxEPD2_420_GDEY042T81(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ0583T31 - BW, 648x480px, 5.83"
 #elif defined D_GDEQ0583T31
@@ -302,12 +302,12 @@ GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(Gx
 // ADC reading
 #include <ESP32AnalogRead.h>
 // Font
-#include "fonts/OpenSansSB_12px.h"
+//#include "fonts/OpenSansSB_12px.h"
 #include "fonts/OpenSansSB_14px.h"
 #include "fonts/OpenSansSB_16px.h"
 #include "fonts/OpenSansSB_18px.h"
 #include "fonts/OpenSansSB_20px.h"
-#include "fonts/OpenSansSB_22px.h"
+//#include "fonts/OpenSansSB_22px.h"
 #include "fonts/OpenSansSB_24px.h"
 
 #include <QRCodeGenerator.h>
@@ -467,10 +467,10 @@ void drawQrCode(const char* qrStr, int qrSize, int yCord, int xCord, byte qrSize
       int newY = offset_y + (y * qrSizeMulti);
 
       if (qrcode_getModule(&qrcode, x, y)) {
-        display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, 0);
+        display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, GxEPD_BLACK);
       }
       else {
-        display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, 65535);
+        display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, GxEPD_WHITE);
       }
     }
   }
@@ -513,13 +513,23 @@ void displayInit()
 }
 
 // This is called if the WifiManager is in config mode (AP open)
+// and draws information screen
 void configModeCallback (WiFiManager *myWiFiManager)
 {
-  // Set network name to wi-fi mac address
   String hostname = "INK_";
   hostname += WiFi.macAddress();
-  // Replace colon with nothing
   hostname.replace(":", "");
+
+  /*
+    QR code hint
+    Common format: WIFI:S:<SSID>;T:<WEP|WPA|nopass>;P:<PASSWORD>;H:<true|false|blank>;;
+    Sample: WIFI:S:MySSID;T:WPA;P:MyPassW0rd;;
+  */
+  //Serial.println(qrString);
+  String qrString = "WIFI:S:";
+  qrString += hostname;
+  qrString += ";T:WPA;P:zivyobraz;;";
+  String ipAddress = "http://192.168.4.1/";
 
   timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
 
@@ -533,73 +543,86 @@ void configModeCallback (WiFiManager *myWiFiManager)
   {
     if (DISPLAY_RESOLUTION_X >= 800)
     {
+      display.fillRect(0, 0, DISPLAY_RESOLUTION_X, 90, GxEPD_BLACK);
+      display.setTextColor(GxEPD_WHITE);
       display.setFont(&OpenSansSB_24px);
-      centeredText("No Wi-Fi configured OR connection lost", DISPLAY_RESOLUTION_X / 2, 40);
+      centeredText("No Wi-Fi configured OR connection lost", DISPLAY_RESOLUTION_X / 2, 28);
       display.setFont(&OpenSansSB_18px);
-      centeredText("Retries in a few minutes if lost.", DISPLAY_RESOLUTION_X / 2, 75);
+      centeredText("Retries in a few minutes if lost.", DISPLAY_RESOLUTION_X / 2, 64);
+      display.setTextColor(GxEPD_BLACK);
       centeredText("To setup or change Wi-Fi configuration", DISPLAY_RESOLUTION_X / 2, 120);
       centeredText("(with mobile data turned off):", DISPLAY_RESOLUTION_X / 2, 145);
-      centeredText("1) Connect to this AP:", DISPLAY_RESOLUTION_X / 4 + 20, 185);
-      centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4 - 20, 185);
-      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4 + 20, 365);
-      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4 + 20, 390);
-      centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4 - 20, 365);
-      centeredText("Documentation: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 30);
+      centeredText("1) Connect to this AP:", DISPLAY_RESOLUTION_X / 4, 190);
+      centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4, 190);
+
+      drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 40, DISPLAY_RESOLUTION_X / 4, 4);
+      display.drawLine(DISPLAY_RESOLUTION_X / 2 - 1, 185, DISPLAY_RESOLUTION_X / 2 - 1, 405, GxEPD_BLACK);
+      display.drawLine(DISPLAY_RESOLUTION_X / 2, 185, DISPLAY_RESOLUTION_X / 2, 405, GxEPD_BLACK);
+      drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 40, DISPLAY_RESOLUTION_X * 3 / 4, 4);
+
+      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 370);
+      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 395);
+      centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4, 370);
+      display.fillRect(0, DISPLAY_RESOLUTION_Y - 40, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
+      display.setTextColor(GxEPD_WHITE);
+      centeredText("Documentation: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 22);
     }
     else if (DISPLAY_RESOLUTION_X >= 600)
     {
+      display.fillRect(0, 0, DISPLAY_RESOLUTION_X, 70, GxEPD_BLACK);
+      display.setTextColor(GxEPD_WHITE);
       display.setFont(&OpenSansSB_20px);
-      centeredText("No Wi-Fi configured OR connection lost", DISPLAY_RESOLUTION_X / 2, 25);
+      centeredText("No Wi-Fi configured OR connection lost", DISPLAY_RESOLUTION_X / 2, 20);
       display.setFont(&OpenSansSB_14px);
-      centeredText("Retries in a few minutes if lost.", DISPLAY_RESOLUTION_X / 2, 55);
+      centeredText("Retries in a few minutes if lost.", DISPLAY_RESOLUTION_X / 2, 50);
+      display.setTextColor(GxEPD_BLACK);
       centeredText("To setup or change Wi-Fi configuration", DISPLAY_RESOLUTION_X / 2, 90);
       centeredText("(with mobile data turned off):", DISPLAY_RESOLUTION_X / 2, 110);
       centeredText("1) Connect to this AP", DISPLAY_RESOLUTION_X / 4, 140);
       centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4, 140);
+
+      drawQrCode(qrString.c_str(), 4, 225, DISPLAY_RESOLUTION_X / 4 + 18, 3);
+      display.drawLine(DISPLAY_RESOLUTION_X / 2 - 1, 135, DISPLAY_RESOLUTION_X / 2 - 1, 310, GxEPD_BLACK);
+      display.drawLine(DISPLAY_RESOLUTION_X / 2, 135, DISPLAY_RESOLUTION_X / 2, 310, GxEPD_BLACK);
+      drawQrCode(ipAddress.c_str(), 4, 225, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
+
       centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 280);
       centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 300);
       centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4, 280);
+      display.fillRect(0, DISPLAY_RESOLUTION_Y - 36, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
+      display.setTextColor(GxEPD_WHITE);
       centeredText("Documentation: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
     }
     else if (DISPLAY_RESOLUTION_X >= 400)
     {
-      //TODO for 4" display
+      display.fillRect(0, 0, DISPLAY_RESOLUTION_X, 58, GxEPD_BLACK);
+      display.setTextColor(GxEPD_WHITE);
+      display.setFont(&OpenSansSB_16px);
+      centeredText("No Wi-Fi configured OR connection lost", DISPLAY_RESOLUTION_X / 2, 16);
+      display.setFont(&OpenSansSB_14px);
+      centeredText("Retries in a few minutes if lost.", DISPLAY_RESOLUTION_X / 2, 40);
+      display.setTextColor(GxEPD_BLACK);
+      centeredText("To setup or change Wi-Fi configuration", DISPLAY_RESOLUTION_X / 2, 72);
+      centeredText("(with mobile data turned off):", DISPLAY_RESOLUTION_X / 2, 92);
+      centeredText("1) Connect to AP", DISPLAY_RESOLUTION_X / 4, 115);
+      centeredText("2) Open in browser:", DISPLAY_RESOLUTION_X * 3 / 4, 115);
+
+      drawQrCode(qrString.c_str(), 3, 190, DISPLAY_RESOLUTION_X / 4 + 18, 3);
+      display.drawLine(DISPLAY_RESOLUTION_X / 2 + 2, 108, DISPLAY_RESOLUTION_X / 2 + 2, 260, GxEPD_BLACK);
+      display.drawLine(DISPLAY_RESOLUTION_X / 2 + 3, 108, DISPLAY_RESOLUTION_X / 2 + 3, 260, GxEPD_BLACK);
+      drawQrCode(ipAddress.c_str(), 3, 190, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
+
+      centeredText("AP: " + hostname, DISPLAY_RESOLUTION_X / 4, 232);
+      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 250);
+      centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4, 232);
+      display.fillRect(0, DISPLAY_RESOLUTION_Y - 25, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
+      display.setTextColor(GxEPD_WHITE);
+      centeredText("Documentation: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 15);
     }
     else
     {
       
     }
-
-    // Create the QR code
-
-    /*
-      QR code hint
-      Common format: WIFI:S:<SSID>;T:<WEP|WPA|nopass>;P:<PASSWORD>;H:<true|false|blank>;;
-      Sample: WIFI:S:MySSID;T:WPA;P:MyPassW0rd;;
-    */
-
-    String qrString = "WIFI:S:";
-    qrString += hostname;
-    qrString += ";T:WPA;P:zivyobraz;;";
-    //Serial.println(qrString);
-
-    if (DISPLAY_RESOLUTION_X >= 800)
-    {
-      drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 35, DISPLAY_RESOLUTION_X / 4 + 20, 4);
-      String ipAddress = "http://192.168.4.1/";
-      drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 35, DISPLAY_RESOLUTION_X * 3 / 4 - 20, 4);
-    }
-    else if (DISPLAY_RESOLUTION_X >= 600)
-    {
-      drawQrCode(qrString.c_str(), 4, 225, DISPLAY_RESOLUTION_X / 4 + 18, 3);
-      String ipAddress = "http://192.168.4.1/";
-      drawQrCode(ipAddress.c_str(), 4, 225, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
-    }
-    else if (DISPLAY_RESOLUTION_X >= 400)
-    {
-
-    }
-    // otherwise no space for QR code
   } while (display.nextPage());
   
   setEPaperPowerOn(false);
