@@ -621,7 +621,32 @@ void configModeCallback (WiFiManager *myWiFiManager)
     }
     else
     {
-      
+      // Initialize defined resolution into variables for possible swap later
+      uint16_t small_resolution_x = DISPLAY_RESOLUTION_X;
+      uint16_t small_resolution_y = DISPLAY_RESOLUTION_Y;
+
+      // Use landscape mode - many small displays are in portrait mode
+      if(DISPLAY_RESOLUTION_X < DISPLAY_RESOLUTION_Y)
+      {
+        display.setRotation(3);
+
+        // Swap resolution for X and Y
+        small_resolution_x = DISPLAY_RESOLUTION_Y;
+        small_resolution_y = DISPLAY_RESOLUTION_X;
+      }
+
+      display.fillRect(0, 0, small_resolution_x, 34, GxEPD_BLACK);
+      display.setTextColor(GxEPD_WHITE);
+      display.setFont(&OpenSansSB_14px);
+      centeredText("No Wi-Fi setup OR connection", small_resolution_x / 2, 6);
+      centeredText("Retries in a few minutes if lost.", small_resolution_x / 2, 25);
+      display.setTextColor(GxEPD_BLACK);
+      setTextPos("Setup or change cfg:", 2, 44);
+      setTextPos("AP: ..." + hostname.substring(hostname.length() - 6), 2, 64);
+      setTextPos("Password: zivyobraz", 2, 84);
+      setTextPos("Help: zivyobraz.eu ", 2, 104);
+
+      drawQrCode(qrString.c_str(), 3, 93, small_resolution_x - 28, 3);
     }
   } while (display.nextPage());
   
