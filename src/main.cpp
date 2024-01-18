@@ -44,6 +44,7 @@
 
 //#define TYPE_BW // black and white
 //#define TYPE_3C // 3 colors - black, white and red/yellow
+//#define TYPE_4C // 4 colors - black, white, red and yellow
 //#define TYPE_GRAYSCALE // grayscale - 4 colors
 //#define TYPE_7C // 7 colors
 
