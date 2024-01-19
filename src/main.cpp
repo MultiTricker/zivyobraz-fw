@@ -595,7 +595,7 @@ void configModeCallback (WiFiManager *myWiFiManager)
       display.setTextColor(GxEPD_BLACK);
       centeredText("To setup or change Wi-Fi configuration", DISPLAY_RESOLUTION_X / 2, 90);
       centeredText("(with mobile data turned off):", DISPLAY_RESOLUTION_X / 2, 110);
-      centeredText("1) Connect to this AP", DISPLAY_RESOLUTION_X / 4, 140);
+      centeredText("1) Connect to this AP:", DISPLAY_RESOLUTION_X / 4, 140);
       centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4, 140);
 
       drawQrCode(qrString.c_str(), 4, 225, DISPLAY_RESOLUTION_X / 4 + 18, 3);
@@ -608,7 +608,7 @@ void configModeCallback (WiFiManager *myWiFiManager)
       centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4, 280);
       display.fillRect(0, DISPLAY_RESOLUTION_Y - 36, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
       display.setTextColor(GxEPD_WHITE);
-      centeredText("Documentation: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
+      centeredText("Documentation: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 24);
     }
     else if (DISPLAY_RESOLUTION_X >= 400)
     {
