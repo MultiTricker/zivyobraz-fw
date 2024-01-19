@@ -1241,7 +1241,11 @@ void readBitmapData()
     uint16_t color2 = GxEPD_LIGHTGREY;
     uint16_t color3 = GxEPD_DARKGREY;
 
-#ifdef defined TYPE_3C || defined TYPE_4C
+#ifdef TYPE_3C
+    color2 = GxEPD_RED;
+    color3 = GxEPD_YELLOW;
+
+#elif defined TYPE_4C
     color2 = GxEPD_RED;
     color3 = GxEPD_YELLOW;
 
