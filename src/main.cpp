@@ -805,6 +805,7 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
   while (client.connected())
   {
     String line = client.readStringUntil('\n');
+    //Serial.println(line);
 
     if (checkTimestamp)
     {
@@ -812,6 +813,7 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
       if (line.startsWith("Timestamp"))
       {
         gotTimestamp = true;
+        // Skipping also colon and space - also in following code for sleep, rotate, ...
         timestampNow = line.substring(11).toInt();
         Serial.print("Timestamp now: ");
         Serial.println(timestampNow);
@@ -824,6 +826,15 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
         deepSleepTime = sleep;
         Serial.print("Sleep: ");
         Serial.println(sleep);
+      }
+
+      // Do we want to rotate display? (IE. upside down)
+      if (line.startsWith("Rotate"))
+      {
+        uint8_t rotation = line.substring(8).toInt();
+        display.setRotation(rotation);
+        Serial.print("Rotate: ");
+        Serial.println(rotation);
       }
     }
 
