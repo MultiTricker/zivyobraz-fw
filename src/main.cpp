@@ -498,20 +498,20 @@ void drawQrCode(const char *qrStr, int qrSize, int yCord, int xCord, byte qrSize
   }
 }
 
-void setTextPos(String text, int xCord, int yCord)
+void setTextPos(const String &text, int xCord, int yCord)
 {
   int16_t x1, y1;
   uint16_t w, h;
-  display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  display.getTextBounds(text.c_str(), 0, 0, &x1, &y1, &w, &h);
   display.setCursor(xCord, (yCord + (h / 2)));
   display.print(text);
 }
 
-void centeredText(String text, int xCord, int yCord)
+void centeredText(const String &text, int xCord, int yCord)
 {
   int16_t x1, y1;
   uint16_t w, h;
-  display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  display.getTextBounds(text.c_str(), 0, 0, &x1, &y1, &w, &h);
   display.setCursor(xCord - (w / 2), (yCord + (h / 2)));
   display.println(text);
 }
@@ -538,20 +538,19 @@ void displayInit()
 // and draws information screen
 void configModeCallback(WiFiManager *myWiFiManager)
 {
-  String hostname = "INK_";
-  hostname += WiFi.macAddress();
-  hostname.replace(":", "");
-
   /*
     QR code hint
     Common format: WIFI:S:<SSID>;T:<WEP|WPA|nopass>;P:<PASSWORD>;H:<true|false|blank>;;
     Sample: WIFI:S:MySSID;T:WPA;P:MyPassW0rd;;
   */
+  const String hostname = WiFi.softAPSSID();
+  const String password =  WiFi.psk();
+
+  const String qrString = "WIFI:S:" + hostname + ";T:WPA;P:" + password + ";;";
   //Serial.println(qrString);
-  String qrString = "WIFI:S:";
-  qrString += hostname;
-  qrString += ";T:WPA;P:zivyobraz;;";
-  String ipAddress = "http://192.168.4.1/";
+
+  const String urlWeb = "http://" + WiFi.softAPIP().toString();
+  const String urlWiki = "https://wiki.zivyobraz.eu ";
 
   timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
 
@@ -580,14 +579,14 @@ void configModeCallback(WiFiManager *myWiFiManager)
       drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 40, DISPLAY_RESOLUTION_X / 4, 4);
       display.drawLine(DISPLAY_RESOLUTION_X / 2 - 1, 185, DISPLAY_RESOLUTION_X / 2 - 1, 405, GxEPD_BLACK);
       display.drawLine(DISPLAY_RESOLUTION_X / 2, 185, DISPLAY_RESOLUTION_X / 2, 405, GxEPD_BLACK);
-      drawQrCode(ipAddress.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 40, DISPLAY_RESOLUTION_X * 3 / 4, 4);
+      drawQrCode(urlWeb.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 40, DISPLAY_RESOLUTION_X * 3 / 4, 4);
 
       centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 370);
-      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 395);
-      centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4, 370);
+      centeredText("Password: " + password, DISPLAY_RESOLUTION_X / 4, 395);
+      centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, 370);
       display.fillRect(0, DISPLAY_RESOLUTION_Y - 40, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
       display.setTextColor(GxEPD_WHITE);
-      centeredText("Documentation: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 22);
+      centeredText("Documentation: " + urlWiki, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 22);
     }
     else if (DISPLAY_RESOLUTION_X >= 600)
     {
@@ -606,14 +605,14 @@ void configModeCallback(WiFiManager *myWiFiManager)
       drawQrCode(qrString.c_str(), 4, 225, DISPLAY_RESOLUTION_X / 4 + 18, 3);
       display.drawLine(DISPLAY_RESOLUTION_X / 2 - 1, 135, DISPLAY_RESOLUTION_X / 2 - 1, 310, GxEPD_BLACK);
       display.drawLine(DISPLAY_RESOLUTION_X / 2, 135, DISPLAY_RESOLUTION_X / 2, 310, GxEPD_BLACK);
-      drawQrCode(ipAddress.c_str(), 4, 225, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
+      drawQrCode(urlWeb.c_str(), 4, 225, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
 
       centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 280);
-      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 300);
-      centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4, 280);
+      centeredText("Password: " + password, DISPLAY_RESOLUTION_X / 4, 300);
+      centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, 280);
       display.fillRect(0, DISPLAY_RESOLUTION_Y - 36, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
       display.setTextColor(GxEPD_WHITE);
-      centeredText("Documentation: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 24);
+      centeredText("Documentation: " + urlWiki, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 24);
     }
     else if (DISPLAY_RESOLUTION_X >= 400)
     {
@@ -632,14 +631,14 @@ void configModeCallback(WiFiManager *myWiFiManager)
       drawQrCode(qrString.c_str(), 3, 190, DISPLAY_RESOLUTION_X / 4 + 18, 3);
       display.drawLine(DISPLAY_RESOLUTION_X / 2 + 2, 108, DISPLAY_RESOLUTION_X / 2 + 2, 260, GxEPD_BLACK);
       display.drawLine(DISPLAY_RESOLUTION_X / 2 + 3, 108, DISPLAY_RESOLUTION_X / 2 + 3, 260, GxEPD_BLACK);
-      drawQrCode(ipAddress.c_str(), 3, 190, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
+      drawQrCode(urlWeb.c_str(), 3, 190, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
 
       centeredText("AP: " + hostname, DISPLAY_RESOLUTION_X / 4, 232);
-      centeredText("Password: zivyobraz", DISPLAY_RESOLUTION_X / 4, 250);
-      centeredText("http://192.168.4.1/", DISPLAY_RESOLUTION_X * 3 / 4, 232);
+      centeredText("Password: " + password, DISPLAY_RESOLUTION_X / 4, 250);
+      centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, 232);
       display.fillRect(0, DISPLAY_RESOLUTION_Y - 25, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
       display.setTextColor(GxEPD_WHITE);
-      centeredText("Documentation: https://wiki.zivyobraz.eu ", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 15);
+      centeredText("Documentation: " + urlWiki, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 15);
     }
     else
     {
@@ -665,7 +664,7 @@ void configModeCallback(WiFiManager *myWiFiManager)
       display.setTextColor(GxEPD_BLACK);
       setTextPos("Setup or change cfg:", 2, 44);
       setTextPos("AP: ..." + hostname.substring(hostname.length() - 6), 2, 64);
-      setTextPos("Password: zivyobraz", 2, 84);
+      setTextPos("Password: " + password, 2, 84);
       setTextPos("Help: zivyobraz.eu ", 2, 104);
 
       drawQrCode(qrString.c_str(), 3, 93, small_resolution_x - 28, 3);
