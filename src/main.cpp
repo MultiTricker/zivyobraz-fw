@@ -391,9 +391,7 @@ void setEPaperPowerOn(bool on)
   // use HIGH/LOW notation for better readability
 #ifdef ES3ink
   digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
-#elif defined M5StackCoreInk
-  // void
-#else
+#elif !defined M5StackCoreInk
   digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
 #endif
 }
@@ -485,14 +483,8 @@ void drawQrCode(const char *qrStr, int qrSize, int yCord, int xCord, byte qrSize
       int newX = offset_x + (x * qrSizeMulti);
       int newY = offset_y + (y * qrSizeMulti);
 
-      if (qrcode_getModule(&qrcode, x, y))
-      {
-        display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, GxEPD_BLACK);
-      }
-      else
-      {
-        display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, GxEPD_WHITE);
-      }
+      display.fillRect(newX, newY, qrSizeMulti, qrSizeMulti,
+                       qrcode_getModule(&qrcode, x, y) ? GxEPD_BLACK : GxEPD_WHITE);
     }
   }
 }
@@ -974,12 +966,7 @@ void readBitmapData()
   has_multicolors = false;
   grayscale = false;
 
-#elif defined TYPE_4C
-  with_color = true;
-  has_multicolors = true;
-  grayscale = false;
-
-#elif defined TYPE_7C
+#elif (defined TYPE_4C) || (defined TYPE_7C)
   with_color = true;
   has_multicolors = true;
   grayscale = false;
@@ -1244,8 +1231,8 @@ void readBitmapData()
     // Z3 - 2 bits for color, 6 bits for number of repetition
     // Z3 - 3 bits for color, 5 bits for number of repetition
     if (header == 0x315A) Serial.println("Got format Z1, processing");
-    if (header == 0x325A) Serial.println("Got format Z2, processing");
-    if (header == 0x335A) Serial.println("Got format Z3, processing");
+    else if (header == 0x325A) Serial.println("Got format Z2, processing");
+    else Serial.println("Got format Z3, processing");
 
     uint32_t bytes_read = 2; // read so far
     uint16_t w = display.width();
@@ -1254,20 +1241,12 @@ void readBitmapData()
     uint16_t color;
     valid = true;
 
-    uint16_t color2 = GxEPD_LIGHTGREY;
-    uint16_t color3 = GxEPD_DARKGREY;
+    uint16_t color2 = GxEPD_RED;
+    uint16_t color3 = GxEPD_YELLOW;
 
-#ifdef TYPE_3C
-    color2 = GxEPD_RED;
-    color3 = GxEPD_YELLOW;
-
-#elif defined TYPE_4C
-    color2 = GxEPD_RED;
-    color3 = GxEPD_YELLOW;
-
-#elif defined TYPE_7C
-    color2 = GxEPD_RED;
-    color3 = GxEPD_YELLOW;
+#if (defined TYPE_BW) || (defined TYPE_GRAYSCALE)
+    color2 = GxEPD_LIGHTGREY;
+    color3 = GxEPD_DARKGREY;
 #endif
 
     for (uint16_t row = 0; row < h; row++) // for each line
@@ -1404,8 +1383,6 @@ void setup()
   M5.begin(false, false, true);
   display.init(115200, false);
   M5.update();
-#else
-  Serial.begin(115200);
 #endif
 
   Serial.println("Starting firmware for Zivy Obraz service");
