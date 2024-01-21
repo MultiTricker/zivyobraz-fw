@@ -118,7 +118,7 @@
 
   #include <esp_adc_cal.h>
   #include <soc/adc_channel.h>
-  esp_adc_cal_characteristics_t adc_cal;
+esp_adc_cal_characteristics_t adc_cal;
 
 #elif defined MakerBadge_revB
   #define PIN_SS 41   // SS
@@ -338,7 +338,7 @@ SPIClass hspi(HSPI);
 #ifdef SHT40
   #include <Wire.h>
   #include "Adafruit_SHT4x.h"
-  Adafruit_SHT4x sht4 = Adafruit_SHT4x();
+Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 #endif
 
 /* ---- ADC reading - indoor Battery voltage ---- */
@@ -358,7 +358,7 @@ SPIClass hspi(HSPI);
   #define BATT_V_CAL_SCALE 1.05
 
 #else
-  ESP32AnalogRead adc;
+ESP32AnalogRead adc;
   #define dividerRatio 1.769
   #define vBatPin 34
 #endif
@@ -415,7 +415,7 @@ float getBatteryVoltage()
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_11);
 
   Serial.println("Reading battery on ES3ink board");
-  
+
   digitalWrite(enableBattery, LOW);
   uint32_t raw = adc1_get_raw(vBatPin);
   //Serial.println(raw);
@@ -468,7 +468,7 @@ float getBatteryVoltage()
   return volt;
 }
 
-void drawQrCode(const char* qrStr, int qrSize, int yCord, int xCord, byte qrSizeMulti = 1)
+void drawQrCode(const char *qrStr, int qrSize, int yCord, int xCord, byte qrSizeMulti = 1)
 {
   uint8_t qrcodeData[qrcode_getBufferSize(qrSize)];
   qrcode_initText(&qrcode, qrcodeData, qrSize, ECC_LOW, qrStr);
@@ -478,15 +478,19 @@ void drawQrCode(const char* qrStr, int qrSize, int yCord, int xCord, byte qrSize
   int offset_x = xCord - (qrSizeTemp * 2);
   int offset_y = yCord - (qrSizeTemp * 2);
 
-  for (int y = 0; y < qrcode.size; y++) {
-    for (int x = 0; x < qrcode.size; x++) {
+  for (int y = 0; y < qrcode.size; y++)
+  {
+    for (int x = 0; x < qrcode.size; x++)
+    {
       int newX = offset_x + (x * qrSizeMulti);
       int newY = offset_y + (y * qrSizeMulti);
 
-      if (qrcode_getModule(&qrcode, x, y)) {
+      if (qrcode_getModule(&qrcode, x, y))
+      {
         display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, GxEPD_BLACK);
       }
-      else {
+      else
+      {
         display.fillRect( newX, newY, qrSizeMulti, qrSizeMulti, GxEPD_WHITE);
       }
     }
@@ -531,7 +535,7 @@ void displayInit()
 
 // This is called if the WifiManager is in config mode (AP open)
 // and draws information screen
-void configModeCallback (WiFiManager *myWiFiManager)
+void configModeCallback(WiFiManager *myWiFiManager)
 {
   String hostname = "INK_";
   hostname += WiFi.macAddress();
@@ -643,7 +647,7 @@ void configModeCallback (WiFiManager *myWiFiManager)
       uint16_t small_resolution_y = DISPLAY_RESOLUTION_Y;
 
       // Use landscape mode - many small displays are in portrait mode
-      if(DISPLAY_RESOLUTION_X < DISPLAY_RESOLUTION_Y)
+      if (DISPLAY_RESOLUTION_X < DISPLAY_RESOLUTION_Y)
       {
         display.setRotation(3);
 
@@ -666,7 +670,7 @@ void configModeCallback (WiFiManager *myWiFiManager)
       drawQrCode(qrString.c_str(), 3, 93, small_resolution_x - 28, 3);
     }
   } while (display.nextPage());
-  
+
   setEPaperPowerOn(false);
 }
 
@@ -697,7 +701,7 @@ void WiFiInit()
   wm.autoConnect(hostname.c_str(), "zivyobraz");
 }
 
-uint32_t read8n(WiFiClient& client, uint8_t *buffer, int32_t bytes)
+uint32_t read8n(WiFiClient &client, uint8_t *buffer, int32_t bytes)
 {
   int32_t remain = bytes;
   uint32_t start = millis();
@@ -715,20 +719,20 @@ uint32_t read8n(WiFiClient& client, uint8_t *buffer, int32_t bytes)
   return bytes - remain;
 }
 
-uint32_t skip(WiFiClient& client, int32_t bytes)
+uint32_t skip(WiFiClient &client, int32_t bytes)
 {
   return read8n(client, NULL, bytes);
 }
 
 // read one byte safely from WiFiClient, wait a while if data are not available immediately
-uint8_t safe_read(WiFiClient& client)
+uint8_t safe_read(WiFiClient &client)
 {
   uint8_t ret;
   read8n(client, &ret, 1);
   return ret;
 }
 
-uint16_t read16(WiFiClient& client)
+uint16_t read16(WiFiClient &client)
 {
   // BMP data is stored little-endian, same as Arduino.
   uint16_t result;
@@ -737,7 +741,7 @@ uint16_t read16(WiFiClient& client)
   return result;
 }
 
-uint32_t read32(WiFiClient& client)
+uint32_t read32(WiFiClient &client)
 {
   // BMP data is stored little-endian, same as Arduino.
   uint32_t result;
@@ -1055,18 +1059,19 @@ void readBitmapData()
         if (depth <= 8)
         {
           if (depth < 8) bitmask >>= depth;
-          //bytes_read += skip(client, 54 - bytes_read); //palette is always @ 54
+          // bytes_read += skip(client, 54 - bytes_read); //palette is always @ 54
           bytes_read += skip(client, (int32_t)(imageOffset - (4 << depth) - bytes_read)); // 54 for regular, diff for colorsimportant
           for (uint16_t pn = 0; pn < (1 << depth); pn++)
           {
-            blue  = safe_read(client);
+            blue = safe_read(client);
             green = safe_read(client);
-            red   = safe_read(client);
+            red = safe_read(client);
             skip(client, 1);
             bytes_read += 4;
             whitish = with_color ? ((red > 0x80) && (green > 0x80) && (blue > 0x80)) : ((red + green + blue) > 3 * 0x80); // whitish
             colored = (red > 0xF0) || ((green > 0xF0) && (blue > 0xF0)); // reddish or yellowish?
-            if (0 == pn % 8) {
+            if (0 == pn % 8)
+            {
               mono_palette_buffer[pn / 8] = 0;
               color_palette_buffer[pn / 8] = 0;
             }
@@ -1302,7 +1307,8 @@ void readBitmapData()
           count = compressed & 0b00111111;
           pixel_color = (compressed & 0b11000000) >> 6;
           bytes_read++;
-        } else if (header == 0x335A)
+        }
+        else if (header == 0x335A)
         {
           // Z3
           compressed = safe_read(client);
@@ -1390,8 +1396,8 @@ void setup()
   // can be read right after High->Low transition of enableBattery
   // Here, pin should not go LOW, so intentionally digitalWrite called as first.
   // First write output register (PORTx) then activate output direction (DDRx). Pin will go from highZ(sleep) to HIGH without LOW pulse.
-  digitalWrite(enableBattery,HIGH); 
-  pinMode(enableBattery,OUTPUT); 
+  digitalWrite(enableBattery, HIGH); 
+  pinMode(enableBattery, OUTPUT); 
 #endif
 
 #ifdef M5StackCoreInk
@@ -1449,7 +1455,7 @@ void setup()
 
 #ifdef M5StackCoreInk
   display.powerOff();
-  M5.shutdown(deepSleepTime*60);
+  M5.shutdown(deepSleepTime * 60);
 #else  
   esp_sleep_enable_timer_wakeup(deepSleepTime * 60 * 1000000);
   delay(100);
