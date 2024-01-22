@@ -681,10 +681,10 @@ void WiFiInit()
   WiFi.mode(WIFI_STA);
   WiFiManager wm;
   wm.setWiFiAutoReconnect(true);
-  wm.setConnectRetries(3);
+  wm.setConnectRetries(5);
   wm.setDarkMode(true);
-  wm.setConnectTimeout(3);
-  wm.setSaveConnectTimeout(3);
+  wm.setConnectTimeout(5);
+  wm.setSaveConnectTimeout(5);
 
   // Set network name to wi-fi mac address
   String hostname = "INK_";
