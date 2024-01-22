@@ -381,6 +381,7 @@ uint64_t deepSleepTime = defaultDeepSleepTime; // actual sleep time in minutes, 
 /* ---------------------------------------------- */
 
 /* variables */
+String ssid; // Wi-Fi ssid
 int8_t rssi; // Wi-Fi signal strength
 float d_volt; // indoor battery voltage
 RTC_DATA_ATTR uint64_t timestamp = 0;
@@ -394,6 +395,14 @@ void setEPaperPowerOn(bool on)
 #elif !defined M5StackCoreInk
   digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
 #endif
+}
+
+const String getWifiSSID()
+{
+  const String wifiSSID = WiFi.SSID();
+  Serial.println("Wifi SSID: " + wifiSSID);
+
+  return wifiSSID;
 }
 
 int8_t getWifiStrength()
@@ -750,6 +759,7 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
   String url = "index.php?mac=" + WiFi.macAddress() +
                (checkTimestamp ? "&timestamp_check=1" : "") +
                "&rssi=" + String(rssi) +
+               "&ssid=" + ssid +
                "&v=" + String(d_volt) +
                "&x=" + String(DISPLAY_RESOLUTION_X) +
                "&y=" + String(DISPLAY_RESOLUTION_Y) +
@@ -1402,6 +1412,9 @@ void setup()
 
   // WiFi strength - so you will know how good your signal is
   rssi = getWifiStrength();
+
+  // WiFi SSID - get connected ssid
+  ssid = getWifiSSID();
 
   // Do we need to update the screen?
   if (checkForNewTimestampOnServer())
