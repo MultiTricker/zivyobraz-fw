@@ -910,9 +910,7 @@ bool checkForNewTimestampOnServer()
 
   if (!sht4.begin())
   {
-    Serial.println("SHT4x not found");
-    Serial.println("Check the connection");
-    delay(100);
+    Serial.println("SHT4x not found - maybe just not connected? Otherwise check its wiring.");
   }
   else
   {
