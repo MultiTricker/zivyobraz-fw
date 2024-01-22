@@ -366,6 +366,7 @@ ESP32AnalogRead adc;
 /* ---- Server Zivy obraz ----------------------- */
 const char *host = "cdn.zivyobraz.eu";
 const char *firmware = "2.1";
+const char *wifiPassword = "zivyobraz";
 
 /* ---------- Deepsleep time in minutes --------- */
 uint64_t defaultDeepSleepTime = 2; // if there is a problem with loading images,
@@ -544,9 +545,7 @@ void configModeCallback(WiFiManager *myWiFiManager)
     Sample: WIFI:S:MySSID;T:WPA;P:MyPassW0rd;;
   */
   const String hostname = WiFi.softAPSSID();
-  const String password =  WiFi.psk();
-
-  const String qrString = "WIFI:S:" + hostname + ";T:WPA;P:" + password + ";;";
+  const String qrString = "WIFI:S:" + hostname + ";T:WPA;P:" + wifiPassword + ";;";
   //Serial.println(qrString);
 
   const String urlWeb = "http://" + WiFi.softAPIP().toString();
@@ -582,7 +581,7 @@ void configModeCallback(WiFiManager *myWiFiManager)
       drawQrCode(urlWeb.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 40, DISPLAY_RESOLUTION_X * 3 / 4, 4);
 
       centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 370);
-      centeredText("Password: " + password, DISPLAY_RESOLUTION_X / 4, 395);
+      centeredText("Password: " + String(wifiPassword), DISPLAY_RESOLUTION_X / 4, 395);
       centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, 370);
       display.fillRect(0, DISPLAY_RESOLUTION_Y - 40, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
       display.setTextColor(GxEPD_WHITE);
@@ -608,7 +607,7 @@ void configModeCallback(WiFiManager *myWiFiManager)
       drawQrCode(urlWeb.c_str(), 4, 225, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
 
       centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 280);
-      centeredText("Password: " + password, DISPLAY_RESOLUTION_X / 4, 300);
+      centeredText("Password: " + String(wifiPassword), DISPLAY_RESOLUTION_X / 4, 300);
       centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, 280);
       display.fillRect(0, DISPLAY_RESOLUTION_Y - 36, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
       display.setTextColor(GxEPD_WHITE);
@@ -634,7 +633,7 @@ void configModeCallback(WiFiManager *myWiFiManager)
       drawQrCode(urlWeb.c_str(), 3, 190, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
 
       centeredText("AP: " + hostname, DISPLAY_RESOLUTION_X / 4, 232);
-      centeredText("Password: " + password, DISPLAY_RESOLUTION_X / 4, 250);
+      centeredText("Password: " + String(wifiPassword), DISPLAY_RESOLUTION_X / 4, 250);
       centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, 232);
       display.fillRect(0, DISPLAY_RESOLUTION_Y - 25, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
       display.setTextColor(GxEPD_WHITE);
@@ -664,7 +663,7 @@ void configModeCallback(WiFiManager *myWiFiManager)
       display.setTextColor(GxEPD_BLACK);
       setTextPos("Setup or change cfg:", 2, 44);
       setTextPos("AP: ..." + hostname.substring(hostname.length() - 6), 2, 64);
-      setTextPos("Password: " + password, 2, 84);
+      setTextPos("Password: " + String(wifiPassword), 2, 84);
       setTextPos("Help: zivyobraz.eu ", 2, 104);
 
       drawQrCode(qrString.c_str(), 3, 93, small_resolution_x - 28, 3);
@@ -698,7 +697,7 @@ void WiFiInit()
 
   wm.setConfigPortalTimeout(300); // set portal time to 5 min, then sleep/try again.
   wm.setAPCallback(configModeCallback);
-  wm.autoConnect(hostname.c_str(), "zivyobraz");
+  wm.autoConnect(hostname.c_str(), wifiPassword);
 }
 
 uint32_t read8n(WiFiClient &client, uint8_t *buffer, int32_t bytes)
