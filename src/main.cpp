@@ -63,6 +63,7 @@
 //#define D_GDEQ0426T82   // 800x480, 4.26"
 //#define D_GDEW075T7     // 800x480, 7.5"
 //#define D_GDEQ102T90    // 960x640, 10.2"
+//#define D_075BN-T7      // 800x480, 7.5" (V2)
 
 // Grayscale
 //#define D_GDEW042T2_G   // 400x300, 4.2"
@@ -237,6 +238,8 @@ GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN
 #elif defined D_GDEQ102T90
 GxEPD2_BW<GxEPD2_1160_T91, GxEPD2_1160_T91::HEIGHT / 2> display(GxEPD2_1160_T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
+#elif defined D_075BN-T7
+GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 ///////////////////////
 // Grayscale
 ///////////////////////
