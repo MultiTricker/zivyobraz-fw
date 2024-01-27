@@ -405,8 +405,11 @@ void setEPaperPowerOn(bool on)
 
 const String getWifiSSID()
 {
-  const String wifiSSID = WiFi.SSID();
+  String wifiSSID = WiFi.SSID();
   Serial.println("Wifi SSID: " + wifiSSID);
+
+  // Replace wifiSSID space with %20 for URL
+  wifiSSID.replace(" ", "%20");
 
   return wifiSSID;
 }
