@@ -17,6 +17,9 @@
  * EPD library: https://github.com/ZinggJM/GxEPD2
  * EPD library for 4G "Grayscale": https://github.com/ZinggJM/GxEPD2_4G
  * WiFi manager by tzapu https://github.com/tzapu/WiFiManager
+ * QRCode generator: https://github.com/ricmoo/QRCode
+ * SHT4x (temperature, humidity): https://github.com/adafruit/Adafruit_SHT4X
+ * SCD41 (CO2, temperature, humidity): https://github.com/sparkfun/SparkFun_SCD4x_Arduino_Library
  *
  * original code made by Jean-Marc Zingg and LaskaKit
  * modified by @MultiTricker (https://michalsevcik.eu)
@@ -32,11 +35,13 @@
 //#define MakerBadge_revD
 //#define REMAP_SPI
 
-//////////////////////////////////////////////////////////////////////////////////////
-// Uncomment if you have connected SHT40 sensor for sending temperature and humidity
-//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+// Uncomment if you have connected SHT40 OR SCD41 sensor
+//////////////////////////////////////////////////////////////
 
 //#define SHT40
+// OR
+//#define SCD41
 
 //////////////////////////////////////////////////////////////
 // Uncomment correct color capability of your ePaper display
@@ -344,6 +349,13 @@ SPIClass hspi(HSPI);
   #include <Wire.h>
   #include "Adafruit_SHT4x.h"
 Adafruit_SHT4x sht4 = Adafruit_SHT4x();
+#endif
+
+// SCD41 sensor
+#ifdef SCD41
+  #include <Wire.h>
+  #include "SparkFun_SCD4x_Arduino_Library.h"
+SCD4x SCD4(SCD4x_SENSOR_SCD41);
 #endif
 
 /* ---- ADC reading - indoor Battery voltage ---- */
@@ -905,10 +917,7 @@ bool checkForNewTimestampOnServer()
   bool connection_ok = false;
   String extraParams = "";
 
-  ////////////////////////////////////////
   // Measuring temperature and humidity?
-  ////////////////////////////////////////
-
 #ifdef SHT40
   #ifdef ESPink
   // LaskaKit ESPInk 2.5 needs to power up uSup
@@ -934,6 +943,46 @@ bool checkForNewTimestampOnServer()
     humidity = hum.relative_humidity;
 
     extraParams += "&temp=" + String(temperature) + "&hum=" + String(humidity);
+  }
+
+  #ifdef ESPink
+  // Power down for now
+  setEPaperPowerOn(false);
+  #endif
+#endif
+
+  // Measuring temperature, humidity and CO2...?
+#ifdef SCD41
+  #ifdef ESPink
+  // LaskaKit ESPInk 2.5 needs to power up uSup
+  setEPaperPowerOn(true);
+  delay(50);
+  #endif
+
+  float temperature;
+  int humidity;
+  int co2;
+  Wire.begin();
+  if (SCD4.begin(false, true, false) == false)
+  {
+    Serial.println("SCD41 not found - maybe just not connected? Otherwise check its wiring.");
+  }
+  else
+  {
+    SCD4.measureSingleShot();
+
+    while (SCD4.readMeasurement() == false) // wait for a new data (approx 30s)
+    {
+      Serial.println("Waiting for first measurement...");
+      delay(1000);
+    }
+
+    temperature = SCD4.getTemperature();
+    humidity = SCD4.getHumidity();
+    co2 = SCD4.getCO2();
+
+    // temperature, humidity and CO2 linked to "pres" variable
+    extraParams += "&temp=" + String(temperature) + "&hum=" + String(humidity) + "&pres=" + String(co2);
   }
 
   #ifdef ESPink
@@ -1404,12 +1453,12 @@ void setup()
   // Battery voltage measurement
   d_volt = getBatteryVoltage();
 
-  // ePaper init
-  displayInit();
-
 #ifndef M5StackCoreInk
   pinMode(ePaperPowerPin, OUTPUT);
 #endif
+
+  // ePaper init
+  displayInit();
 
   // Wifi init
   WiFiInit();
