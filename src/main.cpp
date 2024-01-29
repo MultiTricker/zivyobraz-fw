@@ -17,6 +17,10 @@
  * EPD library: https://github.com/ZinggJM/GxEPD2
  * EPD library for 4G "Grayscale": https://github.com/ZinggJM/GxEPD2_4G
  * WiFi manager by tzapu https://github.com/tzapu/WiFiManager
+ * QRCode generator: https://github.com/ricmoo/QRCode
+ * SHT4x (temperature, humidity): https://github.com/adafruit/Adafruit_SHT4X
+ * SCD41 (CO2, temperature, humidity): https://github.com/sparkfun/SparkFun_SCD4x_Arduino_Library
+ * BME280 (temperature, humidity, pressure): https://github.com/adafruit/Adafruit_BME280_Library
  *
  * original code made by Jean-Marc Zingg and LaskaKit
  * modified by @MultiTricker (https://michalsevcik.eu)
@@ -32,11 +36,12 @@
 //#define MakerBadge_revD
 //#define REMAP_SPI
 
-//////////////////////////////////////////////////////////////////////////////////////
-// Uncomment if you have connected SHT40 sensor for sending temperature and humidity
-//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+// Uncomment if supported sensor is connected
+// SHT40/41/45, SCD40/41, BME280 
+//////////////////////////////////////////////////////////////
 
-//#define SHT40
+//#define SENSOR
 
 //////////////////////////////////////////////////////////////
 // Uncomment correct color capability of your ePaper display
@@ -339,11 +344,19 @@ QRCode qrcode;
 SPIClass hspi(HSPI);
 #endif
 
-// SHT40 sensor
-#ifdef SHT40
+// Supported sensors
+#ifdef SENSOR
+  // SHT40/41/45
   #include <Wire.h>
   #include "Adafruit_SHT4x.h"
 Adafruit_SHT4x sht4 = Adafruit_SHT4x();
+  //SCD40/41
+  #include "SparkFun_SCD4x_Arduino_Library.h"
+SCD4x SCD4(SCD4x_SENSOR_SCD41);
+  //BME280
+  #include <Adafruit_Sensor.h>
+  #include <Adafruit_BME280.h>
+Adafruit_BME280 bme;
 #endif
 
 /* ---- ADC reading - indoor Battery voltage ---- */
@@ -905,27 +918,35 @@ bool checkForNewTimestampOnServer()
   bool connection_ok = false;
   String extraParams = "";
 
-  ////////////////////////////////////////
   // Measuring temperature and humidity?
-  ////////////////////////////////////////
+#ifdef SENSOR
 
-#ifdef SHT40
+  float temperature;
+  int humidity;
+  int co2;
+  int pressure;
+
+  Wire.begin();
+
   #ifdef ESPink
   // LaskaKit ESPInk 2.5 needs to power up uSup
   setEPaperPowerOn(true);
   delay(50);
   #endif
 
+  // Check if supported sensor is connected
+  
+  // Check SHT40 OR SHT41 OR SHT45
   if (!sht4.begin())
   {
     Serial.println("SHT4x not found - maybe just not connected? Otherwise check its wiring.");
   }
   else
   {
+    Serial.println("SHT4x FOUND");
     sht4.setPrecision(SHT4X_LOW_PRECISION); // highest resolution
     sht4.setHeater(SHT4X_NO_HEATER); // no heater
-    float temperature;
-    int humidity;
+
 
     sensors_event_t hum, temp; // temperature and humidity variables
     sht4.getEvent(&hum, &temp);
@@ -933,7 +954,47 @@ bool checkForNewTimestampOnServer()
     temperature = temp.temperature;
     humidity = hum.relative_humidity;
 
-    extraParams += "&temp=" + String(temperature) + "&hum=" + String(humidity);
+    extraParams = "&temp=" + String(temperature) + "&hum=" + String(humidity);
+  }
+
+  // Check SCD40 OR SCD41
+  if (!SCD4.begin(false, true, false))
+  {
+    Serial.println("SCD41 not found - maybe just not connected? Otherwise check its wiring.");
+  }
+  else
+  {
+    Serial.println("SCD4x FOUND");
+    SCD4.measureSingleShot();
+
+    while (SCD4.readMeasurement() == false) // wait for a new data (approx 30s)
+    {
+      Serial.println("Waiting for first measurement...");
+      delay(1000);
+    }
+
+    temperature = SCD4.getTemperature();
+    humidity = SCD4.getHumidity();
+    co2 = SCD4.getCO2();
+    // temperature, humidity and CO2 linked to "pres" variable
+    extraParams = "&temp=" + String(temperature) + "&hum=" + String(humidity) + "&pres=" + String(co2);
+  }
+
+  // Check BME280
+  if(!bme.begin())
+  {
+    Serial.println("BME280 not found - maybe just not connected? Otherwise check its wiring.");
+  }
+  else
+  {
+    Serial.println("BME280 FOUND");
+
+    temperature = bme.readTemperature();
+    humidity = bme.readHumidity();
+    pressure = bme.readPressure() / 100.0F;
+
+    // temperature, humidity and pressure variable
+    extraParams = "&temp=" + String(temperature) + "&hum=" + String(humidity) + "&pres=" + String(pressure);
   }
 
   #ifdef ESPink
@@ -1404,12 +1465,12 @@ void setup()
   // Battery voltage measurement
   d_volt = getBatteryVoltage();
 
-  // ePaper init
-  displayInit();
-
 #ifndef M5StackCoreInk
   pinMode(ePaperPowerPin, OUTPUT);
 #endif
+
+  // ePaper init
+  displayInit();
 
   // Wifi init
   WiFiInit();
