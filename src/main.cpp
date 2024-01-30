@@ -19,8 +19,8 @@
  * WiFi manager by tzapu https://github.com/tzapu/WiFiManager
  * QRCode generator: https://github.com/ricmoo/QRCode
  * SHT4x (temperature, humidity): https://github.com/adafruit/Adafruit_SHT4X
- * SCD41 (CO2, temperature, humidity): https://github.com/sparkfun/SparkFun_SCD4x_Arduino_Library
  * BME280 (temperature, humidity, pressure): https://github.com/adafruit/Adafruit_BME280_Library
+ * SCD41 (CO2, temperature, humidity): https://github.com/sparkfun/SparkFun_SCD4x_Arduino_Library
  *
  * original code made by Jean-Marc Zingg and LaskaKit
  * modified by @MultiTricker (https://michalsevcik.eu)
@@ -37,8 +37,8 @@
 //#define REMAP_SPI
 
 //////////////////////////////////////////////////////////////
-// Uncomment if supported sensor is connected
-// SHT40/41/45, SCD40/41, BME280 
+// Uncomment if one of the sensors will be connected
+// Supported sensors: SHT40/41/45, SCD40/41, BME280 
 //////////////////////////////////////////////////////////////
 
 //#define SENSOR
@@ -357,6 +357,13 @@ SCD4x SCD4(SCD4x_SENSOR_SCD41);
   #include <Adafruit_Sensor.h>
   #include <Adafruit_BME280.h>
 Adafruit_BME280 bme;
+#endif
+
+// SCD41 sensor
+#ifdef SCD41
+  #include <Wire.h>
+  #include "SparkFun_SCD4x_Arduino_Library.h"
+SCD4x SCD4(SCD4x_SENSOR_SCD41);
 #endif
 
 /* ---- ADC reading - indoor Battery voltage ---- */
@@ -939,7 +946,7 @@ bool checkForNewTimestampOnServer()
   // Check SHT40 OR SHT41 OR SHT45
   if (!sht4.begin())
   {
-    Serial.println("SHT4x not found - maybe just not connected? Otherwise check its wiring.");
+    Serial.println("SHT4x not found");
   }
   else
   {
@@ -960,7 +967,7 @@ bool checkForNewTimestampOnServer()
   // Check SCD40 OR SCD41
   if (!SCD4.begin(false, true, false))
   {
-    Serial.println("SCD41 not found - maybe just not connected? Otherwise check its wiring.");
+    Serial.println("SCD40/SCD41 not found");
   }
   else
   {
@@ -983,7 +990,7 @@ bool checkForNewTimestampOnServer()
   // Check BME280
   if(!bme.begin())
   {
-    Serial.println("BME280 not found - maybe just not connected? Otherwise check its wiring.");
+    Serial.println("BME280 not found");
   }
   else
   {
