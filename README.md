@@ -16,9 +16,9 @@ Budete potřebovat mít nainstalované následující knihovny:
 > zinggjm/GxEPD2@^1.5.2  
 > adafruit/Adafruit GFX Library@^1.11.5  
 > madhephaestus/ESP32AnalogRead@^0.2.1  
-> adafruit/Adafruit SHT4x Library@^1.0.3
-> adafruit/Adafruit BME280 Library@^2.2.4
-> sparkfun/SparkFun SCD4x Arduino Library@^1.1.2
+> adafruit/Adafruit SHT4x Library@^1.0.3  
+> adafruit/Adafruit BME280 Library@^2.2.4  
+> sparkfun/SparkFun SCD4x Arduino Library@^1.1.2  
 
 V kódu _**main.cpp**_ nezapomeňte odkomentovat:
 1. Typ použité desky (ESPink, ES3ink, REMAP_SPI ...)
