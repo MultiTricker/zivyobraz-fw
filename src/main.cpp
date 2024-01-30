@@ -349,21 +349,16 @@ SPIClass hspi(HSPI);
   // SHT40/41/45
   #include <Wire.h>
   #include "Adafruit_SHT4x.h"
-Adafruit_SHT4x sht4 = Adafruit_SHT4x();
+  Adafruit_SHT4x sht4 = Adafruit_SHT4x();
+
   //SCD40/41
   #include "SparkFun_SCD4x_Arduino_Library.h"
-SCD4x SCD4(SCD4x_SENSOR_SCD41);
+  SCD4x SCD4(SCD4x_SENSOR_SCD41);
+
   //BME280
   #include <Adafruit_Sensor.h>
   #include <Adafruit_BME280.h>
-Adafruit_BME280 bme;
-#endif
-
-// SCD41 sensor
-#ifdef SCD41
-  #include <Wire.h>
-  #include "SparkFun_SCD4x_Arduino_Library.h"
-SCD4x SCD4(SCD4x_SENSOR_SCD41);
+  Adafruit_BME280 bme;
 #endif
 
 /* ---- ADC reading - indoor Battery voltage ---- */
@@ -390,7 +385,7 @@ ESP32AnalogRead adc;
 
 /* ---- Server Zivy obraz ----------------------- */
 const char *host = "cdn.zivyobraz.eu";
-const char *firmware = "2.1";
+const char *firmware = "2.2";
 const String wifiPassword = "zivyobraz";
 
 /* ---------- Deepsleep time in minutes --------- */
@@ -918,30 +913,8 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
   return true;
 }
 
-bool checkForNewTimestampOnServer()
-{
-  // Connect to the HOST and read data via GET method
-  WiFiClient client; // Use WiFiClient class to create TCP connections
-  bool connection_ok = false;
-  String extraParams = "";
-
-  // Measuring temperature and humidity?
-#ifdef SENSOR
-
-  float temperature;
-  int humidity;
-  int co2;
-  int pressure;
-
+int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres){
   Wire.begin();
-
-  #ifdef ESPink
-  // LaskaKit ESPInk 2.5 needs to power up uSup
-  setEPaperPowerOn(true);
-  delay(50);
-  #endif
-
-  // Check if supported sensor is connected
   
   // Check SHT40 OR SHT41 OR SHT45
   if (!sht4.begin())
@@ -951,23 +924,36 @@ bool checkForNewTimestampOnServer()
   else
   {
     Serial.println("SHT4x FOUND");
-    sht4.setPrecision(SHT4X_LOW_PRECISION); // highest resolution
-    sht4.setHeater(SHT4X_NO_HEATER); // no heater
+    sht4.setPrecision(SHT4X_LOW_PRECISION);
+    sht4.setHeater(SHT4X_NO_HEATER);
 
-
-    sensors_event_t hum, temp; // temperature and humidity variables
+    sensors_event_t hum, temp;
     sht4.getEvent(&hum, &temp);
 
-    temperature = temp.temperature;
-    humidity = hum.relative_humidity;
+    sen_temp = temp.temperature;
+    sen_humi  = hum.relative_humidity;
+    return 1;
+  }
 
-    extraParams = "&temp=" + String(temperature) + "&hum=" + String(humidity);
+  // Check BME280
+  if (!bme.begin())
+  {
+    Serial.println("BME280 not found");
+  }
+  else
+  {
+    Serial.println("BME280 FOUND");
+
+    sen_temp = bme.readTemperature();
+    sen_humi = bme.readHumidity();
+    sen_pres = bme.readPressure() / 100.0F;
+    return 2;
   }
 
   // Check SCD40 OR SCD41
   if (!SCD4.begin(false, true, false))
   {
-    Serial.println("SCD40/SCD41 not found");
+    Serial.println("SCD41 not found");
   }
   else
   {
@@ -980,34 +966,53 @@ bool checkForNewTimestampOnServer()
       delay(1000);
     }
 
-    temperature = SCD4.getTemperature();
-    humidity = SCD4.getHumidity();
-    co2 = SCD4.getCO2();
-    // temperature, humidity and CO2 linked to "pres" variable
-    extraParams = "&temp=" + String(temperature) + "&hum=" + String(humidity) + "&pres=" + String(co2);
+    sen_temp = SCD4.getTemperature();
+    sen_humi = SCD4.getHumidity();
+    sen_pres = SCD4.getCO2();
+    return 3;
   }
 
-  // Check BME280
-  if(!bme.begin())
+  // No sensor found
+  return 0;
+}
+
+bool checkForNewTimestampOnServer()
+{
+  // Connect to the HOST and read data via GET method
+  WiFiClient client; // Use WiFiClient class to create TCP connections
+  bool connection_ok = false;
+  String extraParams = "";
+
+  // Measuring temperature and humidity?
+#ifdef SENSOR
+#ifdef ESPink
+    // LaskaKit ESPInk 2.5 needs to power up uSup
+    setEPaperPowerOn(true);
+    delay(50);
+#endif
+
+  float temperature;
+  int humidity;
+  int pressure;
+  uint8_t sen_ret = readSensorsVal(temperature, humidity, pressure);
+
+  if (sen_ret == 1)
   {
-    Serial.println("BME280 not found");
+    extraParams = "&temp=" + String(temperature) + "&hum=" + String(humidity);
   }
-  else
+  else if (sen_ret == 2)
   {
-    Serial.println("BME280 FOUND");
-
-    temperature = bme.readTemperature();
-    humidity = bme.readHumidity();
-    pressure = bme.readPressure() / 100.0F;
-
-    // temperature, humidity and pressure variable
     extraParams = "&temp=" + String(temperature) + "&hum=" + String(humidity) + "&pres=" + String(pressure);
   }
+  else if (sen_ret == 3)
+  {
+    extraParams = "&temp=" + String(temperature) + "&hum=" + String(humidity) + "&co2=" + String(pressure);
+  }
 
-  #ifdef ESPink
-  // Power down for now
-  setEPaperPowerOn(false);
-  #endif
+#ifdef ESPink
+    // Power down for now
+    setEPaperPowerOn(false);
+#endif
 #endif
 
   return createHttpRequest(client, connection_ok, true, extraParams);

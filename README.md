@@ -16,12 +16,14 @@ Budete potřebovat mít nainstalované následující knihovny:
 > zinggjm/GxEPD2@^1.5.2  
 > adafruit/Adafruit GFX Library@^1.11.5  
 > madhephaestus/ESP32AnalogRead@^0.2.1  
-> adafruit/Adafruit SHT4x Library@^1.0.2 
+> adafruit/Adafruit SHT4x Library@^1.0.3
+> adafruit/Adafruit BME280 Library@^2.2.4
+> sparkfun/SparkFun SCD4x Arduino Library@^1.1.2
 
 V kódu _**main.cpp**_ nezapomeňte odkomentovat:
 1. Typ použité desky (ESPink, ES3ink, REMAP_SPI ...)
-2. Případné čidlo SHT40 připojené přes uŠup pro vyčítání teploty a vlhkosti a zasílání obojího na server:
-> //#define SHT40
+2. Plánujete-li připojit jedno z podorovaných čidel přes uŠup pro vyčítání teploty, vlhkosti a tlaku/CO2 a zasílání hodnot na server, odkomentujte:
+> //#define SENSOR
 3. Typ displeje. V případě GRAYSCALE musíte z platformio.ini vyhodit "zinggjm/GxEPD2" (stačí zakomentovat), jinak dojde ke kolizi knihoven a kód nebude funkční. V tom případě se využije "lib/GxEPD2_4G". Pro ostatní displeje (BW, 3C, 7C) nechte zinggjm/GxEPD2 aktivní, s 4G verzí nic dělat nemusíte.
 > #define TYPE_BW // black and white  
 > //#define TYPE_3C // 3 colors - black, white and red/yellow  
