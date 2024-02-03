@@ -361,6 +361,8 @@ SPIClass hspi(HSPI);
   Adafruit_BME280 bme;
 #endif
 
+WiFiClient client;
+
 /* ---- ADC reading - indoor Battery voltage ---- */
 #ifdef ES3ink
   #define vBatPin ADC1_GPIO2_CHANNEL
@@ -913,15 +915,18 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
   return true;
 }
 
-int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres){
+int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
+{
   Wire.begin();
-  
-  // Check SHT40 OR SHT41 OR SHT45
-  if (!sht4.begin())
-  {
-    Serial.println("SHT4x not found");
+  Wire.beginTransmission(0);
+
+  if (Wire.endTransmission()){
+    Serial.println("No sensor found.");        
+    return 0;
   }
-  else
+  
+  // Check for SHT40 OR SHT41 OR SHT45
+  if (sht4.begin())
   {
     Serial.println("SHT4x FOUND");
     sht4.setPrecision(SHT4X_LOW_PRECISION);
@@ -935,12 +940,8 @@ int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres){
     return 1;
   }
 
-  // Check BME280
-  if (!bme.begin())
-  {
-    Serial.println("BME280 not found");
-  }
-  else
+  // Check for BME280
+  if (bme.begin())
   {
     Serial.println("BME280 FOUND");
 
@@ -950,12 +951,8 @@ int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres){
     return 2;
   }
 
-  // Check SCD40 OR SCD41
-  if (!SCD4.begin(false, true, false))
-  {
-    Serial.println("SCD41 not found");
-  }
-  else
+  // Check for SCD40 OR SCD41
+  if (SCD4.begin(false, true, false))
   {
     Serial.println("SCD4x FOUND");
     SCD4.measureSingleShot();
@@ -972,14 +969,12 @@ int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres){
     return 3;
   }
 
-  // No sensor found
   return 0;
 }
 
 bool checkForNewTimestampOnServer()
 {
   // Connect to the HOST and read data via GET method
-  WiFiClient client; // Use WiFiClient class to create TCP connections
   bool connection_ok = false;
   String extraParams = "";
 
@@ -996,17 +991,16 @@ bool checkForNewTimestampOnServer()
   int pressure;
   uint8_t sen_ret = readSensorsVal(temperature, humidity, pressure);
 
-  if (sen_ret == 1)
+  if (sen_ret)
   {
     extraParams = "&temp=" + String(temperature) + "&hum=" + String(humidity);
-  }
-  else if (sen_ret == 2)
-  {
-    extraParams = "&temp=" + String(temperature) + "&hum=" + String(humidity) + "&pres=" + String(pressure);
-  }
-  else if (sen_ret == 3)
-  {
-    extraParams = "&temp=" + String(temperature) + "&hum=" + String(humidity) + "&co2=" + String(pressure);
+
+    switch(sen_ret){
+      case 2 : extraParams += "&pres=" + String(pressure); // BME280
+               break;
+      case 3 : extraParams += "&co2=" + String(pressure); // SCD4x
+               break;
+    }
   }
 
 #ifdef ESPink
@@ -1021,7 +1015,6 @@ bool checkForNewTimestampOnServer()
 void readBitmapData()
 {
   // Connect to the HOST and read data via GET method
-  WiFiClient client; // Use WiFiClient class to create TCP connections
 
   // Let's read bitmap
   static const uint16_t input_buffer_pixels = 800; // may affect performance
