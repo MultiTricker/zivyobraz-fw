@@ -915,6 +915,7 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
   return true;
 }
 
+#ifdef SENSOR
 int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   Wire.begin();
@@ -971,6 +972,7 @@ int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 
   return 0;
 }
+#endif
 
 bool checkForNewTimestampOnServer()
 {
