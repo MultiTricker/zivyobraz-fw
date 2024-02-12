@@ -486,7 +486,7 @@ float getBatteryVoltage()
 
   digitalWrite(enableBattery, LOW);
   delayMicroseconds(150);
-  volt = (enableBattery * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
+  volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
   digitalWrite(enableBattery, HIGH);
 
 #else
