@@ -413,6 +413,8 @@ void setEPaperPowerOn(bool on)
   // use HIGH/LOW notation for better readability
 #ifdef ES3ink
   digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
+#elif defined MakerBadge_revD
+  digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
 #elif !defined M5StackCoreInk
   digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
 #endif
@@ -479,13 +481,13 @@ float getBatteryVoltage()
   // can be read right after High->Low transition of IO_BAT_meas_disable
   // Here, pin should not go LOW, so intentionally digitalWrite called as first.
   // First write output register (PORTx) then activate output direction (DDRx). Pin will go from highZ(sleep) to HIGH without LOW pulse.
-  digitalWrite(IO_BAT_meas_disable, HIGH);
-  pinMode(IO_BAT_meas_disable, OUTPUT);
+  digitalWrite(enableBattery, HIGH);
+  pinMode(enableBattery, OUTPUT);
 
-  digitalWrite(IO_BAT_meas_disable, LOW);
+  digitalWrite(enableBattery, LOW);
   delayMicroseconds(150);
   volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
-  digitalWrite(IO_BAT_meas_disable, HIGH);
+  digitalWrite(enableBattery, HIGH);
 
 #else
   // attach ADC input
