@@ -35,20 +35,20 @@
 //#define MakerBadge_revB //also works with A and C
 //#define MakerBadge_revD
 //#define REMAP_SPI
-#define TTGO_T5_v23 //tested only with 2.13" variant
+//#define TTGO_T5_v23 //tested only with 2.13" variant
 
 //////////////////////////////////////////////////////////////
 // Uncomment if one of the sensors will be connected
 // Supported sensors: SHT40/41/45, SCD40/41, BME280 
 //////////////////////////////////////////////////////////////
 
-#define SENSOR
+//#define SENSOR
 
 //////////////////////////////////////////////////////////////
 // Uncomment correct color capability of your ePaper display
 //////////////////////////////////////////////////////////////
 
-#define TYPE_BW // black and white
+//#define TYPE_BW // black and white
 //#define TYPE_3C // 3 colors - black, white and red/yellow
 //#define TYPE_4C // 4 colors - black, white, red and yellow
 //#define TYPE_GRAYSCALE // grayscale - 4 colors
@@ -59,7 +59,7 @@
 //////////////////////////////////////////////////////////////
 
 // BW
-#define D_DEPG0213BN   // 122x250, 2.13" (TTGO T5_V2.3_2.13)
+//#define D_DEPG0213BN   // 122x250, 2.13" (TTGO T5_V2.3_2.13)
 //#define D_GDEY0213B74   // 128x250, 2.13"
 //#define D_GDEW0154T8    // 152x152, 1.54"
 //#define D_GDEY027T91    // 176x264, 2.7"
