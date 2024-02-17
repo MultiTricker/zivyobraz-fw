@@ -433,9 +433,7 @@ uint64_t timestampNow = 1; // initialize value for timestamp from server
 void setEPaperPowerOn(bool on)
 {
   // use HIGH/LOW notation for better readability
-#ifdef ES3ink
-  digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
-#elif defined MakerBadge_revD
+#if (defined ES3ink) || (defined MakerBadge_revD)
   digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
 #elif !defined M5StackCoreInk
   digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
