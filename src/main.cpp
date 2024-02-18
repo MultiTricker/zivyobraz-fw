@@ -32,10 +32,10 @@
 
 //#define ESPink
 //#define ES3ink
-//#define MakerBadge_revB //also works with A and C
+//#define MakerBadge_revB // also works with A and C
 //#define MakerBadge_revD
 //#define REMAP_SPI
-//#define TTGO_T5_v23 //tested only with 2.13" variant
+//#define TTGO_T5_v23 // tested only with 2.13" variant
 
 //////////////////////////////////////////////////////////////
 // Uncomment if one of the sensors will be connected
@@ -59,7 +59,7 @@
 //////////////////////////////////////////////////////////////
 
 // BW
-//#define D_DEPG0213BN   // 122x250, 2.13" (TTGO T5_V2.3_2.13)
+//#define D_DEPG0213BN    // 122x250, 2.13" (TTGO T5_V2.3_2.13)
 //#define D_GDEY0213B74   // 128x250, 2.13"
 //#define D_GDEW0154T8    // 152x152, 1.54"
 //#define D_GDEY027T91    // 176x264, 2.7"
@@ -83,6 +83,7 @@
 //#define D_HINK_E075A01  // 640x384, 7.5"
 //#define D_GDEQ0583Z31   // 648x480, 5.83"
 //#define D_GDEY075Z08    // 800x480, 7.5"
+//#define D_GDEH075Z90    // 880x528, 7.5"
 
 // 4C
 //#define D_WS437YRBW     // 512x368, 4.37"
@@ -300,6 +301,10 @@ GxEPD2_3C<GxEPD2_583c_Z83, GxEPD2_583c_Z83::HEIGHT> display(GxEPD2_583c_Z83(PIN_
 // GDEY075Z08 - 3C, 800x480px, 7.5"
 #elif defined D_GDEY075Z08
 GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+
+// GDEH075Z90 - 3C, 880x528px, 7.5"
+#elif defined D_GDEH075Z90
+GxEPD2_3C<GxEPD2_750c_Z90, GxEPD2_750c_Z90::HEIGHT / 2> display(GxEPD2_750c_Z90(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 ///////////////////////
 // 4C
