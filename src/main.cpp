@@ -35,6 +35,7 @@
 //#define MakerBadge_revB //also works with A and C
 //#define MakerBadge_revD
 //#define REMAP_SPI
+//#define TTGO_T5_v23 //tested only with 2.13" variant
 
 //////////////////////////////////////////////////////////////
 // Uncomment if one of the sensors will be connected
@@ -58,6 +59,7 @@
 //////////////////////////////////////////////////////////////
 
 // BW
+//#define D_DEPG0213BN   // 122x250, 2.13" (TTGO T5_V2.3_2.13)
 //#define D_GDEY0213B74   // 128x250, 2.13"
 //#define D_GDEW0154T8    // 152x152, 1.54"
 //#define D_GDEY027T91    // 176x264, 2.7"
@@ -124,7 +126,6 @@
 
   #include <esp_adc_cal.h>
   #include <soc/adc_channel.h>
-esp_adc_cal_characteristics_t adc_cal;
 
 #elif defined MakerBadge_revB
   #define PIN_SS 41   // SS
@@ -140,6 +141,15 @@ esp_adc_cal_characteristics_t adc_cal;
   #define PIN_BUSY 42 // PIN_BUSY
   #define ePaperPowerPin 16
   #define enableBattery 14
+
+#elif defined TTGO_T5_v23
+  #define PIN_SS 5   // SS
+  #define PIN_DC 17  // D/C
+  #define PIN_RST 16 // RES
+  #define PIN_BUSY 4 // PIN_BUSY
+  #define ePaperPowerPin 2
+
+
 #else
   #error "Board not defined!"
 #endif
@@ -203,8 +213,12 @@ static const char *defined_color_type = "7C";
 // BW
 ///////////////////////
 
+// D_DEPG0213BN - BW, 122x250px, 2.13"
+#ifdef D_DEPG0213BN
+GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+
 // GDEY0213B74 - BW, 128x250px, 2.13"
-#ifdef D_GDEY0213B74
+#elif D_GDEY0213B74
 GxEPD2_BW<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEW0154T8 - BW, 152x152px, 1.54"
@@ -377,6 +391,9 @@ SPIClass hspi(HSPI);
   #define vBatPin 6
   #define BATT_V_CAL_SCALE 1.05
 
+#elif defined TTGO_T5_v23
+  #define vBatPin 35
+
 #else
 ESP32AnalogRead adc;
   #define dividerRatio 1.769
@@ -444,6 +461,7 @@ float getBatteryVoltage()
   float volt;
 
 #ifdef ES3ink
+  esp_adc_cal_characteristics_t adc_cal;
   esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 0, &adc_cal);
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_11);
 
@@ -461,11 +479,8 @@ float getBatteryVoltage()
 
 #elif defined M5StackCoreInk
   analogSetPinAttenuation(vBatPin, ADC_11db);
-  esp_adc_cal_characteristics_t *adc_chars =
-    (esp_adc_cal_characteristics_t *)calloc(
-      1, sizeof(esp_adc_cal_characteristics_t));
-  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12,
-                           3600, adc_chars);
+  esp_adc_cal_characteristics_t *adc_chars = (esp_adc_cal_characteristics_t *)calloc(1, sizeof(esp_adc_cal_characteristics_t));
+  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 3600, adc_chars);
   uint16_t ADCValue = analogRead(vBatPin);
 
   uint32_t BatVolmV = esp_adc_cal_raw_to_voltage(ADCValue, adc_chars);
@@ -488,6 +503,13 @@ float getBatteryVoltage()
   delayMicroseconds(150);
   volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
   digitalWrite(enableBattery, HIGH);
+
+#elif defined TTGO_T5_v23
+  esp_adc_cal_characteristics_t adc_chars;
+  esp_adc_cal_value_t val_type = esp_adc_cal_characterize((adc_unit_t)ADC_UNIT_1, (adc_atten_t)ADC_ATTEN_DB_2_5, (adc_bits_width_t)ADC_WIDTH_BIT_12, 1100, &adc_chars);
+  
+  float measurement = (float) analogRead(vBatPin);
+  volt = (float)(measurement / 4095.0) * 7.05;
 
 #else
   // attach ADC input
