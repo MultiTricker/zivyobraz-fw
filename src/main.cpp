@@ -375,8 +375,8 @@ Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 SCD4x SCD4(SCD4x_SENSOR_SCD41);
 
   // BME280
-  #include <Adafruit_BME280.h>
   #include <Adafruit_Sensor.h>
+  #include <Adafruit_BME280.h>
 Adafruit_BME280 bme;
 #endif
 
