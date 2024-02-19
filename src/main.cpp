@@ -1000,10 +1000,8 @@ int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 }
 #endif
 
-bool checkForNewTimestampOnServer()
+bool checkForNewTimestampOnServer(WiFiClient &client)
 {
-  // Connect to the HOST and read data via GET method
-  WiFiClient client; // Use WiFiClient class to create TCP connections
   bool connection_ok = false;
   String extraParams = "";
 
@@ -1044,11 +1042,8 @@ bool checkForNewTimestampOnServer()
   return createHttpRequest(client, connection_ok, true, extraParams);
 }
 
-void readBitmapData()
+void readBitmapData(WiFiClient &client)
 {
-  // Connect to the HOST and read data via GET method
-  WiFiClient client; // Use WiFiClient class to create TCP connections
-
   // Let's read bitmap
   static const uint16_t input_buffer_pixels = 800; // may affect performance
   static const uint16_t max_row_width = 1872; // for up to 7.8" display 1872x1404
@@ -1519,8 +1514,11 @@ void setup()
   // WiFi SSID - get connected ssid
   ssid = getWifiSSID();
 
+  // Use WiFiClient class to create TCP connections
+  WiFiClient client;
+
   // Do we need to update the screen?
-  if (checkForNewTimestampOnServer())
+  if (checkForNewTimestampOnServer(client))
   {
     // Enable power supply for ePaper
     setEPaperPowerOn(true);
@@ -1534,7 +1532,7 @@ void setup()
     display.firstPage();
     do
     {
-      readBitmapData();
+      readBitmapData(client);
     } while (display.nextPage());
 
     delay(100);
