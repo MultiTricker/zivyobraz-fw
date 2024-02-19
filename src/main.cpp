@@ -368,16 +368,16 @@ SPIClass hspi(HSPI);
   // SHT40/41/45
   #include <Wire.h>
   #include "Adafruit_SHT4x.h"
-  Adafruit_SHT4x sht4 = Adafruit_SHT4x();
+Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 
-  //SCD40/41
+  // SCD40/41
   #include "SparkFun_SCD4x_Arduino_Library.h"
-  SCD4x SCD4(SCD4x_SENSOR_SCD41);
+SCD4x SCD4(SCD4x_SENSOR_SCD41);
 
-  //BME280
-  #include <Adafruit_Sensor.h>
+  // BME280
   #include <Adafruit_BME280.h>
-  Adafruit_BME280 bme;
+  #include <Adafruit_Sensor.h>
+Adafruit_BME280 bme;
 #endif
 
 /* ---- ADC reading - indoor Battery voltage ---- */
@@ -433,9 +433,7 @@ uint64_t timestampNow = 1; // initialize value for timestamp from server
 void setEPaperPowerOn(bool on)
 {
   // use HIGH/LOW notation for better readability
-#ifdef ES3ink
-  digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
-#elif defined MakerBadge_revD
+#if (defined ES3ink) || (defined MakerBadge_revD)
   digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
 #elif !defined M5StackCoreInk
   digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
@@ -948,11 +946,12 @@ int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
   Wire.begin();
   Wire.beginTransmission(0);
 
-  if (Wire.endTransmission()){
-    Serial.println("No sensor found.");        
+  if (Wire.endTransmission())
+  {
+    Serial.println("No sensor found.");
     return 0;
   }
-  
+
   // Check for SHT40 OR SHT41 OR SHT45
   if (sht4.begin())
   {
@@ -964,7 +963,7 @@ int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
     sht4.getEvent(&hum, &temp);
 
     sen_temp = temp.temperature;
-    sen_humi  = hum.relative_humidity;
+    sen_humi = hum.relative_humidity;
     return 1;
   }
 
@@ -1001,20 +1000,18 @@ int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 }
 #endif
 
-bool checkForNewTimestampOnServer()
+bool checkForNewTimestampOnServer(WiFiClient &client)
 {
-  // Connect to the HOST and read data via GET method
-  WiFiClient client; // Use WiFiClient class to create TCP connections
   bool connection_ok = false;
   String extraParams = "";
 
   // Measuring temperature and humidity?
 #ifdef SENSOR
-#ifdef ESPink
-    // LaskaKit ESPInk 2.5 needs to power up uSup
-    setEPaperPowerOn(true);
-    delay(50);
-#endif
+  #ifdef ESPink
+  // LaskaKit ESPInk 2.5 needs to power up uSup
+  setEPaperPowerOn(true);
+  delay(50);
+  #endif
 
   float temperature;
   int humidity;
@@ -1025,28 +1022,28 @@ bool checkForNewTimestampOnServer()
   {
     extraParams = "&temp=" + String(temperature) + "&hum=" + String(humidity);
 
-    switch(sen_ret){
-      case 2 : extraParams += "&pres=" + String(pressure); // BME280
-               break;
-      case 3 : extraParams += "&co2=" + String(pressure); // SCD4x
-               break;
+    switch (sen_ret)
+    {
+      case 2:
+        extraParams += "&pres=" + String(pressure); // BME280
+        break;
+      case 3:
+        extraParams += "&co2=" + String(pressure); // SCD4x
+        break;
     }
   }
 
-#ifdef ESPink
-    // Power down for now
-    setEPaperPowerOn(false);
-#endif
+  #ifdef ESPink
+  // Power down for now
+  setEPaperPowerOn(false);
+  #endif
 #endif
 
   return createHttpRequest(client, connection_ok, true, extraParams);
 }
 
-void readBitmapData()
+void readBitmapData(WiFiClient &client)
 {
-  // Connect to the HOST and read data via GET method
-  WiFiClient client; // Use WiFiClient class to create TCP connections
-
   // Let's read bitmap
   static const uint16_t input_buffer_pixels = 800; // may affect performance
   static const uint16_t max_row_width = 1872; // for up to 7.8" display 1872x1404
@@ -1486,8 +1483,8 @@ void setup()
   // can be read right after High->Low transition of enableBattery
   // Here, pin should not go LOW, so intentionally digitalWrite called as first.
   // First write output register (PORTx) then activate output direction (DDRx). Pin will go from highZ(sleep) to HIGH without LOW pulse.
-  digitalWrite(enableBattery, HIGH); 
-  pinMode(enableBattery, OUTPUT); 
+  digitalWrite(enableBattery, HIGH);
+  pinMode(enableBattery, OUTPUT);
 #endif
 
 #ifdef M5StackCoreInk
@@ -1517,8 +1514,11 @@ void setup()
   // WiFi SSID - get connected ssid
   ssid = getWifiSSID();
 
+  // Use WiFiClient class to create TCP connections
+  WiFiClient client;
+
   // Do we need to update the screen?
-  if (checkForNewTimestampOnServer())
+  if (checkForNewTimestampOnServer(client))
   {
     // Enable power supply for ePaper
     setEPaperPowerOn(true);
@@ -1532,7 +1532,7 @@ void setup()
     display.firstPage();
     do
     {
-      readBitmapData();
+      readBitmapData(client);
     } while (display.nextPage());
 
     delay(100);
@@ -1547,7 +1547,7 @@ void setup()
 #ifdef M5StackCoreInk
   display.powerOff();
   M5.shutdown(deepSleepTime * 60);
-#else  
+#else
   esp_sleep_enable_timer_wakeup(deepSleepTime * 60 * 1000000);
   delay(100);
   esp_deep_sleep_start();
