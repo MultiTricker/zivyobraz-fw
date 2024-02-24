@@ -943,14 +943,14 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
 #ifdef SENSOR
 int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 {
-  Wire.begin();
-  Wire.beginTransmission(0);
+  //Wire.begin();
+  //Wire.beginTransmission(0);
 
-  if (Wire.endTransmission())
-  {
-    Serial.println("No sensor found.");
-    return 0;
-  }
+  //if (Wire.endTransmission())
+  //{
+  //  Serial.println("No sensor found.");
+  //  return 0;
+  //}
 
   // Check for SHT40 OR SHT41 OR SHT45
   if (sht4.begin())
