@@ -219,7 +219,7 @@ static const char *defined_color_type = "7C";
 GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY0213B74 - BW, 128x250px, 2.13"
-#elif D_GDEY0213B74
+#elif defined D_GDEY0213B74
 GxEPD2_BW<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEW0154T8 - BW, 152x152px, 1.54"
@@ -943,15 +943,6 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
 #ifdef SENSOR
 int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 {
-  //Wire.begin();
-  //Wire.beginTransmission(0);
-
-  //if (Wire.endTransmission())
-  //{
-  //  Serial.println("No sensor found.");
-  //  return 0;
-  //}
-
   // Check for SHT40 OR SHT41 OR SHT45
   if (sht4.begin())
   {
