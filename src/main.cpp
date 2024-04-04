@@ -124,6 +124,8 @@
   #define PIN_BUSY 6 // PIN_BUSY
   #define ePaperPowerPin 3
   #define enableBattery 40
+  #define RGBledPin 48
+  #define RGBledPowerPin 14
 
   #include <esp_adc_cal.h>
   #include <soc/adc_channel.h>
@@ -358,6 +360,11 @@ GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(Gx
 
 #include <QRCodeGenerator.h>
 QRCode qrcode;
+
+#ifdef ES3ink
+  #include <Adafruit_NeoPixel.h>
+  Adafruit_NeoPixel pixel(1, RGBledPin, NEO_GRB + NEO_KHZ800);
+#endif
 
 #ifdef REMAP_SPI
 SPIClass hspi(HSPI);
@@ -1476,6 +1483,15 @@ void setup()
   // First write output register (PORTx) then activate output direction (DDRx). Pin will go from highZ(sleep) to HIGH without LOW pulse.
   digitalWrite(enableBattery, HIGH);
   pinMode(enableBattery, OUTPUT);
+  pinMode(RGBledPowerPin, OUTPUT);
+  digitalWrite(RGBledPowerPin, HIGH);
+  pixel.begin();
+  pixel.setBrightness(15);
+  pixel.clear();
+  for(int i=0; i<1; i++) { 
+    pixel.setPixelColor(i, pixel.Color(150, 0, 0));
+    pixel.show();
+  }
 #endif
 
 #ifdef M5StackCoreInk
@@ -1530,6 +1546,14 @@ void setup()
     // Disable power supply for ePaper
     setEPaperPowerOn(false);
   }
+
+#ifdef ES3ink
+  pixel.clear();
+  for(int i=0; i<1; i++) { 
+    pixel.setPixelColor(i, pixel.Color(0, 150, 0));
+    pixel.show();
+  }
+#endif
 
   // Deep sleep mode
   Serial.print("Going to sleep now for (minutes): ");
