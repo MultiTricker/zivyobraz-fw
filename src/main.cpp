@@ -31,6 +31,7 @@
 /////////////////////////////////
 
 //#define ESPink
+//#define ESP32S3Adapter
 //#define ES3ink
 //#define MakerBadge_revB // also works with A and C
 //#define MakerBadge_revD
@@ -123,6 +124,19 @@
   #define PIN_BUSY 4 // PIN_BUSY
   #define ePaperPowerPin 2
 
+#elif defined ESP32S3Adapter
+  #define PIN_SS 10  // SS
+  #define PIN_DC 41   // D/C
+  #define PIN_RST 40  // RES
+  #define PIN_BUSY 13 // PIN_BUSY
+  #define ePaperPowerPin 47
+  #define enableBattery 40
+  #define PIN_SPI_CLK 12  // CLK
+  #define PIN_SPI_MOSI 11 // DIN
+
+  #include <esp_adc_cal.h>
+  #include <soc/adc_channel.h>
+
 #elif defined ES3ink
   // for version P1.1
   #define PIN_SS 10  // SS
@@ -157,12 +171,10 @@
   #define PIN_BUSY 4 // PIN_BUSY
   #define ePaperPowerPin 2
 
-
 #else
   #error "Board not defined!"
 #endif
 
-//#define REMAP_SPI
 #ifdef REMAP_SPI
   #define PIN_SPI_CLK 13  // CLK
   #define PIN_SPI_MISO 14 // unused
@@ -435,10 +447,14 @@ Adafruit_BME280 bme;
 #elif defined TTGO_T5_v23
   #define vBatPin 35
 
+#elif defined ESP32S3Adapter
+  #define vBatPin ADC1_GPIO2_CHANNEL
+  #define dividerRatio 2.018
+
 #else
 ESP32AnalogRead adc;
-  #define dividerRatio 1.769
   #define vBatPin 34
+  #define dividerRatio 1.769
 #endif
 
 /* ---- Server Zivy obraz ----------------------- */
@@ -499,12 +515,12 @@ float getBatteryVoltage()
 {
   float volt;
 
-#ifdef ES3ink
+#if (defined ES3ink) || (defined ESP32S3Adapter)
   esp_adc_cal_characteristics_t adc_cal;
   esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 0, &adc_cal);
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_11);
 
-  Serial.println("Reading battery on ES3ink board");
+  Serial.println("Reading battery on ES3ink/ESP32S3Adapter board");
 
   digitalWrite(enableBattery, LOW);
   uint32_t raw = adc1_get_raw(vBatPin);
@@ -611,7 +627,7 @@ void displayInit()
   display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
 #endif
 
-#ifdef ES3ink
+#if (defined ES3ink) || (defined ESP32S3Adapter)
   display.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
 #else
   display.init();
