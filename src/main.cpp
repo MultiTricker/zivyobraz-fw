@@ -658,17 +658,17 @@ void configModeCallback(WiFiManager *myWiFiManager)
       display.setTextColor(GxEPD_BLACK);
       centeredText("To setup or change Wi-Fi configuration", DISPLAY_RESOLUTION_X / 2, 120);
       centeredText("(with mobile data turned off):", DISPLAY_RESOLUTION_X / 2, 145);
-      centeredText("1) Connect to this AP:", DISPLAY_RESOLUTION_X / 4, 190);
-      centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4, 190);
+      centeredText("1) Connect to this AP:", DISPLAY_RESOLUTION_X / 4, (DISPLAY_RESOLUTION_Y / 2) - 50);
+      centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4, (DISPLAY_RESOLUTION_Y / 2) - 50);
 
       drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 40, DISPLAY_RESOLUTION_X / 4, 4);
-      display.drawLine(DISPLAY_RESOLUTION_X / 2 - 1, 185, DISPLAY_RESOLUTION_X / 2 - 1, 405, GxEPD_BLACK);
-      display.drawLine(DISPLAY_RESOLUTION_X / 2, 185, DISPLAY_RESOLUTION_X / 2, 405, GxEPD_BLACK);
+      display.drawLine(DISPLAY_RESOLUTION_X / 2 - 1, (DISPLAY_RESOLUTION_Y / 2) - 60, DISPLAY_RESOLUTION_X / 2 - 1, (DISPLAY_RESOLUTION_Y / 2) + 170, GxEPD_BLACK);
+      display.drawLine(DISPLAY_RESOLUTION_X / 2, (DISPLAY_RESOLUTION_Y / 2) - 60, DISPLAY_RESOLUTION_X / 2, (DISPLAY_RESOLUTION_Y / 2) + 170, GxEPD_BLACK);
       drawQrCode(urlWeb.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 40, DISPLAY_RESOLUTION_X * 3 / 4, 4);
 
-      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 370);
-      centeredText("Password: " + wifiPassword, DISPLAY_RESOLUTION_X / 4, 395);
-      centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, 370);
+      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, (DISPLAY_RESOLUTION_Y / 2) + 130);
+      centeredText("Password: " + wifiPassword, DISPLAY_RESOLUTION_X / 4, (DISPLAY_RESOLUTION_Y / 2) + 155);
+      centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, (DISPLAY_RESOLUTION_Y / 2) + 130);
       display.fillRect(0, DISPLAY_RESOLUTION_Y - 40, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
       display.setTextColor(GxEPD_WHITE);
       centeredText("Documentation: " + urlWiki, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 22);
