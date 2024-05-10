@@ -14,7 +14,7 @@
 #include "GxEPD2_1330c_GDEM133Z91.h"
 
 GxEPD2_1330c_GDEM133Z91::GxEPD2_1330c_GDEM133Z91(int16_t cs, int16_t dc, int16_t rst, int16_t busy) :
-  GxEPD2_EPD(cs, dc, rst, busy, HIGH, 25000000, WIDTH, HEIGHT, panel, hasColor, hasPartialUpdate, hasFastPartialUpdate)
+  GxEPD2_EPD(cs, dc, rst, busy, HIGH, 27000000, WIDTH, HEIGHT, panel, hasColor, hasPartialUpdate, hasFastPartialUpdate)
 {
 }
 
