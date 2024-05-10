@@ -72,8 +72,8 @@
 //#define D_GDEM133T91    // 960x680, 13.3"
 
 // Grayscale
-//#define D_GDEY0213B74   // 128x250, 1.54"
-//#define D_GDEY0154D67   // 200x200, 2.13"
+//#define D_GDEY0154D67   // 200x200, 1.54"
+//#define D_GDEY0213B74   // 128x250, 2.13"
 //#define D_GDEW042T2_G   // 400x300, 4.2"
 //#define D_GDEY042T81    // 400x300, 4.2"
 //#define D_GDEQ0426T82   // 800x480, 4.26"
@@ -280,12 +280,12 @@ GxEPD2_BW<GxEPD2_1330_GDEM133T91, GxEPD2_1330_GDEM133T91::HEIGHT / 2> display(Gx
 // Grayscale
 ///////////////////////
 
-// GDEY0213B74 - Grayscale, 128x250px, 1.54"
-#elif defined D_GDEY0213B74
+// GDEY0154D67 - Grayscale, 200x200px, 1.54"
+#elif defined D_GDEY0154D67
 GxEPD2_4G_4G<GxEPD2_154_GDEY0154D67, GxEPD2_154_GDEY0154D67::HEIGHT> display(GxEPD2_154_GDEY0154D67(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
-// GDEY0154D67 - Grayscale, 200x200px, 2.13"
-#elif defined D_GDEY0154D67
+// GDEY0213B74 - Grayscale, 128x250px, 2.13"
+#elif defined D_GDEY0213B74
 GxEPD2_4G_4G<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEW042T2_G - Grayscale, 400x300px, 4.2"
