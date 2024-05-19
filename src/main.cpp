@@ -30,7 +30,8 @@
 // Uncomment for correct board
 /////////////////////////////////
 
-//#define ESPink
+//#define ESPink_V2
+//#define ESPink_V3
 //#define ESP32S3Adapter
 //#define ES3ink
 //#define MakerBadge_revB // also works with A and C
@@ -118,32 +119,39 @@
 // https://www.laskakit.cz/laskakit-espink-esp32-e-paper-pcb-antenna/?variantId=12419
 // + LaskaKit ESPInk-42 all-in-one board
 
-#ifdef ESPink
-  #define PIN_SS 5   // SS
-  #define PIN_DC 17  // D/C
-  #define PIN_RST 16 // RES
-  #define PIN_BUSY 4 // PIN_BUSY
+#ifdef ESPink_V2
+  #define PIN_SS 5
+  #define PIN_DC 17
+  #define PIN_RST 16
+  #define PIN_BUSY 4
   #define ePaperPowerPin 2
 
+#elif defined ESPink_V3
+  #define PIN_SS 10
+  #define PIN_DC 48
+  #define PIN_RST 45
+  #define PIN_BUSY 36
+  #define ePaperPowerPin 47
+
 #elif defined ESP32S3Adapter
-  #define PIN_SS 10  // SS
-  #define PIN_DC 41   // D/C
-  #define PIN_RST 40  // RES
-  #define PIN_BUSY 13 // PIN_BUSY
+  #define PIN_SS 10
+  #define PIN_DC 41
+  #define PIN_RST 40
+  #define PIN_BUSY 13
   #define ePaperPowerPin 47
   #define enableBattery 40
-  #define PIN_SPI_CLK 12  // CLK
-  #define PIN_SPI_MOSI 11 // DIN
+  #define PIN_SPI_CLK 12
+  #define PIN_SPI_MOSI 11
 
   #include <esp_adc_cal.h>
   #include <soc/adc_channel.h>
 
 #elif defined ES3ink
   // for version P1.1
-  #define PIN_SS 10  // SS
-  #define PIN_DC 7   // D/C
-  #define PIN_RST 5  // RES
-  #define PIN_BUSY 6 // PIN_BUSY
+  #define PIN_SS 10
+  #define PIN_DC 7
+  #define PIN_RST 5
+  #define PIN_BUSY 6
   #define ePaperPowerPin 3
   #define enableBattery 40
   #define RGBledPin 48
@@ -153,25 +161,25 @@
   #include <soc/adc_channel.h>
 
 #elif defined MakerBadge_revB
-  #define PIN_SS 41   // SS
-  #define PIN_DC 40   // D/C
-  #define PIN_RST 39  // RES
-  #define PIN_BUSY 42 // PIN_BUSY
+  #define PIN_SS 41
+  #define PIN_DC 40
+  #define PIN_RST 39
+  #define PIN_BUSY 42
   #define ePaperPowerPin 16
 
 #elif defined MakerBadge_revD
-  #define PIN_SS 41   // SS
-  #define PIN_DC 40   // D/C
-  #define PIN_RST 39  // RES
-  #define PIN_BUSY 42 // PIN_BUSY
+  #define PIN_SS 41
+  #define PIN_DC 40
+  #define PIN_RST 39
+  #define PIN_BUSY 42
   #define ePaperPowerPin 16
   #define enableBattery 14
 
 #elif defined TTGO_T5_v23
-  #define PIN_SS 5   // SS
-  #define PIN_DC 17  // D/C
-  #define PIN_RST 16 // RES
-  #define PIN_BUSY 4 // PIN_BUSY
+  #define PIN_SS 5
+  #define PIN_DC 17
+  #define PIN_RST 16
+  #define PIN_BUSY 4
   #define ePaperPowerPin 2
 
 #else
@@ -577,6 +585,9 @@ float getBatteryVoltage()
   
   float measurement = (float) analogRead(vBatPin);
   volt = (float)(measurement / 4095.0) * 7.05;
+
+#elif defined ESPink_V3
+  // Measuring battery voltage not yet in final resolved on board
 
 #else
   // attach ADC input
@@ -1062,8 +1073,8 @@ bool checkForNewTimestampOnServer(WiFiClient &client)
 
   // Measuring temperature and humidity?
 #ifdef SENSOR
-  #ifdef ESPink
-  // LaskaKit ESPInk 2.5 needs to power up uSup
+  #if (defined ESPink_V2) || (defined ESPink_V3)
+  // LaskaKit ESPink 2.5 needs to power up uSup
   setEPaperPowerOn(true);
   delay(50);
   #endif
@@ -1088,7 +1099,7 @@ bool checkForNewTimestampOnServer(WiFiClient &client)
     }
   }
 
-  #ifdef ESPink
+  #if (defined ESPink_V2) || (defined ESPink_V3)
   // Power down for now
   setEPaperPowerOn(false);
   #endif
