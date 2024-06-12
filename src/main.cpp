@@ -70,6 +70,7 @@
 //#define D_WS75BWT7      // 800x480, 7.5"
 //#define D_GDEW075T7     // 800x480, 7.5"
 //#define D_GDEM102T91    // 960x640, 10.2"
+//#define D_GDEM1085T51   // 1360x480, 10.85"
 //#define D_GDEM133T91    // 960x680, 13.3"
 
 // Grayscale
@@ -92,6 +93,7 @@
 //#define D_GDEM133Z91    // 960x680, 13.3"
 
 // 4C
+//#define D_GDEY0213F51   // 128x250, 2.13"
 //#define D_GDEY0266F51H  // 184x460, 2.66"
 //#define D_GDEY029F51H   // 168x384, 2.9"
 //#define D_WS3004YRBW    // 168x400, 3.00"
@@ -280,6 +282,10 @@ GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN
 #elif defined D_GDEM102T91
 GxEPD2_BW<GxEPD2_1020_GDEM102T91, GxEPD2_1020_GDEM102T91::HEIGHT / 2> display(GxEPD2_1020_GDEM102T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
+// GDEM1085T51 - BW, 1360x480px, 10.85"
+#elif defined D_GDEM1085T51
+GxEPD2_BW<GxEPD2_1085_GDEM1085T51, GxEPD2_1085_GDEM1085T51::HEIGHT / 2> display(GxEPD2_1085_GDEM1085T51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+
 // GDEM133T91 - BW, 960x680px, 13.3"
 #elif defined D_GDEM133T91
 GxEPD2_BW<GxEPD2_1330_GDEM133T91, GxEPD2_1330_GDEM133T91::HEIGHT / 2> display(GxEPD2_1330_GDEM133T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
@@ -355,6 +361,10 @@ GxEPD2_3C<GxEPD2_1330c_GDEM133Z91, GxEPD2_1330c_GDEM133Z91::HEIGHT / 4> display(
 ///////////////////////
 // 4C
 ///////////////////////
+
+// GDEY0213F51 - 4C, 128x250px, 2.13"
+#elif defined D_GDEY0213F51
+GxEPD2_4C<GxEPD2_213c_GDEY0213F51, GxEPD2_213c_GDEY0213F51::HEIGHT> display(GxEPD2_213c_GDEY0213F51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY0266F51H - 4C, 184x460px, 2.66"
 #elif defined D_GDEY0266F51H
@@ -478,7 +488,7 @@ ESP32AnalogRead adc;
 #endif
 
 /* ---- Server Zivy obraz ----------------------- */
-const char *host = "cdn.zivyobraz.eu";
+const char *host = "cdn.mujink.cz";
 const char *firmware = "2.2";
 const String wifiPassword = "zivyobraz";
 
