@@ -133,6 +133,7 @@
   #define PIN_DC 48
   #define PIN_RST 45
   #define PIN_BUSY 36
+  #define PIN_CS2 35
   #define ePaperPowerPin 47
 
 #elif defined ESP32S3Adapter
@@ -284,7 +285,7 @@ GxEPD2_BW<GxEPD2_1020_GDEM102T91, GxEPD2_1020_GDEM102T91::HEIGHT / 2> display(Gx
 
 // GDEM1085T51 - BW, 1360x480px, 10.85"
 #elif defined D_GDEM1085T51
-GxEPD2_BW<GxEPD2_1085_GDEM1085T51, GxEPD2_1085_GDEM1085T51::HEIGHT / 2> display(GxEPD2_1085_GDEM1085T51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_BW<GxEPD2_1085_GDEM1085T51, GxEPD2_1085_GDEM1085T51::HEIGHT / 2> display(GxEPD2_1085_GDEM1085T51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY, PIN_CS2));
 
 // GDEM133T91 - BW, 960x680px, 13.3"
 #elif defined D_GDEM133T91
@@ -481,6 +482,11 @@ Adafruit_BME280 bme;
   #define vBatPin ADC1_GPIO2_CHANNEL
   #define dividerRatio 2.018
 
+#elif defined ESPink_V3
+  ESP32AnalogRead adc;
+  #define vBatPin 9
+  #define dividerRatio 1.7693877551
+
 #else
 ESP32AnalogRead adc;
   #define vBatPin 34
@@ -488,7 +494,7 @@ ESP32AnalogRead adc;
 #endif
 
 /* ---- Server Zivy obraz ----------------------- */
-const char *host = "cdn.mujink.cz";
+const char *host = "cdn.zivyobraz.eu";
 const char *firmware = "2.2";
 const String wifiPassword = "zivyobraz";
 
@@ -596,9 +602,6 @@ float getBatteryVoltage()
   float measurement = (float) analogRead(vBatPin);
   volt = (float)(measurement / 4095.0) * 7.05;
 
-#elif defined ESPink_V3
-  // Measuring battery voltage not yet in final resolved on board
-
 #else
   // attach ADC input
   adc.attach(vBatPin);
@@ -660,7 +663,7 @@ void displayInit()
   display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
 #endif
 
-#if (defined ES3ink) || (defined ESP32S3Adapter)
+#if (defined ES3ink) || (defined ESP32S3Adapter) || (defined ESPink_V3)
   display.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
 #else
   display.init();
