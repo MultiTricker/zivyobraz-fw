@@ -535,6 +535,24 @@ const String getWifiSSID()
 
   // Replace wifiSSID space with %20 for URL
   wifiSSID.replace(" ", "%20");
+  wifiSSID.replace("%", "%25");
+  wifiSSID.replace("#", "%23");
+  wifiSSID.replace("$", "%24");
+  wifiSSID.replace("&", "%26");
+  wifiSSID.replace("'", "%27");
+  wifiSSID.replace("(", "%28");
+  wifiSSID.replace(")", "%29");
+  wifiSSID.replace("*", "%2A");
+  wifiSSID.replace("+", "%2B");
+  wifiSSID.replace(",", "%2C");
+  wifiSSID.replace("/", "%2F");
+  wifiSSID.replace(":", "%3A");
+  wifiSSID.replace(";", "%3B");
+  wifiSSID.replace("=", "%3D");
+  wifiSSID.replace("?", "%3F");
+  wifiSSID.replace("@", "%40");
+  wifiSSID.replace("[", "%5B");
+  wifiSSID.replace("]", "%5D");
 
   return wifiSSID;
 }
