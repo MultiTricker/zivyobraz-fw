@@ -533,9 +533,9 @@ const String getWifiSSID()
   String wifiSSID = WiFi.SSID();
   Serial.println("Wifi SSID: " + wifiSSID);
 
-  // Replace wifiSSID space with %20 for URL
-  wifiSSID.replace(" ", "%20");
+  // Replace special characters
   wifiSSID.replace("%", "%25");
+  wifiSSID.replace(" ", "%20");
   wifiSSID.replace("#", "%23");
   wifiSSID.replace("$", "%24");
   wifiSSID.replace("&", "%26");
