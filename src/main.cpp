@@ -143,14 +143,19 @@
   #define PIN_BUSY 36
   #define PIN_CS2 35
   #define ePaperPowerPin 47
+  #define PIN_SPI_MOSI 11
+  #define PIN_SPI_CLK 12
+  #define PIN_SDA 42
+  #define PIN_SCL 2
 
 #elif defined ESP32S3Adapter
+  // With ESP32-S3 DEVKIT from laskakit.cz
   #define PIN_SS 10
   #define PIN_DC 41
   #define PIN_RST 40
   #define PIN_BUSY 13
   #define ePaperPowerPin 47
-  #define enableBattery 40
+  #define enableBattery 9
   #define PIN_SPI_CLK 12
   #define PIN_SPI_MOSI 11
 
@@ -203,16 +208,6 @@
   #define PIN_SPI_MOSI 12 // DIN
   #define PIN_SPI_SS 15   // unused
 #endif
-
-// For LaskaKit ESP32-Dev kit use pins:
-/*
-SDI  = GPIO23
-SCL  = GPIO18
-CS   = GPIO5
-D/C  = GPIO17
-RES  = GPIO16
-PIN_BUSY = GPIO4
-*/
 
 ///////////////////////
 // ePaper libraries
@@ -473,6 +468,9 @@ GxEPD2_7C<GxEPD2_730c_GDEP073E01, GxEPD2_730c_GDEP073E01::HEIGHT / 4> display(Gx
 #include <QRCodeGenerator.h>
 QRCode qrcode;
 
+// TWI/I2C library
+#include <Wire.h>
+
 #ifdef ES3ink
   #include <Adafruit_NeoPixel.h>
   Adafruit_NeoPixel pixel(1, RGBledPin, NEO_GRB + NEO_KHZ800);
@@ -485,7 +483,6 @@ SPIClass hspi(HSPI);
 // Supported sensors
 #ifdef SENSOR
   // SHT40/41/45
-  #include <Wire.h>
   #include "Adafruit_SHT4x.h"
 Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 
@@ -519,7 +516,8 @@ Adafruit_BME280 bme;
   #define vBatPin 35
 
 #elif defined ESP32S3Adapter
-  #define vBatPin ADC1_GPIO2_CHANNEL
+  ESP32AnalogRead adc;
+  #define vBatPin ADC1_GPIO9_CHANNEL
   #define dividerRatio 2.018
 
 #elif defined ESPink_V3
@@ -535,7 +533,7 @@ ESP32AnalogRead adc;
 
 /* ---- Server Zivy obraz ----------------------- */
 const char *host = "cdn.zivyobraz.eu";
-const char *firmware = "2.2";
+const char *firmware = "2.3";
 const String wifiPassword = "zivyobraz";
 
 /* ---------- Deepsleep time in minutes --------- */
@@ -609,12 +607,32 @@ float getBatteryVoltage()
 {
   float volt;
 
-#if (defined ES3ink) || (defined ESP32S3Adapter)
+#if defined ESPink_V3
+
+  Serial.println("Reading battery on ESPink V3 board");
+
+  Wire.begin(SDA, SCL);
+  delay(200);
+
+  pwr_mgmt.attatch(Wire);
+  delay(200);
+
+  setEPaperPowerOn(true);
+  delay(200);
+
+  volt = (float)pwr_mgmt.voltage();
+
+  setEPaperPowerOn(false);
+
+  Serial.println("Battery voltage: " + String(volt) + " V");
+  Serial.println("Battery percentage: " + String(pwr_mgmt.percent()) + " %");
+
+#elif defined ES3ink
   esp_adc_cal_characteristics_t adc_cal;
   esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 0, &adc_cal);
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_11);
 
-  Serial.println("Reading battery on ES3ink/ESP32S3Adapter board");
+  Serial.println("Reading battery on ES3ink board");
 
   digitalWrite(enableBattery, LOW);
   uint32_t raw = adc1_get_raw(vBatPin);
@@ -625,6 +643,13 @@ float getBatteryVoltage()
   const uint32_t lower_divider = 1000;
   volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
   digitalWrite(enableBattery, HIGH);
+
+#elif defined ESP32S3Adapter
+  Serial.println("Reading battery on ESP32-S3 DEVKIT board");
+  // attach ADC input
+  adc.attach(vBatPin);
+  // battery voltage measurement
+  volt = (float)(adc.readVoltage() * dividerRatio);
 
 #elif defined M5StackCoreInk
   analogSetPinAttenuation(vBatPin, ADC_11db);
@@ -1614,6 +1639,7 @@ void readBitmapData(WiFiClient &client)
 void setup()
 {
   Serial.begin(115200);
+  Serial.println("Starting firmware for Zivy Obraz service");
 
 #ifdef ES3ink
   // Battery voltage reading via PMOS switch with series capacitor to gate.
@@ -1638,8 +1664,6 @@ void setup()
   display.init(115200, false);
   M5.update();
 #endif
-
-  Serial.println("Starting firmware for Zivy Obraz service");
 
   // Battery voltage measurement
   d_volt = getBatteryVoltage();
