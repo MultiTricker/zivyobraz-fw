@@ -535,6 +535,7 @@ ESP32AnalogRead adc;
 const char *host = "cdn.zivyobraz.eu";
 const char *firmware = "2.3";
 const String wifiPassword = "zivyobraz";
+const String urlWiki = "https://wiki.zivyobraz.eu ";
 
 /* ---------- Deepsleep time in minutes --------- */
 uint64_t defaultDeepSleepTime = 2; // if there is a problem with loading images,
@@ -554,6 +555,7 @@ String ssid; // Wi-Fi ssid
 int8_t rssi; // Wi-Fi signal strength
 float d_volt; // indoor battery voltage
 RTC_DATA_ATTR uint64_t timestamp = 0;
+RTC_DATA_ATTR uint8_t notConnectedToAPCount = 0;
 uint64_t timestampNow = 1; // initialize value for timestamp from server
 
 void setEPaperPowerOn(bool on)
@@ -760,6 +762,12 @@ void displayInit()
 // and draws information screen
 void configModeCallback(WiFiManager *myWiFiManager)
 {
+  // Iterate notConnectedToAPCount counter
+  if(notConnectedToAPCount < 255)
+  {
+    notConnectedToAPCount++;
+  }
+
   /*
     QR code hint
     Common format: WIFI:S:<SSID>;T:<WEP|WPA|nopass>;P:<PASSWORD>;H:<true|false|blank>;;
@@ -770,7 +778,6 @@ void configModeCallback(WiFiManager *myWiFiManager)
   //Serial.println(qrString);
 
   const String urlWeb = "http://" + WiFi.softAPIP().toString();
-  const String urlWiki = "https://wiki.zivyobraz.eu ";
 
   timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
 
@@ -894,6 +901,31 @@ void configModeCallback(WiFiManager *myWiFiManager)
   setEPaperPowerOn(false);
 }
 
+void displayNoWiFiError()
+{
+  timestamp = 0; // set timestamp to 0 to force update because we changed screen to this info
+
+  displayInit();
+  setEPaperPowerOn(true);
+  delay(500);
+
+  display.setFullWindow();
+  display.firstPage();
+  do
+  {
+      display.fillRect(0, 0, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_WHITE);
+      display.setTextColor(GxEPD_BLACK);
+      display.setFont(&OpenSansSB_20px);
+      centeredText("Cannot connect to Wi-Fi", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y / 2 - 15);
+      display.setFont(&OpenSansSB_16px);
+      centeredText("Retries in a " + String(deepSleepTime) + " minutes.", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y / 2 + 15);
+      display.setFont(&OpenSansSB_14px);
+      centeredText("Docs: " + urlWiki, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
+  } while (display.nextPage());
+
+  setEPaperPowerOn(false);
+}
+
 void WiFiInit()
 {
   // Connecting to WiFi
@@ -916,9 +948,16 @@ void WiFiInit()
   // reset settings - wipe stored credentials for testing
   //wm.resetSettings();
 
-  wm.setConfigPortalTimeout(300); // set portal time to 5 min, then sleep/try again.
+  wm.setConfigPortalTimeout(240); // set portal time to 4 min, then sleep/try again.
   wm.setAPCallback(configModeCallback);
   wm.autoConnect(hostname.c_str(), wifiPassword.c_str());
+
+  // Check if Wi-Fi is connected
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    // Reset counter    
+    notConnectedToAPCount = 0;
+  }
 }
 
 uint32_t read8n(WiFiClient &client, uint8_t *buffer, int32_t bytes)
@@ -984,6 +1023,7 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
                "&y=" + String(DISPLAY_RESOLUTION_Y) +
                "&c=" + String(defined_color_type) +
                "&fw=" + String(firmware) +
+               "&ap_retries=" + String(notConnectedToAPCount) +
                extraParams;
 
   Serial.print("connecting to ");
@@ -1687,6 +1727,9 @@ void setup()
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
 
+  // Successfully connected to Wi-Fi?
+  if(notConnectedToAPCount == 0)
+  {
   // Do we need to update the screen?
   if (checkForNewTimestampOnServer(client))
   {
@@ -1717,6 +1760,29 @@ void setup()
     pixel.show();
   }
 #endif
+  }
+  else
+  {
+    Serial.println("No Wi-Fi connection, will sleep for a while and try again. Failure no.: " + String(notConnectedToAPCount));
+
+    // Determine how long we will sleep determined by number of notConnectedToAPCount
+    if(notConnectedToAPCount <= 3) deepSleepTime = defaultDeepSleepTime;
+    else if(notConnectedToAPCount <= 10) deepSleepTime = 10;
+    else if(notConnectedToAPCount <= 20) deepSleepTime = 30;
+    else if(notConnectedToAPCount <= 50) deepSleepTime = 60;
+    else deepSleepTime = 720;
+
+    // Enable power supply for ePaper
+    setEPaperPowerOn(true);
+    delay(500);
+
+    // Display error message
+    displayNoWiFiError();
+
+    delay(100);
+    // Disable power supply for ePaper
+    setEPaperPowerOn(false);
+  }
 
   // Deep sleep mode
   Serial.print("Going to sleep now for (minutes): ");
