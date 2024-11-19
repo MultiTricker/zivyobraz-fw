@@ -95,6 +95,7 @@
 //#define D_GDEY075Z08    // 800x480, 7.5"
 //#define D_GDEH075Z90    // 880x528, 7.5"
 //#define D_GDEY116Z91    // 960x640, 11.6"
+//#define D_GDEY1248Z51   // 1304x984, 12.48"
 //#define D_GDEM133Z91    // 960x680, 13.3"
 
 // 4C
@@ -134,6 +135,7 @@
   #define PIN_DC 17
   #define PIN_RST 16
   #define PIN_BUSY 4
+  #define PIN_CS2 35
   #define ePaperPowerPin 2
 
 #elif defined ESPink_V3
@@ -169,6 +171,7 @@
   #define PIN_DC 7
   #define PIN_RST 5
   #define PIN_BUSY 6
+  #define PIN_CS2 35
   #define ePaperPowerPin 3
   #define enableBattery 40
   #define RGBledPin 48
@@ -378,6 +381,11 @@ GxEPD2_3C<GxEPD2_750c_Z90, GxEPD2_750c_Z90::HEIGHT / 2> display(GxEPD2_750c_Z90(
 // GDEY116Z91 - 3C, 960x640px, 11.6"
 #elif defined D_GDEY116Z91
 GxEPD2_3C<GxEPD2_1160c_GDEY116Z91, GxEPD2_1160c_GDEY116Z91::HEIGHT / 4> display(GxEPD2_1160c_GDEY116Z91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+
+// GDEY1248Z51 - 3C, 1304x984px, 12.48"
+#elif defined D_GDEY1248Z51
+GxEPD2_3C <GxEPD2_1248c, GxEPD2_1248c::HEIGHT / 4> display(GxEPD2_1248c(/*sck=*/ 35, /*miso=*/ -1, /*mosi=*/ 36, /*cs_m1=*/ 17, /*cs_s1=*/ 18, /*cs_m2=*/ 40, /*cs_s2=*/ 46,
+                            /*dc1=*/ 20, /*dc2=*/ 39, /*rst1=*/ 19, /*rst2=*/ 38, /*busy_m1=*/ 8, /*busy_s1=*/ 3, /*busy_m2=*/ 37, /*busy_s2=*/ 41));
 
 // GDEM133Z91 - 3C, 960x680px, 13.3"
 #elif defined D_GDEM133Z91
