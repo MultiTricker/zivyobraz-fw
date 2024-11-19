@@ -147,6 +147,7 @@
   #define PIN_SPI_CLK 12
   #define PIN_SDA 42
   #define PIN_SCL 2
+  #define PIN_ALERT 9
 
 #elif defined ESP32S3Adapter
   // With ESP32-S3 DEVKIT from laskakit.cz
@@ -517,16 +518,15 @@ Adafruit_BME280 bme;
 
 #elif defined ESP32S3Adapter
   ESP32AnalogRead adc;
-  #define vBatPin ADC1_GPIO9_CHANNEL
+  #define vBatPin ADC1_GPIO9_CHANNEL  
   #define dividerRatio 2.018
 
 #elif defined ESPink_V3
-  ESP32AnalogRead adc;
-  #define vBatPin 9
-  #define dividerRatio 1.7693877551
+  #include <SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library.h>
+  SFE_MAX1704X lipo(MAX1704X_MAX17048);
 
 #else
-ESP32AnalogRead adc;
+  ESP32AnalogRead adc;
   #define vBatPin 34
   #define dividerRatio 1.769
 #endif
@@ -613,21 +613,42 @@ float getBatteryVoltage()
 
   Serial.println("Reading battery on ESPink V3 board");
 
-  Wire.begin(SDA, SCL);
-  delay(200);
-
-  pwr_mgmt.attatch(Wire);
-  delay(200);
-
   setEPaperPowerOn(true);
-  delay(200);
+  pinMode(PIN_ALERT, INPUT_PULLUP);
 
-  volt = (float)pwr_mgmt.voltage();
+  delay(100);
+
+  Wire.begin (PIN_SDA, PIN_SCL);
+
+  lipo.begin();
+
+  //lipo.enableDebugging(); // Uncomment this line to enable helpful debug messages on Serial
+
+  // Read and print the reset indicator
+  Serial.print(F("Reset Indicator was: "));
+  bool RI = lipo.isReset(true); // Read the RI flag and clear it automatically if it is set
+  Serial.println(RI); // Print the RI
+  // If RI was set, check it is now clear
+  if (RI)
+  {
+    Serial.print(F("Reset Indicator is now: "));
+    RI = lipo.isReset(); // Read the RI flag
+    Serial.println(RI); // Print the RI    
+  }
+
+	lipo.setThreshold(1); // Set alert threshold to just 1% - we don't want to trigger the alert
+  lipo.setVALRTMax((float)4.3); // Set high voltage threshold (Volts)
+  lipo.setVALRTMin((float)2.9); // Set low voltage threshold (Volts)
+  
+  volt = (float)lipo.getVoltage();
+  // percentage could be read like this:
+  // lipo.getSOC();
+  //Serial.println("Battery percentage: " + String(lipo.getSOC(), 2) + " %");
+
+  lipo.clearAlert();
+  lipo.enableHibernate();
 
   setEPaperPowerOn(false);
-
-  Serial.println("Battery voltage: " + String(volt) + " V");
-  Serial.println("Battery percentage: " + String(pwr_mgmt.percent()) + " %");
 
 #elif defined ES3ink
   esp_adc_cal_characteristics_t adc_cal;
@@ -1730,36 +1751,36 @@ void setup()
   // Successfully connected to Wi-Fi?
   if(notConnectedToAPCount == 0)
   {
-  // Do we need to update the screen?
-  if (checkForNewTimestampOnServer(client))
-  {
-    // Enable power supply for ePaper
-    setEPaperPowerOn(true);
-    delay(500);
-
-    // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
-
-    // If you can't use whole display at once, there will be multiple pages and therefore
-    // requests and downloads of one bitmap from server, since you have to always write whole image
-    display.setFullWindow();
-    display.firstPage();
-    do
+    // Do we need to update the screen?
+    if (checkForNewTimestampOnServer(client))
     {
-      readBitmapData(client);
-    } while (display.nextPage());
+      // Enable power supply for ePaper
+      setEPaperPowerOn(true);
+      delay(500);
 
-    delay(100);
-    // Disable power supply for ePaper
-    setEPaperPowerOn(false);
-  }
+      // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
 
-#ifdef ES3ink
-  pixel.clear();
-  for(int i=0; i<1; i++) { 
-    pixel.setPixelColor(i, pixel.Color(0, 150, 0));
-    pixel.show();
-  }
-#endif
+      // If you can't use whole display at once, there will be multiple pages and therefore
+      // requests and downloads of one bitmap from server, since you have to always write whole image
+      display.setFullWindow();
+      display.firstPage();
+      do
+      {
+        readBitmapData(client);
+      } while (display.nextPage());
+
+      delay(100);
+      // Disable power supply for ePaper
+      setEPaperPowerOn(false);
+    }
+
+  #ifdef ES3ink
+    pixel.clear();
+    for(int i=0; i<1; i++) { 
+      pixel.setPixelColor(i, pixel.Color(0, 150, 0));
+      pixel.show();
+    }
+  #endif
   }
   else
   {
