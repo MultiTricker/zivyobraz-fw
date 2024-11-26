@@ -384,8 +384,8 @@ GxEPD2_3C<GxEPD2_1160c_GDEY116Z91, GxEPD2_1160c_GDEY116Z91::HEIGHT / 4> display(
 
 // GDEY1248Z51 - 3C, 1304x984px, 12.48"
 #elif defined D_GDEY1248Z51
-GxEPD2_3C <GxEPD2_1248c, GxEPD2_1248c::HEIGHT / 4> display(GxEPD2_1248c(/*sck=*/ 35, /*miso=*/ -1, /*mosi=*/ 36, /*cs_m1=*/ 17, /*cs_s1=*/ 18, /*cs_m2=*/ 40, /*cs_s2=*/ 46,
-                            /*dc1=*/ 20, /*dc2=*/ 39, /*rst1=*/ 19, /*rst2=*/ 38, /*busy_m1=*/ 8, /*busy_s1=*/ 3, /*busy_m2=*/ 37, /*busy_s2=*/ 41));
+GxEPD2_3C<GxEPD2_1248c, GxEPD2_1248c::HEIGHT / 4> display(GxEPD2_1248c(/*sck=*/ 12, /*miso=*/ -1, /*mosi=*/ 11, /*cs_m1=*/ 10, /*cs_s1=*/ 18, /*cs_m2=*/ 48, /*cs_s2=*/ 41,
+                            /*dc1=*/ 46, /*dc2=*/ 45, /*rst1=*/ 3, /*rst2=*/ 39, /*busy_m1=*/ 8, /*busy_s1=*/ 17, /*busy_m2=*/ 40, /*busy_s2=*/ 16));
 
 // GDEM133Z91 - 3C, 960x680px, 13.3"
 #elif defined D_GDEM133Z91
