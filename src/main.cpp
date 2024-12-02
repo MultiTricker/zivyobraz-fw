@@ -1583,7 +1583,10 @@ void readBitmapData(WiFiClient &client)
     uint16_t color2 = GxEPD_RED;
     uint16_t color3 = GxEPD_YELLOW;
 
-#if (defined TYPE_BW) || (defined TYPE_GRAYSCALE)
+#if defined TYPE_BW
+    color2 = GxEPD_BLACK;
+    color3 = GxEPD_WHITE;
+#elif defined TYPE_GRAYSCALE
     color2 = GxEPD_LIGHTGREY;
     color3 = GxEPD_DARKGREY;
 #endif
