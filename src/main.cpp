@@ -1734,15 +1734,15 @@ void setup()
   M5.update();
 #endif
 
-  // Battery voltage measurement
-  d_volt = getBatteryVoltage();
-
 #ifndef M5StackCoreInk
   pinMode(ePaperPowerPin, OUTPUT);
 #endif
 
   // ePaper init
   displayInit();
+
+  // Battery voltage measurement
+  d_volt = getBatteryVoltage();
 
   // Wifi init
   WiFiInit();
