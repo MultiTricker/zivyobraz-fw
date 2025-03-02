@@ -30,7 +30,7 @@
 // Uncomment for correct board
 /////////////////////////////////
 
-//#define ESPink_V2
+#define ESPink_V2
 //#define ESPink_V3
 //#define ESP32S3Adapter
 //#define ES3ink
@@ -53,7 +53,7 @@
 //#define TYPE_BW // black and white
 //#define TYPE_3C // 3 colors - black, white and red/yellow
 //#define TYPE_4C // 4 colors - black, white, red and yellow
-//#define TYPE_GRAYSCALE // grayscale - 4 colors
+#define TYPE_GRAYSCALE // grayscale - 4 colors
 //#define TYPE_7C // 7 colors
 
 //////////////////////////////////////////////////////////////
@@ -82,7 +82,7 @@
 //#define D_GDEW042T2_G   // 400x300, 4.2"
 //#define D_GDEY042T81    // 400x300, 4.2"
 //#define D_GDEQ0426T82   // 800x480, 4.26"
-//#define D_GDEY075T7     // 800x480, 7.5"
+#define D_GDEY075T7     // 800x480, 7.5"
 
 // 3C
 //#define D_GDEY0154Z90   // 200x200, 1.54"
@@ -1020,6 +1020,15 @@ uint8_t safe_read(WiFiClient &client)
   return ret;
 }
 
+// read one byte safely from WiFiClient, wait a while if data are not available immediately
+// if byte is not read, set error to true
+uint8_t safe_read_error(WiFiClient &client,bool *error)
+{
+  uint8_t ret;
+  *error=read8n(client, &ret, 1)<1;  // signalize reading error when not all bytes are read
+  return ret;
+}
+
 uint16_t read16(WiFiClient &client)
 {
   // BMP data is stored little-endian, same as Arduino.
@@ -1295,6 +1304,7 @@ void readBitmapData(WiFiClient &client)
   bool has_multicolors = false;
   bool grayscale = false;
 
+  bool read_error;
 #ifdef TYPE_GRAYSCALE
   with_color = true;
   has_multicolors = false;
@@ -1614,14 +1624,26 @@ void readBitmapData(WiFiClient &client)
         // Z1
         if (header == 0x315A)
         {
-          pixel_color = safe_read(client);
+          pixel_color = safe_read_error(client,&read_error);
+          if (read_error){
+            Serial.print("Client got disconnected during read - after bytes:");
+            Serial.println(bytes_read);
+            valid=false;
+            break;
+          }
           count = safe_read(client);
           bytes_read += 2;
         }
         else if (header == 0x325A)
         {
           // Z2
-          compressed = safe_read(client);
+          compressed = safe_read_error(client,&read_error);
+          if (read_error){
+            Serial.print("Client got disconnected during read - after bytes:");
+            Serial.println(bytes_read);
+            valid=false;
+            break;
+          }
           count = compressed & 0b00111111;
           pixel_color = (compressed & 0b11000000) >> 6;
           bytes_read++;
@@ -1629,7 +1651,13 @@ void readBitmapData(WiFiClient &client)
         else if (header == 0x335A)
         {
           // Z3
-          compressed = safe_read(client);
+          compressed = safe_read_error(client,&read_error);
+          if (read_error){
+            Serial.print("Client got disconnected during read - after bytes:");
+            Serial.println(bytes_read);
+            valid=false;
+            break;
+          }
           count = compressed & 0b00011111;
           pixel_color = (compressed & 0b11100000) >> 5;
           bytes_read++;
