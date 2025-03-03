@@ -1020,6 +1020,15 @@ uint8_t safe_read(WiFiClient &client)
   return ret;
 }
 
+// read one byte safely from WiFiClient, wait a while if data are not available immediately
+// if byte is not read, set valid to false
+uint8_t safe_read_valid(WiFiClient &client,bool *valid)
+{
+  uint8_t ret;
+  *valid=read8n(client, &ret, 1) == 1;  // signalize not valid reading when not all bytes are read
+  return ret;
+}
+
 uint16_t read16(WiFiClient &client)
 {
   // BMP data is stored little-endian, same as Arduino.
@@ -1271,6 +1280,13 @@ bool checkForNewTimestampOnServer(WiFiClient &client)
 #endif
 
   return createHttpRequest(client, connection_ok, true, extraParams);
+}
+
+void print_error_reading(uint32_t bytes_read)
+{
+  // print error message when reading bitmap data from server failed
+  Serial.print("Client got disconnected after bytes:");
+  Serial.println(bytes_read);
 }
 
 void readBitmapData(WiFiClient &client)
@@ -1606,22 +1622,36 @@ void readBitmapData(WiFiClient &client)
 
         if (!(client.connected() || client.available()))
         {
-          Serial.print("Client got disconnected after bytes:");
-          Serial.println(bytes_read);
+          print_error_reading(bytes_read);
           break;
         }
 
         // Z1
         if (header == 0x315A)
         {
-          pixel_color = safe_read(client);
-          count = safe_read(client);
+          pixel_color = safe_read_valid(client,&valid);
+          if (!valid)
+          {
+            print_error_reading(bytes_read);
+            break;
+          }
+          count = safe_read_valid(client,&valid);
+          if (!valid)
+          {
+            print_error_reading(bytes_read);
+            break;
+          }
           bytes_read += 2;
         }
         else if (header == 0x325A)
         {
           // Z2
-          compressed = safe_read(client);
+          compressed = safe_read_valid(client,&valid);
+          if (!valid)
+          {
+            print_error_reading(bytes_read);
+            break;
+          }
           count = compressed & 0b00111111;
           pixel_color = (compressed & 0b11000000) >> 6;
           bytes_read++;
@@ -1629,7 +1659,12 @@ void readBitmapData(WiFiClient &client)
         else if (header == 0x335A)
         {
           // Z3
-          compressed = safe_read(client);
+          compressed = safe_read_valid(client,&valid);
+          if (!valid)
+          {
+            print_error_reading(bytes_read);
+            break;
+          }
           count = compressed & 0b00011111;
           pixel_color = (compressed & 0b11100000) >> 5;
           bytes_read++;
