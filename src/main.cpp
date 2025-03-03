@@ -1025,7 +1025,7 @@ uint8_t safe_read(WiFiClient &client)
 uint8_t safe_read_valid(WiFiClient &client,bool *valid)
 {
   uint8_t ret;
-  *valid=read8n(client, &ret, 1)==1;  // signalize not valid reading when not all bytes are read
+  *valid=read8n(client, &ret, 1) == 1;  // signalize not valid reading when not all bytes are read
   return ret;
 }
 
@@ -1630,11 +1630,17 @@ void readBitmapData(WiFiClient &client)
         if (header == 0x315A)
         {
           pixel_color = safe_read_valid(client,&valid);
-          if (!valid){
+          if (!valid)
+          {
             print_error_reading(bytes_read);
             break;
           }
-          count = safe_read(client);
+          count = safe_read_valid(client,&valid);
+          if (!valid)
+          {
+            print_error_reading(bytes_read);
+            break;
+          }
           bytes_read += 2;
         }
         else if (header == 0x325A)
