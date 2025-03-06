@@ -466,6 +466,7 @@ GxEPD2_7C<GxEPD2_730c_GDEP073E01, GxEPD2_730c_GDEP073E01::HEIGHT / 4> display(Gx
 // ADC reading
 #include <ESP32AnalogRead.h>
 // Font
+#include <gfxfont.h>
 //#include "fonts/OpenSansSB_12px.h"
 #include "fonts/OpenSansSB_14px.h"
 #include "fonts/OpenSansSB_16px.h"
