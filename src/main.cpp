@@ -219,17 +219,17 @@
 
 // 2 colors (Black and White)
 #ifdef TYPE_BW
-  #include "GxEPD2_BW.h"
+  #include <GxEPD2_BW.h>
 static const char *defined_color_type = "BW";
 
 // 3 colors (Black, White and Red/Yellow)
 #elif defined TYPE_3C
-  #include "GxEPD2_3C.h"
+  #include <GxEPD2_3C.h>
 static const char *defined_color_type = "3C";
 
 // 4 colors (Black, White, Red and Yellow)
 #elif defined TYPE_4C
-  #include "GxEPD2_4C.h"
+  #include <GxEPD2_4C.h>
 static const char *defined_color_type = "4C";
 
 // 4 colors (Grayscale - Black, Darkgrey, Lightgrey, White) (https://github.com/ZinggJM/GxEPD2_4G)
@@ -240,7 +240,7 @@ static const char *defined_color_type = "4G";
 
 // 7 colors
 #elif defined TYPE_7C
-  #include "GxEPD2_7C.h"
+  #include <GxEPD2_7C.h>
 static const char *defined_color_type = "7C";
 #else
   #error "ePaper type not defined!"
