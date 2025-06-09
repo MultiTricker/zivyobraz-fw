@@ -531,7 +531,6 @@ Adafruit_BME280 bme;
   SFE_MAX1704X lipo(MAX1704X_MAX17048);
 
 #else
-  ESP32AnalogRead adc;
   #define vBatPin 34
   #define dividerRatio 1.769
 #endif
