@@ -158,7 +158,6 @@
   #define PIN_RST 40
   #define PIN_BUSY 13
   #define ePaperPowerPin 47
-  #define enableBattery 9
   #define PIN_SPI_CLK 12
   #define PIN_SPI_MOSI 11
 
@@ -463,8 +462,6 @@ GxEPD2_7C<GxEPD2_730c_GDEP073E01, GxEPD2_730c_GDEP073E01::HEIGHT / 4> display(Gx
 
 // SPI
 #include "SPI.h"
-// ADC reading
-#include <ESP32AnalogRead.h>
 // Font
 #include <gfxfont.h>
 //#include "fonts/OpenSansSB_12px.h"
@@ -526,9 +523,8 @@ Adafruit_BME280 bme;
   #define vBatPin 35
 
 #elif defined ESP32S3Adapter
-  ESP32AnalogRead adc;
-  #define vBatPin ADC1_GPIO9_CHANNEL  
-  #define dividerRatio 2.018
+  #define vBatPin 9  
+  #define dividerRatio 1.7693877551
 
 #elif defined ESPink_V3
   #include <SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library.h>
@@ -679,9 +675,7 @@ float getBatteryVoltage()
 #elif defined ESP32S3Adapter
   Serial.println("Reading battery on ESP32-S3 DEVKIT board");
   // attach ADC input
-  adc.attach(vBatPin);
-  // battery voltage measurement
-  volt = (float)(adc.readVoltage() * dividerRatio);
+  volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);
 
 #elif defined M5StackCoreInk
   analogSetPinAttenuation(vBatPin, ADC_11db);
@@ -718,10 +712,8 @@ float getBatteryVoltage()
   volt = (float)(measurement / 4095.0) * 7.05;
 
 #else
-  // attach ADC input
-  adc.attach(vBatPin);
-  // battery voltage measurement
-  volt = (float)(adc.readVoltage() * dividerRatio);
+  volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);
+
 #endif
 
   Serial.println("Battery voltage: " + String(volt) + " V");
