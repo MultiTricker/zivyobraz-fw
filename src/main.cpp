@@ -201,6 +201,15 @@
   #define PIN_BUSY 4
   #define ePaperPowerPin 2
 
+#elif defined SEEDSTUDIO_XIAO
+  #define PIN_SS 3
+  #define PIN_DC 5
+  #define PIN_RST 2
+  #define PIN_BUSY 4
+  #define ePaperPowerPin 7
+  #define PIN_SPI_CLK 8
+  #define PIN_SPI_MOSI 11
+
 #else
   #error "Board not defined!"
 #endif
@@ -709,6 +718,9 @@ float getBatteryVoltage()
   
   float measurement = (float) analogRead(vBatPin);
   volt = (float)(measurement / 4095.0) * 7.05;
+
+#elif defined SEEDSTUDIO_XIAO
+  volt = (float)0;
 
 #else
   volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);
