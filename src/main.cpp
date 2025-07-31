@@ -30,10 +30,11 @@
 // Uncomment for correct board
 /////////////////////////////////
 
-//#define ESPink_V2
-//#define ESPink_V3
-//#define ESP32S3Adapter
-//#define ES3ink
+//#define ESPink_V2 // LáskaKit ESPInk 2.x, ESP32-WROOM-32, ADC battery measurement
+//#define ESPink_V3 // LáskaKit ESPInk 3.0-3.4, ESP32-S3, with FuelGauge, about 100 pcs
+//#define ESPink_V35 // LáskaKit ESPInk 3.5, ESP32-S3, ADC battery measurement, extra buton
+//#define ESP32S3Adapter // LáskaKit ESP32-S3 with adapter for 6/7 color ePaper displays
+//#define ES3ink // Board from dronecz
 //#define MakerBadge_revB // also works with A and C
 //#define MakerBadge_revD
 //#define REMAP_SPI
@@ -150,6 +151,18 @@
   #define PIN_SDA 42
   #define PIN_SCL 2
   #define PIN_ALERT 9
+
+#elif defined ESPink_V35
+  #define PIN_SS 10
+  #define PIN_DC 48
+  #define PIN_RST 45
+  #define PIN_BUSY 38
+  #define PIN_CS2 35
+  #define ePaperPowerPin 47
+  #define PIN_SPI_MOSI 11
+  #define PIN_SPI_CLK 12
+  #define PIN_SDA 42
+  #define PIN_SCL 2
 
 #elif defined ESP32S3Adapter
   // With ESP32-S3 DEVKIT from laskakit.cz
@@ -531,7 +544,7 @@ Adafruit_BME280 bme;
 #elif defined TTGO_T5_v23
   #define vBatPin 35
 
-#elif defined ESP32S3Adapter
+#elif (defined ESPink_V35) || (defined ESP32S3Adapter)
   #define vBatPin 9  
   #define dividerRatio 1.7693877551
 
