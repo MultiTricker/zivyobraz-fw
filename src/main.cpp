@@ -2,15 +2,7 @@
  * ZivyObraz.eu - Orchestrate your ePaper displays
  *
  * You need to change some initial things like ePaper type etc. - see below.
- *
  * Default password for Wi-Fi AP is: zivyobraz
- *
- * Code based on both:
- * https://github.com/ZinggJM/GxEPD2/blob/master/examples/GxEPD2_WiFi_Example/GxEPD2_WiFi_Example.ino
- * and
- * https://github.com/LaskaKit/ESPink-42/blob/main/SW/Weatherstation_info/Weatherstation_info.ino
- *
- * Compile with board type: ESP32 dev module
  *
  * Libraries:
  * Analog read with calibration data: https://github.com/madhephaestus/ESP32AnalogRead/
@@ -21,9 +13,6 @@
  * SHT4x (temperature, humidity): https://github.com/adafruit/Adafruit_SHT4X
  * BME280 (temperature, humidity, pressure): https://github.com/adafruit/Adafruit_BME280_Library
  * SCD41 (CO2, temperature, humidity): https://github.com/sparkfun/SparkFun_SCD4x_Arduino_Library
- *
- * original code made by Jean-Marc Zingg and LaskaKit
- * modified by @MultiTricker (https://michalsevcik.eu)
  */
 
 /////////////////////////////////
