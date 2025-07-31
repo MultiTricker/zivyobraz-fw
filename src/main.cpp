@@ -4,6 +4,10 @@
  * You need to change some initial things like ePaper type etc. - see below.
  * Default password for Wi-Fi AP is: zivyobraz
  *
+ * Kits for ZivyObraz to buy: 
+ * LáskaKit: https://www.laskakit.cz/vyhledavani/?string=%C5%BEiv%C3%BD+obraz
+ * Pájeníčko: https://pajenicko.cz/vyhledavani?search=%C5%BEiv%C3%BD%20obraz
+ *
  * Libraries:
  * Analog read with calibration data: https://github.com/madhephaestus/ESP32AnalogRead/
  * EPD library: https://github.com/ZinggJM/GxEPD2
@@ -24,6 +28,7 @@
 //#define ESPink_V35 // LáskaKit ESPInk 3.5, ESP32-S3, ADC battery measurement, extra buton
 //#define ESP32S3Adapter // LáskaKit ESP32-S3 with adapter for 6/7 color ePaper displays
 //#define ES3ink // Board from dronecz
+//#define SEEDSTUDIO_XIAO // Seeed Studio XIAO ESP32C3, bundled with 800x480 BW display
 //#define MakerBadge_revB // also works with A and C
 //#define MakerBadge_revD
 //#define REMAP_SPI
@@ -116,9 +121,6 @@
 ////////////
 // Board
 ////////////
-
-// https://www.laskakit.cz/laskakit-espink-esp32-e-paper-pcb-antenna/?variantId=12419
-// + LaskaKit ESPInk-42 all-in-one board
 
 #ifdef ESPink_V2
   #define PIN_SS 5
