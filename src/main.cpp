@@ -491,7 +491,6 @@ GxEPD2_7C<GxEPD2_730c_GDEP073E01, GxEPD2_730c_GDEP073E01::HEIGHT / 4> display(Gx
 #include "fonts/OpenSansSB_16px.h"
 #include "fonts/OpenSansSB_18px.h"
 #include "fonts/OpenSansSB_20px.h"
-//#include "fonts/OpenSansSB_22px.h"
 #include "fonts/OpenSansSB_24px.h"
 
 #include <QRCodeGenerator.h>
