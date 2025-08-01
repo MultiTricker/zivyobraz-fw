@@ -164,6 +164,8 @@
   #define ePaperPowerPin 47
   #define PIN_SPI_CLK 12
   #define PIN_SPI_MOSI 11
+  #define PIN_SDA 42
+  #define PIN_SCL 2
 
   #include <esp_adc_cal.h>
   #include <soc/adc_channel.h>
@@ -634,7 +636,7 @@ float getBatteryVoltage()
 
   delay(100);
 
-  Wire.begin (PIN_SDA, PIN_SCL);
+  Wire.begin(PIN_SDA, PIN_SCL);
 
   lipo.begin();
 
@@ -1263,10 +1265,14 @@ bool checkForNewTimestampOnServer(WiFiClient &client)
 
   // Measuring temperature and humidity?
 #ifdef SENSOR
-  #if (defined ESPink_V2) || (defined ESPink_V3)
+  #if (defined ESPink_V2) || (defined ESPink_V3) || (defined ESPink_V35)
   // LaskaKit ESPink 2.5 needs to power up uSup
   setEPaperPowerOn(true);
   delay(50);
+  #endif
+
+  #if (defined PIN_SDA) && (defined PIN_SCL)
+    Wire.begin(PIN_SDA, PIN_SCL);
   #endif
 
   float temperature;
