@@ -555,10 +555,10 @@ const char *firmware = "2.3";
 const String wifiPassword = "zivyobraz";
 const String urlWiki = "https://wiki.zivyobraz.eu ";
 
-/* ---------- Deepsleep time in minutes --------- */
-uint64_t defaultDeepSleepTime = 120; // in seconds - if there is a problem with loading images,
+/* ---------- Deepsleep time in seconds --------- */
+uint64_t defaultDeepSleepTime = 120; // if there is a problem with loading images,
                                      // this time in will be used as fallback to try again soon
-uint64_t deepSleepTime = defaultDeepSleepTime; // actual sleep time in minutes, value is changed
+uint64_t deepSleepTime = defaultDeepSleepTime; // actual sleep time in seconds, value is changed
                                                // by what server suggest in response headers
 /* ---------------------------------------------- */
 
@@ -956,7 +956,7 @@ void displayNoWiFiError()
       display.setFont(&OpenSansSB_20px);
       centeredText("Cannot connect to Wi-Fi", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y / 2 - 15);
       display.setFont(&OpenSansSB_16px);
-      centeredText("Retries in a " + String(deepSleepTime) + " minutes.", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y / 2 + 15);
+      centeredText("Retries in a " + String(deepSleepTime / 60) + " minutes.", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y / 2 + 15);
       display.setFont(&OpenSansSB_14px);
       centeredText("Docs: " + urlWiki, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
   } while (display.nextPage());
@@ -1871,7 +1871,7 @@ void setup()
   }
 
   // Deep sleep mode
-  Serial.print("Going to sleep now for (minutes): ");
+  Serial.print("Going to sleep now for (seconds): ");
   Serial.println(deepSleepTime);
 
 #ifdef M5StackCoreInk
