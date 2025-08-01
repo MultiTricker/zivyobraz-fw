@@ -554,8 +554,8 @@ const String wifiPassword = "zivyobraz";
 const String urlWiki = "https://wiki.zivyobraz.eu ";
 
 /* ---------- Deepsleep time in minutes --------- */
-uint64_t defaultDeepSleepTime = 2; // if there is a problem with loading images,
-                                   // this time will be used as fallback to try again soon
+uint64_t defaultDeepSleepTime = 120; // in seconds - if there is a problem with loading images,
+                                     // this time in will be used as fallback to try again soon
 uint64_t deepSleepTime = defaultDeepSleepTime; // actual sleep time in minutes, value is changed
                                                // by what server suggest in response headers
 /* ---------------------------------------------- */
@@ -1133,8 +1133,17 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
       if (line.startsWith("Sleep"))
       {
         uint64_t sleep = line.substring(7).toInt();
-        deepSleepTime = sleep;
+        deepSleepTime = sleep * 60; // convert minutes to seconds
         Serial.print("Sleep: ");
+        Serial.println(sleep);
+      }
+
+      // Is there another header (after the Sleep one) with sleep, but in Seconds?
+      if (line.startsWith("SleepSeconds"))
+      {
+        uint64_t sleep = line.substring(14).toInt();
+        deepSleepTime = sleep; // already in seconds
+        Serial.print("SleepSeconds: ");
         Serial.println(sleep);
       }
 
@@ -1838,10 +1847,10 @@ void setup()
 
     // Determine how long we will sleep determined by number of notConnectedToAPCount
     if(notConnectedToAPCount <= 3) deepSleepTime = defaultDeepSleepTime;
-    else if(notConnectedToAPCount <= 10) deepSleepTime = 10;
-    else if(notConnectedToAPCount <= 20) deepSleepTime = 30;
-    else if(notConnectedToAPCount <= 50) deepSleepTime = 60;
-    else deepSleepTime = 720;
+    else if(notConnectedToAPCount <= 10) deepSleepTime = 600; // 10 minutes
+    else if(notConnectedToAPCount <= 20) deepSleepTime = 1800; // 30 minutes
+    else if(notConnectedToAPCount <= 50) deepSleepTime = 3600; // 1 hour
+    else deepSleepTime = 43200; // 12 hours
 
     // Enable power supply for ePaper
     setEPaperPowerOn(true);
@@ -1861,9 +1870,9 @@ void setup()
 
 #ifdef M5StackCoreInk
   display.powerOff();
-  M5.shutdown(deepSleepTime * 60);
+  M5.shutdown(deepSleepTime);
 #else
-  esp_sleep_enable_timer_wakeup(deepSleepTime * 60 * 1000000);
+  esp_sleep_enable_timer_wakeup(deepSleepTime * 1000000);
   delay(100);
   esp_deep_sleep_start();
 #endif
