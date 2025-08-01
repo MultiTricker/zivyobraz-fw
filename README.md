@@ -38,4 +38,8 @@ In code _**main.cpp**_ do not forget to uncomment:
 After successfully compiling and flashing the board, continue with the documentation "Bringing your own ePaper to life":
 https://wiki.zivyobraz.eu/doku.php?id=start#oziveni_vlastniho_epaperu
 
+----
+
+**Simple diagram of how it works**
+
 ![](how_it_works_diagram.webp)  
