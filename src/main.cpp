@@ -1265,7 +1265,7 @@ bool checkForNewTimestampOnServer(WiFiClient &client)
 
   // Measuring temperature and humidity?
 #ifdef SENSOR
-  #if (defined ESPink_V2) || (defined ESPink_V3) || (defined ESPink_V35)
+  #if (defined ESPink_V2) || (defined ESPink_V3) || (defined ESPink_V35) || (defined ESP32S3Adapter)
   // LaskaKit ESPink 2.5 needs to power up uSup
   setEPaperPowerOn(true);
   delay(50);
