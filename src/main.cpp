@@ -33,6 +33,7 @@
 //#define MakerBadge_revD
 //#define REMAP_SPI
 //#define TTGO_T5_v23 // tested only with 2.13" variant
+//#define SEEEDSTUDIO_XIAO_EDDB_ESP32S3 //Development board distributed as part of the TRMNL 7.5" (OG) DIY Kit 
 
 //////////////////////////////////////////////////////////////
 // Uncomment if one of the sensors will be connected
@@ -216,6 +217,16 @@
   #define PIN_SPI_CLK 8
   #define PIN_SPI_MOSI 11
 
+#elif defined SEEEDSTUDIO_XIAO_EDDB_ESP32S3
+  #define PIN_SS 44
+  #define PIN_DC 10
+  #define PIN_RST 38
+  #define PIN_BUSY 4
+  #define ePaperPowerPin 43
+  #define PIN_SPI_CLK 7
+  #define PIN_SPI_MOSI 9
+  #define enableBattery 6
+ 
 #else
   #error "Board not defined!"
 #endif
@@ -544,6 +555,10 @@ Adafruit_BME280 bme;
   #include <SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library.h>
   SFE_MAX1704X lipo(MAX1704X_MAX17048);
 
+#elif defined SEEEDSTUDIO_XIAO_EDDB_ESP32S3
+  #define vBatPin 1
+  #define dividerRatio (2.000f)
+
 #else
   #define vBatPin 34
   #define dividerRatio 1.769
@@ -726,6 +741,14 @@ float getBatteryVoltage()
 
 #elif defined SEEDSTUDIO_XIAO
   volt = (float)0;
+
+#elif defined SEEEDSTUDIO_XIAO_EDDB_ESP32S3
+  digitalWrite(enableBattery, HIGH);
+  pinMode(enableBattery, OUTPUT);
+  delay(8);    //slow tON time TPS22916C. 6500us typical for 1V. Set 8ms as margin.
+  volt = ((float)analogReadMilliVolts(vBatPin) * dividerRatio) / 1000;
+  digitalWrite(enableBattery, LOW);
+  pinMode(enableBattery, INPUT);
 
 #else
   volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);
