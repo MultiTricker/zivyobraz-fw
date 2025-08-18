@@ -29,11 +29,11 @@
 //#define ESP32S3Adapter // LáskaKit ESP32-S3 with adapter for 6/7 color ePaper displays
 //#define ES3ink // Board from dronecz
 //#define SEEDSTUDIO_XIAO // Seeed Studio XIAO ESP32C3, bundled with 800x480 BW display
+//#define SEEEDSTUDIO_XIAO_EDDB_ESP32S3 //Development board distributed as part of the TRMNL 7.5" (OG) DIY Kit 
 //#define MakerBadge_revB // also works with A and C
 //#define MakerBadge_revD
 //#define REMAP_SPI
 //#define TTGO_T5_v23 // tested only with 2.13" variant
-//#define SEEEDSTUDIO_XIAO_EDDB_ESP32S3 //Development board distributed as part of the TRMNL 7.5" (OG) DIY Kit 
 
 //////////////////////////////////////////////////////////////
 // Uncomment if one of the sensors will be connected
