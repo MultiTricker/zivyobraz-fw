@@ -1495,7 +1495,7 @@ void readBitmapData(WiFiClient &client)
             // Time to read more pixel data?
             if (in_idx >= in_bytes) // ok, exact match for 24bit also (size IS multiple of 3)
             {
-              uint32_t get = min(in_remain, sizeof(input_buffer));
+              uint32_t get = min(in_remain, (uint32_t)sizeof(input_buffer));
               uint32_t got = read8n(client, input_buffer, (int32_t)get);
               while ((got < get) && connection_ok)
               {
