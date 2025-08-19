@@ -66,7 +66,7 @@
 //#define D_GDEY0579T93   // 792x272, 5.79"
 //#define D_GDEQ0583T31   // 648x480, 5.83"
 //#define D_WS75BWT7      // 800x480, 7.5"
-//#define D_GDEW075T7     // 800x480, 7.5"
+//#define D_GDEW075T7BW   // 800x480, 7.5"
 //#define D_GDEY075T7BW   // 800x480, 7.5"
 //#define D_GDEM102T91    // 960x640, 10.2"
 //#define D_GDEM1085T51   // 1360x480, 10.85"
@@ -78,6 +78,7 @@
 //#define D_GDEW042T2_G   // 400x300, 4.2"
 //#define D_GDEY042T81    // 400x300, 4.2"
 //#define D_GDEQ0426T82   // 800x480, 4.26"
+//#define D_GDEW075T7     // 800x480, 7.5"
 //#define D_GDEY075T7     // 800x480, 7.5"
 
 // 3C
@@ -316,7 +317,7 @@ GxEPD2_BW<GxEPD2_583_GDEQ0583T31, GxEPD2_583_GDEQ0583T31::HEIGHT> display(GxEPD2
 GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> display(GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEW075T7 - BW, 800x480px, 7.5"
-#elif defined D_GDEW075T7
+#elif defined D_GDEW075T7BW
 GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075T7BW - BW, 800x480px, 7.5"
