@@ -28,7 +28,7 @@
 //#define ESPink_V35 // LáskaKit ESPInk 3.5, ESP32-S3, ADC battery measurement, extra buton
 //#define ESP32S3Adapter // LáskaKit ESP32-S3 with adapter for 6/7 color ePaper displays
 //#define ES3ink // Board from dronecz
-//#define SEEDSTUDIO_XIAO // Seeed Studio XIAO ESP32C3, bundled with 800x480 BW display
+//#define SEEDSTUDIO_XIAO_ESP32C3 // Seeed Studio XIAO ESP32C3, bundled with 800x480 BW display
 //#define SEEEDSTUDIO_XIAO_EDDB_ESP32S3 //Development board distributed as part of the TRMNL 7.5" (OG) DIY Kit 
 //#define MakerBadge_revB // also works with A and C
 //#define MakerBadge_revD
@@ -743,7 +743,7 @@ float getBatteryVoltage()
   float measurement = (float) analogRead(vBatPin);
   volt = (float)(measurement / 4095.0) * 7.05;
 
-#elif defined SEEDSTUDIO_XIAO
+#elif defined SEEDSTUDIO_XIAO_ESP32C3
   volt = (float)0;
 
 #elif defined SEEEDSTUDIO_XIAO_EDDB_ESP32S3
