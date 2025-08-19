@@ -4,7 +4,6 @@ APP_BIN = "$BUILD_DIR/${PROGNAME}.bin"
 MERGED_BIN = "$BUILD_DIR/${PROGNAME}_merged.bin"
 BOARD_CONFIG = env.BoardConfig()
 
-
 def merge_bin(source, target, env):
     # The list contains all extra images (bootloader, partitions, eboot) and
     # the final application binary
@@ -19,8 +18,6 @@ def merge_bin(source, target, env):
                 "--chip",
                 BOARD_CONFIG.get("build.mcu", "esp32"),
                 "merge_bin",
-                "--fill-flash-size",
-                BOARD_CONFIG.get("upload.flash_size", "4MB"),
                 "-o",
                 MERGED_BIN,
             ]
