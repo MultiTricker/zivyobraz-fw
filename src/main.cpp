@@ -208,7 +208,7 @@
   #define PIN_BUSY 4
   #define ePaperPowerPin 2
 
-#elif defined SEEDSTUDIO_XIAO
+#elif defined SEEDSTUDIO_XIAO_ESP32C3
   #define PIN_SS 3
   #define PIN_DC 5
   #define PIN_RST 2
