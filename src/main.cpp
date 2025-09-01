@@ -690,8 +690,8 @@ float getBatteryVoltage()
 
 #elif defined ES3ink
   esp_adc_cal_characteristics_t adc_cal;
-  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 0, &adc_cal);
-  adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_11);
+  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_WIDTH_BIT_12, 0, &adc_cal);
+  adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_12);
 
   Serial.println("Reading battery on ES3ink board");
 
@@ -713,7 +713,7 @@ float getBatteryVoltage()
 #elif defined M5StackCoreInk
   analogSetPinAttenuation(vBatPin, ADC_11db);
   esp_adc_cal_characteristics_t *adc_chars = (esp_adc_cal_characteristics_t *)calloc(1, sizeof(esp_adc_cal_characteristics_t));
-  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 3600, adc_chars);
+  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_WIDTH_BIT_12, 3600, adc_chars);
   uint16_t ADCValue = analogRead(vBatPin);
 
   uint32_t BatVolmV = esp_adc_cal_raw_to_voltage(ADCValue, adc_chars);
