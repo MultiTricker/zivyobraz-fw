@@ -34,6 +34,9 @@
 //#define MakerBadge_revD
 //#define REMAP_SPI
 //#define TTGO_T5_v23 // tested only with 2.13" variant
+//#define CROWPANEL_ESP32S3_579 // Elecrow CrowPanel 5.79" 272x792, ESP32-S3-WROOM-1
+//#define CROWPANEL_ESP32S3_42  // Elecrow CrowPanel 4.2" 400x300, ESP32-S3-WROOM-1
+//#define CROWPANEL_ESP32S3_213 // Elecrow CrowPanel 2.13" 250x122, ESP32-S3-WROOM-1
 
 //////////////////////////////////////////////////////////////
 // Uncomment if one of the sensors will be connected
@@ -228,6 +231,35 @@
   #define PIN_SPI_MOSI 9
   #define enableBattery 6
  
+#elif defined(CROWPANEL_ESP32S3_579) || defined(CROWPANEL_ESP32S3_42)
+  // CrowPanel ESP32-S3 5.79" (SSD1683 x2) and 4.2" (SSD1683)
+  #define PIN_SS 45
+  #define PIN_DC 46
+  #define PIN_RST 47
+  #define PIN_BUSY 48
+  // CrowPanel display power enable GPIO
+  #define ePaperPowerPin 7
+  // SPI pins per CrowPanel docs (shared for 5.79" and 4.2")
+  #define PIN_SPI_CLK 12
+  #define PIN_SPI_MISO -1
+  #define PIN_SPI_MOSI 11
+  #define PIN_SPI_SS   PIN_SS
+
+#elif defined CROWPANEL_ESP32S3_42
+  // kept above in the shared block
+  
+#elif defined CROWPANEL_ESP32S3_213
+  // CrowPanel ESP32-S3 2.13" e-paper, BW 250x122
+  #define PIN_SS 14
+  #define PIN_DC 13
+  #define PIN_RST 10
+  #define PIN_BUSY 9
+  #define ePaperPowerPin 7
+  // SPI pins per CrowPanel 2.13" docs
+  #define PIN_SPI_CLK 12
+  #define PIN_SPI_MISO -1
+  #define PIN_SPI_MOSI 11
+  #define PIN_SPI_SS   PIN_SS
 #else
   #error "Board not defined!"
 #endif
@@ -299,6 +331,10 @@ GxEPD2_BW<GxEPD2_290_GDEY029T71H, GxEPD2_290_GDEY029T71H::HEIGHT> display(GxEPD2
 // GDEQ031T10 - BW, 240x320px, 3.1"
 #elif defined D_GDEQ031T10
 GxEPD2_BW<GxEPD2_310_GDEQ031T10, GxEPD2_310_GDEQ031T10::HEIGHT> display(GxEPD2_310_GDEQ031T10(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+
+// 2.13" BW, 250x122px
+#elif defined D_GDEH0213BN
+GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ042T81 - BW, 400x300px, 4.2"
 #elif defined D_GDEQ042T81
@@ -564,6 +600,10 @@ Adafruit_BME280 bme;
   #define vBatPin 1
   #define dividerRatio (2.000f)
 
+#elif defined(CROWPANEL_ESP32S3_579) || defined(CROWPANEL_ESP32S3_42) || defined(CROWPANEL_ESP32S3_213)
+  // CrowPanel: battery measurement not wired to ADC in our hardware; skip
+  #define vBatPin -1
+
 #else
   #define vBatPin 34
   #define dividerRatio 1.769
@@ -586,6 +626,13 @@ uint64_t deepSleepTime = defaultDeepSleepTime; // actual sleep time in seconds, 
 // Get display width from selected display class
 #define DISPLAY_RESOLUTION_X display.epd2.WIDTH
 #define DISPLAY_RESOLUTION_Y display.epd2.HEIGHT
+#ifdef CROWPANEL_ESP32S3_213
+// Override logical resolution to match rotated orientation for 2.13"
+#undef DISPLAY_RESOLUTION_X
+#undef DISPLAY_RESOLUTION_Y
+#define DISPLAY_RESOLUTION_X 250
+#define DISPLAY_RESOLUTION_Y 122
+#endif
 /* ---------------------------------------------- */
 
 /* variables */
@@ -755,6 +802,10 @@ float getBatteryVoltage()
   digitalWrite(enableBattery, LOW);
   pinMode(enableBattery, INPUT);
 
+#elif defined(CROWPANEL_ESP32S3_579) || defined(CROWPANEL_ESP32S3_42) || defined(CROWPANEL_ESP32S3_213)
+  volt = 0.0f;
+  Serial.println("Reading battery on CrowPanel: skipped");
+
 #else
   volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);
 
@@ -814,12 +865,17 @@ void displayInit()
   display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
 #endif
 
-#if (defined ES3ink) || (defined ESP32S3Adapter) || (defined ESPink_V3) || (defined ESPink_V35)
-  display.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+#if (defined ES3ink) || (defined ESP32S3Adapter) || (defined ESPink_V3) || (defined ESPink_V35) || (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42) || (defined CROWPANEL_ESP32S3_213)
+  display.init(115200, true, 2, false); // S3 boards with special reset circuits
 #else
   display.init();
 #endif
+  // Default rotation for all displays; adjust per-board below
+#ifdef CROWPANEL_ESP32S3_213
+  display.setRotation(3); // rotate 90 degrees for 2.13" CrowPanel
+#else
   display.setRotation(0);
+#endif
   display.fillScreen(GxEPD_WHITE); // white background
   display.setTextColor(GxEPD_BLACK); // black font
 }
@@ -894,12 +950,11 @@ void configModeCallback(WiFiManager *myWiFiManager)
       centeredText("(with mobile data turned off):", DISPLAY_RESOLUTION_X / 2, 110);
       centeredText("1) Connect to this AP:", DISPLAY_RESOLUTION_X / 4, 140);
       centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4, 140);
-
-      drawQrCode(qrString.c_str(), 4, 225, DISPLAY_RESOLUTION_X / 4 + 18, 3);
+      int qrScale = (DISPLAY_RESOLUTION_Y < 280) ? 2 : 3;
+      drawQrCode(qrString.c_str(), 4, 225, DISPLAY_RESOLUTION_X / 4 + 18, qrScale);
       display.drawLine(DISPLAY_RESOLUTION_X / 2 - 1, 135, DISPLAY_RESOLUTION_X / 2 - 1, 310, GxEPD_BLACK);
       display.drawLine(DISPLAY_RESOLUTION_X / 2, 135, DISPLAY_RESOLUTION_X / 2, 310, GxEPD_BLACK);
-      drawQrCode(urlWeb.c_str(), 4, 225, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
-
+      drawQrCode(urlWeb.c_str(), 4, 225, DISPLAY_RESOLUTION_X * 3 / 4 + 18, qrScale);
       centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 280);
       centeredText("Password: " + wifiPassword, DISPLAY_RESOLUTION_X / 4, 300);
       centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, 280);
@@ -920,12 +975,11 @@ void configModeCallback(WiFiManager *myWiFiManager)
       centeredText("(with mobile data turned off):", DISPLAY_RESOLUTION_X / 2, 92);
       centeredText("1) Connect to AP", DISPLAY_RESOLUTION_X / 4, 115);
       centeredText("2) Open in browser:", DISPLAY_RESOLUTION_X * 3 / 4, 115);
-
-      drawQrCode(qrString.c_str(), 3, 190, DISPLAY_RESOLUTION_X / 4 + 18, 3);
+      int qrScale = (DISPLAY_RESOLUTION_Y < 280) ? 2 : 3;
+      drawQrCode(qrString.c_str(), 3, 190, DISPLAY_RESOLUTION_X / 4 + 18, qrScale);
       display.drawLine(DISPLAY_RESOLUTION_X / 2 + 2, 108, DISPLAY_RESOLUTION_X / 2 + 2, 260, GxEPD_BLACK);
       display.drawLine(DISPLAY_RESOLUTION_X / 2 + 3, 108, DISPLAY_RESOLUTION_X / 2 + 3, 260, GxEPD_BLACK);
-      drawQrCode(urlWeb.c_str(), 3, 190, DISPLAY_RESOLUTION_X * 3 / 4 + 18, 3);
-
+      drawQrCode(urlWeb.c_str(), 3, 190, DISPLAY_RESOLUTION_X * 3 / 4 + 18, qrScale);
       centeredText("AP: " + hostname, DISPLAY_RESOLUTION_X / 4, 232);
       centeredText("Password: " + wifiPassword, DISPLAY_RESOLUTION_X / 4, 250);
       centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, 232);
@@ -1824,6 +1878,12 @@ void setup()
 #endif
 
   // ePaper init
+  #if defined(CROWPANEL_ESP32S3_579)
+    // Ensure display power is ON before any EPD activity
+    pinMode(ePaperPowerPin, OUTPUT);
+    setEPaperPowerOn(true);
+    delay(50);
+  #endif
   displayInit();
 
   // Battery voltage measurement
