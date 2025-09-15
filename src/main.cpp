@@ -231,35 +231,27 @@
   #define PIN_SPI_MOSI 9
   #define enableBattery 6
  
-#elif defined(CROWPANEL_ESP32S3_579) || defined(CROWPANEL_ESP32S3_42)
-  // CrowPanel ESP32-S3 5.79" (SSD1683 x2) and 4.2" (SSD1683)
+#elif (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42)
   #define PIN_SS 45
   #define PIN_DC 46
   #define PIN_RST 47
   #define PIN_BUSY 48
-  // CrowPanel display power enable GPIO
   #define ePaperPowerPin 7
-  // SPI pins per CrowPanel docs (shared for 5.79" and 4.2")
   #define PIN_SPI_CLK 12
   #define PIN_SPI_MISO -1
   #define PIN_SPI_MOSI 11
-  #define PIN_SPI_SS   PIN_SS
+  #define PIN_SPI_SS PIN_SS
 
-#elif defined CROWPANEL_ESP32S3_42
-  // kept above in the shared block
-  
 #elif defined CROWPANEL_ESP32S3_213
-  // CrowPanel ESP32-S3 2.13" e-paper, BW 250x122
   #define PIN_SS 14
   #define PIN_DC 13
   #define PIN_RST 10
   #define PIN_BUSY 9
   #define ePaperPowerPin 7
-  // SPI pins per CrowPanel 2.13" docs
   #define PIN_SPI_CLK 12
   #define PIN_SPI_MISO -1
   #define PIN_SPI_MOSI 11
-  #define PIN_SPI_SS   PIN_SS
+  #define PIN_SPI_SS PIN_SS
 #else
   #error "Board not defined!"
 #endif
@@ -600,7 +592,7 @@ Adafruit_BME280 bme;
   #define vBatPin 1
   #define dividerRatio (2.000f)
 
-#elif defined(CROWPANEL_ESP32S3_579) || defined(CROWPANEL_ESP32S3_42) || defined(CROWPANEL_ESP32S3_213)
+#elif (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42) || (defined CROWPANEL_ESP32S3_213)
   // CrowPanel: battery measurement not wired to ADC in our hardware; skip
   #define vBatPin -1
 
@@ -791,7 +783,7 @@ float getBatteryVoltage()
   float measurement = (float) analogRead(vBatPin);
   volt = (float)(measurement / 4095.0) * 7.05;
 
-#elif defined SEEEDSTUDIO_XIAO_ESP32C3
+#elif (defined SEEEDSTUDIO_XIAO_ESP32C3) || (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42) || (defined CROWPANEL_ESP32S3_213)
   volt = (float)0;
 
 #elif defined SEEEDSTUDIO_XIAO_EDDB_ESP32S3
@@ -801,10 +793,6 @@ float getBatteryVoltage()
   volt = ((float)analogReadMilliVolts(vBatPin) * dividerRatio) / 1000;
   digitalWrite(enableBattery, LOW);
   pinMode(enableBattery, INPUT);
-
-#elif defined(CROWPANEL_ESP32S3_579) || defined(CROWPANEL_ESP32S3_42) || defined(CROWPANEL_ESP32S3_213)
-  volt = 0.0f;
-  Serial.println("Reading battery on CrowPanel: skipped");
 
 #else
   volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);
@@ -1871,19 +1859,17 @@ void setup()
   M5.begin(false, false, true);
   display.init(115200, false);
   M5.update();
-#endif
-
-#ifndef M5StackCoreInk
+#else
   pinMode(ePaperPowerPin, OUTPUT);
 #endif
 
+#ifdef CROWPANEL_ESP32S3_579
+  pinMode(ePaperPowerPin, OUTPUT);
+  setEPaperPowerOn(true);
+  delay(50);
+#endif
+
   // ePaper init
-  #if defined(CROWPANEL_ESP32S3_579)
-    // Ensure display power is ON before any EPD activity
-    pinMode(ePaperPowerPin, OUTPUT);
-    setEPaperPowerOn(true);
-    delay(50);
-  #endif
   displayInit();
 
   // Battery voltage measurement
