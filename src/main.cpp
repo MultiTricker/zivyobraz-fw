@@ -686,7 +686,7 @@ float getBatteryVoltage()
 {
   float volt;
 
-#if defined ESPink_V3
+#ifdev ESPink_V3
 
   Serial.println("Reading battery on ESPink V3 board");
 
@@ -699,7 +699,7 @@ float getBatteryVoltage()
 
   lipo.begin();
 
-  //lipo.enableDebugging(); // Uncomment this line to enable helpful debug messages on Serial
+  // lipo.enableDebugging(); // Uncomment this line to enable helpful debug messages on Serial
 
   // Read and print the reset indicator
   Serial.print(F("Reset Indicator was: "));
@@ -720,7 +720,7 @@ float getBatteryVoltage()
   volt = (float)lipo.getVoltage();
   // percentage could be read like this:
   // lipo.getSOC();
-  //Serial.println("Battery percentage: " + String(lipo.getSOC(), 2) + " %");
+  // Serial.println("Battery percentage: " + String(lipo.getSOC(), 2) + " %");
 
   lipo.clearAlert();
   lipo.enableHibernate();
@@ -736,9 +736,9 @@ float getBatteryVoltage()
 
   digitalWrite(enableBattery, LOW);
   uint32_t raw = adc1_get_raw(vBatPin);
-  //Serial.println(raw);
+  // Serial.println(raw);
   uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw, &adc_cal);
-  //Serial.println(millivolts);
+  // Serial.println(millivolts);
   const uint32_t upper_divider = 1000;
   const uint32_t lower_divider = 1000;
   volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
@@ -780,7 +780,7 @@ float getBatteryVoltage()
   esp_adc_cal_characteristics_t adc_chars;
   esp_adc_cal_value_t val_type = esp_adc_cal_characterize((adc_unit_t)ADC_UNIT_1, (adc_atten_t)ADC_ATTEN_DB_2_5, (adc_bits_width_t)ADC_WIDTH_BIT_12, 1100, &adc_chars);
   
-  float measurement = (float) analogRead(vBatPin);
+  float measurement = (float)analogRead(vBatPin);
   volt = (float)(measurement / 4095.0) * 7.05;
 
 #elif (defined SEEEDSTUDIO_XIAO_ESP32C3) || (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42) || (defined CROWPANEL_ESP32S3_213)
@@ -789,7 +789,7 @@ float getBatteryVoltage()
 #elif defined SEEEDSTUDIO_XIAO_EDDB_ESP32S3
   digitalWrite(enableBattery, HIGH);
   pinMode(enableBattery, OUTPUT);
-  delay(8);    //slow tON time TPS22916C. 6500us typical for 1V. Set 8ms as margin.
+  delay(8); // slow tON time TPS22916C. 6500us typical for 1V. Set 8ms as margin.
   volt = ((float)analogReadMilliVolts(vBatPin) * dividerRatio) / 1000;
   digitalWrite(enableBattery, LOW);
   pinMode(enableBattery, INPUT);
@@ -873,7 +873,7 @@ void displayInit()
 void configModeCallback(WiFiManager *myWiFiManager)
 {
   // Iterate notConnectedToAPCount counter
-  if(notConnectedToAPCount < 255)
+  if (notConnectedToAPCount < 255)
   {
     notConnectedToAPCount++;
   }
@@ -885,7 +885,7 @@ void configModeCallback(WiFiManager *myWiFiManager)
   */
   const String hostname = WiFi.softAPSSID();
   const String qrString = "WIFI:S:" + hostname + ";T:WPA;P:" + wifiPassword + ";;";
-  //Serial.println(qrString);
+  // Serial.println(qrString);
 
   const String urlWeb = "http://" + WiFi.softAPIP().toString();
 
@@ -1054,7 +1054,7 @@ void WiFiInit()
   hostname.replace(":", "");
 
   // reset settings - wipe stored credentials for testing
-  //wm.resetSettings();
+  // wm.resetSettings();
 
   wm.setConfigPortalTimeout(240); // set portal time to 4 min, then sleep/try again.
   wm.setAPCallback(configModeCallback);
@@ -1101,10 +1101,10 @@ uint8_t safe_read(WiFiClient &client)
 
 // read one byte safely from WiFiClient, wait a while if data are not available immediately
 // if byte is not read, set valid to false
-uint8_t safe_read_valid(WiFiClient &client,bool *valid)
+uint8_t safe_read_valid(WiFiClient &client, bool *valid)
 {
   uint8_t ret;
-  *valid=read8n(client, &ret, 1) == 1;  // signalize not valid reading when not all bytes are read
+  *valid = read8n(client, &ret, 1) == 1; // signalize not valid reading when not all bytes are read
   return ret;
 }
 
@@ -1187,7 +1187,7 @@ bool createHttpRequest(WiFiClient &client, bool &connStatus, bool checkTimestamp
   while (client.connected())
   {
     String line = client.readStringUntil('\n');
-    //Serial.println(line);
+    // Serial.println(line);
 
     if (checkTimestamp)
     {
@@ -1479,7 +1479,7 @@ void readBitmapData(WiFiClient &client)
       if ((x + w - 1) >= display.width()) w = display.width() - x;
       if ((y + h - 1) >= display.height()) h = display.height() - y;
 
-      //if (w <= max_row_width) // handle with direct drawing
+      // if (w <= max_row_width) // handle with direct drawing
       {
         valid = true;
         uint8_t bitmask = 0xFF;
@@ -1511,14 +1511,14 @@ void readBitmapData(WiFiClient &client)
             }
             mono_palette_buffer[pn / 8] |= whitish << pn % 8;
             color_palette_buffer[pn / 8] |= colored << pn % 8;
-            //Serial.print("0x00"); Serial.print(red, HEX); Serial.print(green, HEX); Serial.print(blue, HEX);
-            //Serial.print(" : "); Serial.print(whitish); Serial.print(", "); Serial.println(colored);
+            // Serial.print("0x00"); Serial.print(red, HEX); Serial.print(green, HEX); Serial.print(blue, HEX);
+            // Serial.print(" : "); Serial.print(whitish); Serial.print(", "); Serial.println(colored);
             rgb_palette_buffer[pn] = ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
           }
         }
 
         uint32_t rowPosition = flip ? imageOffset + (height - h) * rowSize : imageOffset;
-        //Serial.print("skip "); Serial.println(rowPosition - bytes_read);
+        // Serial.print("skip "); Serial.println(rowPosition - bytes_read);
         bytes_read += skip(client, (int32_t)(rowPosition - bytes_read));
 
         for (uint16_t row = 0; row < h; row++, rowPosition += rowSize) // for each line
@@ -1542,7 +1542,7 @@ void readBitmapData(WiFiClient &client)
               uint32_t got = read8n(client, input_buffer, (int32_t)get);
               while ((got < get) && connection_ok)
               {
-                //Serial.print("got "); Serial.print(got); Serial.print(" < "); Serial.print(get); Serial.print(" @ "); Serial.println(bytes_read);
+                // Serial.print("got "); Serial.print(got); Serial.print(" < "); Serial.print(get); Serial.print(" @ "); Serial.println(bytes_read);
                 uint32_t gotmore = read8n(client, input_buffer + got, (int32_t)(get - got));
                 got += gotmore;
                 connection_ok = gotmore > 0;
@@ -1721,13 +1721,13 @@ void readBitmapData(WiFiClient &client)
         // Z1
         if (header == 0x315A)
         {
-          pixel_color = safe_read_valid(client,&valid);
+          pixel_color = safe_read_valid(client, &valid);
           if (!valid)
           {
             print_error_reading(bytes_read);
             break;
           }
-          count = safe_read_valid(client,&valid);
+          count = safe_read_valid(client, &valid);
           if (!valid)
           {
             print_error_reading(bytes_read);
@@ -1738,7 +1738,7 @@ void readBitmapData(WiFiClient &client)
         else if (header == 0x325A)
         {
           // Z2
-          compressed = safe_read_valid(client,&valid);
+          compressed = safe_read_valid(client, &valid);
           if (!valid)
           {
             print_error_reading(bytes_read);
@@ -1751,7 +1751,7 @@ void readBitmapData(WiFiClient &client)
         else if (header == 0x335A)
         {
           // Z3
-          compressed = safe_read_valid(client,&valid);
+          compressed = safe_read_valid(client, &valid);
           if (!valid)
           {
             print_error_reading(bytes_read);
@@ -1915,7 +1915,8 @@ void setup()
 
   #ifdef ES3ink
     pixel.clear();
-    for(int i=0; i<1; i++) { 
+    for (int i = 0; i < 1; i++)
+    {
       pixel.setPixelColor(i, pixel.Color(0, 150, 0));
       pixel.show();
     }
@@ -1926,10 +1927,10 @@ void setup()
     Serial.println("No Wi-Fi connection, will sleep for a while and try again. Failure no.: " + String(notConnectedToAPCount));
 
     // Determine how long we will sleep determined by number of notConnectedToAPCount
-    if(notConnectedToAPCount <= 3) deepSleepTime = defaultDeepSleepTime;
-    else if(notConnectedToAPCount <= 10) deepSleepTime = 600; // 10 minutes
-    else if(notConnectedToAPCount <= 20) deepSleepTime = 1800; // 30 minutes
-    else if(notConnectedToAPCount <= 50) deepSleepTime = 3600; // 1 hour
+    if (notConnectedToAPCount <= 3) deepSleepTime = defaultDeepSleepTime;
+    else if (notConnectedToAPCount <= 10) deepSleepTime = 600; // 10 minutes
+    else if (notConnectedToAPCount <= 20) deepSleepTime = 1800; // 30 minutes
+    else if (notConnectedToAPCount <= 50) deepSleepTime = 3600; // 1 hour
     else deepSleepTime = 43200; // 12 hours
 
     // Enable power supply for ePaper
