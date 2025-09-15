@@ -686,7 +686,7 @@ float getBatteryVoltage()
 {
   float volt;
 
-#ifdev ESPink_V3
+#ifdef ESPink_V3
 
   Serial.println("Reading battery on ESPink V3 board");
 
