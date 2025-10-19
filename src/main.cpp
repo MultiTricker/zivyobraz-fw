@@ -697,33 +697,39 @@ void setEPaperPowerOn(bool on)
 #endif
 }
 
-const String getWifiSSID()
+String getWifiSSID()
 {
-  String wifiSSID = WiFi.SSID();
-  Serial.println("Wifi SSID: " + wifiSSID);
+  String in = WiFi.SSID();
+  Serial.println("Wifi SSID: " + in);
+  if (in.length() == 0) return in;
 
-  // Replace special characters
-  wifiSSID.replace("%", "%25");
-  wifiSSID.replace(" ", "%20");
-  wifiSSID.replace("#", "%23");
-  wifiSSID.replace("$", "%24");
-  wifiSSID.replace("&", "%26");
-  wifiSSID.replace("'", "%27");
-  wifiSSID.replace("(", "%28");
-  wifiSSID.replace(")", "%29");
-  wifiSSID.replace("*", "%2A");
-  wifiSSID.replace("+", "%2B");
-  wifiSSID.replace(",", "%2C");
-  wifiSSID.replace("/", "%2F");
-  wifiSSID.replace(":", "%3A");
-  wifiSSID.replace(";", "%3B");
-  wifiSSID.replace("=", "%3D");
-  wifiSSID.replace("?", "%3F");
-  wifiSSID.replace("@", "%40");
-  wifiSSID.replace("[", "%5B");
-  wifiSSID.replace("]", "%5D");
+  // Reserve worst-case space (each char -> %XX)
+  String out;
+  out.reserve(in.length() * 3);
+  const char *hex = "0123456789ABCDEF";
 
-  return wifiSSID;
+  for (size_t i = 0; i < in.length(); ++i)
+  {
+    char c = in[i];
+    // leave unreserved characters as-is (RFC3986), without REGEX
+    if ((c >= 'A' && c <= 'Z') ||
+        (c >= 'a' && c <= 'z') ||
+        (c >= '0' && c <= '9') ||
+        c == '-' || c == '_' || c == '.' || c == '~')
+    {
+      out += c;
+    }
+    else
+    {
+      char buf[4];
+      buf[0] = '%';
+      buf[1] = hex[(c >> 4) & 0x0F];
+      buf[2] = hex[c & 0x0F];
+      buf[3] = '\0';
+      out += buf;
+    }
+  }
+  return out;
 }
 
 int8_t getWifiStrength()
