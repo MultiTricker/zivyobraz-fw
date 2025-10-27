@@ -86,6 +86,7 @@
 
 // 3C
 //#define D_GDEY0154Z90   // 200x200, 1.54"
+//#define D_WS27RBW264176 // 264x176, 2.7"
 //#define D_WS42YBW400300 // 400x300, 4.2"
 //#define D_GDEQ042Z21    // 400x300, 4.2"
 //#define D_GDEY042Z98    // 400x300, 4.2"
@@ -403,6 +404,10 @@ GxEPD2_4G_4G<GxEPD2_750_GDEY075T7, GxEPD2_750_GDEY075T7::HEIGHT / 2> display(GxE
 // GDEY0154Z90 - 3C, 200x200px, 1.54"
 #elif defined D_GDEY0154Z90
 GxEPD2_3C<GxEPD2_154_Z90c, GxEPD2_154_Z90c::HEIGHT> display(GxEPD2_154_Z90c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+
+// D_WS27RBW264176 - 3C, 264x176px, 2.7"
+#elif defined D_WS27RBW264176
+GxEPD2_3C<GxEPD2_270c, GxEPD2_270c::HEIGHT> display(GxEPD2_270c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // WS42YBW400300 - 3C, 400x300px, 4.2"
 #elif defined D_WS42YBW400300
@@ -859,8 +864,8 @@ void displayInit()
   display.init();
 #endif
   // Default rotation for all displays; adjust per-board below
-#ifdef CROWPANEL_ESP32S3_213
-  display.setRotation(3); // rotate 90 degrees for 2.13" CrowPanel
+#if (defined CROWPANEL_ESP32S3_213) || (defined D_WS27RBW264176)
+  display.setRotation(3); // rotate 90 degrees
 #else
   display.setRotation(0);
 #endif
