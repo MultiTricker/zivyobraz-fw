@@ -20,9 +20,9 @@ You will need to have the following libraries installed:
 >	adafruit/Adafruit BME280 Library@^2.2.4  
 >	sparkfun/SparkFun SCD4x Arduino Library@^1.1.2
 
-In **platformio.ini**, comment out default build flags under section **common** (they are specified here for automatic compilation checks on GitHub), so you can use your own display type for compilation in next steps:
-> build_flags =
-> \#   -D TYPE_BW # Comment out this for your own display type enabled by you in main.cpp
+In **platformio.ini**, comment out default build flags under section **common** (they are specified here for automatic compilation checks on GitHub), so you can use your own display type for compilation in next steps:  
+> build_flags =  
+> \#   -D TYPE_BW # Comment out this for your own display type enabled by you in main.cpp  
 > \#   -D D_GDEW0154T8 # Also comment out this
 
 In code _**main.cpp**_ do not forget to uncomment:
