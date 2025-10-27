@@ -37,6 +37,7 @@
 //#define CROWPANEL_ESP32S3_579 // Elecrow CrowPanel 5.79" 272x792, ESP32-S3-WROOM-1
 //#define CROWPANEL_ESP32S3_42  // Elecrow CrowPanel 4.2" 400x300, ESP32-S3-WROOM-1
 //#define CROWPANEL_ESP32S3_213 // Elecrow CrowPanel 2.13" 250x122, ESP32-S3-WROOM-1
+//#define WS_EPAPER_ESP32_BOARD // Waveshare ESP32 Driver Board
 
 //////////////////////////////////////////////////////////////
 // Uncomment if one of the sensors will be connected
@@ -253,15 +254,38 @@
   #define PIN_SPI_MISO -1
   #define PIN_SPI_MOSI 11
   #define PIN_SPI_SS PIN_SS
+
+#elif defined WS_EPAPER_ESP32_BOARD
+  #define PIN_SS 15
+  #define PIN_DC 27
+  #define PIN_RST 26
+  #define PIN_BUSY 25
+  #define PIN_CS2 35
+  #define ePaperPowerPin 2
+
+  #define REMAP_SPI
+  #define PIN_SPI_CLK 13
+  #define PIN_SPI_MOSI 14
+  #define PIN_SPI_MISO -1
+  #define PIN_SPI_SS -1
+
 #else
   #error "Board not defined!"
 #endif
 
 #ifdef REMAP_SPI
-  #define PIN_SPI_CLK 13  // CLK
-  #define PIN_SPI_MISO 14 // unused
-  #define PIN_SPI_MOSI 12 // DIN
-  #define PIN_SPI_SS 15   // unused
+  #if !defined PIN_SPI_MISO
+    #define PIN_SPI_CLK 13  // CLK
+  #endif
+  #if !defined PIN_SPI_MISO
+    #define PIN_SPI_MISO 14 // unused
+  #endif
+  #if !defined PIN_SPI_MOSI
+    #define PIN_SPI_MOSI 12 // DIN
+  #endif
+  #if !defined PIN_SPI_SS
+    #define PIN_SPI_SS 15   // unused
+  #endif
 #endif
 
 ///////////////////////
