@@ -4,7 +4,7 @@
  * You need to change some initial things like ePaper type etc. - see below.
  * Default password for Wi-Fi AP is: zivyobraz
  *
- * Kits for ZivyObraz to buy: 
+ * Kits for ZivyObraz to buy:
  * LáskaKit: https://www.laskakit.cz/vyhledavani/?string=%C5%BEiv%C3%BD+obraz
  * Pájeníčko: https://pajenicko.cz/vyhledavani?search=%C5%BEiv%C3%BD%20obraz
  *
@@ -42,7 +42,7 @@
 
 //////////////////////////////////////////////////////////////
 // Uncomment if one of the sensors will be connected
-// Supported sensors: SHT40/41/45, SCD40/41, BME280 
+// Supported sensors: SHT40/41/45, SCD40/41, BME280
 //////////////////////////////////////////////////////////////
 
 //#define SENSOR
@@ -233,7 +233,7 @@
   #define PIN_SPI_CLK 7
   #define PIN_SPI_MOSI 9
   #define enableBattery 6
- 
+
 #elif (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42)
   #define PIN_SS 45
   #define PIN_DC 46
@@ -490,8 +490,8 @@ GxEPD2_3C<GxEPD2_1160c_GDEY116Z91, GxEPD2_1160c_GDEY116Z91::HEIGHT / 4> display(
 
 // GDEY1248Z51 - 3C, 1304x984px, 12.48"
 #elif defined D_GDEY1248Z51
-GxEPD2_3C<GxEPD2_1248c, GxEPD2_1248c::HEIGHT / 4> display(GxEPD2_1248c(/*sck=*/ 12, /*miso=*/ -1, /*mosi=*/ 11, /*cs_m1=*/ 10, /*cs_s1=*/ 18, /*cs_m2=*/ 48, /*cs_s2=*/ 41,
-                            /*dc1=*/ 46, /*dc2=*/ 45, /*rst1=*/ 3, /*rst2=*/ 39, /*busy_m1=*/ 8, /*busy_s1=*/ 17, /*busy_m2=*/ 40, /*busy_s2=*/ 16));
+GxEPD2_3C<GxEPD2_1248c, GxEPD2_1248c::HEIGHT / 4> display(GxEPD2_1248c(/*sck=*/12, /*miso=*/-1, /*mosi=*/11, /*cs_m1=*/10, /*cs_s1=*/18, /*cs_m2=*/48, /*cs_s2=*/41,
+                                                                       /*dc1=*/46, /*dc2=*/45, /*rst1=*/3, /*rst2=*/39, /*busy_m1=*/8, /*busy_s1=*/17, /*busy_m2=*/40, /*busy_s2=*/16));
 
 // GDEM133Z91 - 3C, 960x680px, 13.3"
 #elif defined D_GDEM133Z91
@@ -572,13 +572,13 @@ GxEPD2_7C<GxEPD2_730c_GDEP073E01, GxEPD2_730c_GDEP073E01::HEIGHT / 4> display(Gx
 // Font
 #include <gfxfont.h>
 //#include "fonts/OpenSansSB_12px.h"
+#include <QRCodeGenerator.h>
+
 #include "fonts/OpenSansSB_14px.h"
 #include "fonts/OpenSansSB_16px.h"
 #include "fonts/OpenSansSB_18px.h"
 #include "fonts/OpenSansSB_20px.h"
 #include "fonts/OpenSansSB_24px.h"
-
-#include <QRCodeGenerator.h>
 QRCode qrcode;
 
 // TWI/I2C library
@@ -586,7 +586,7 @@ QRCode qrcode;
 
 #ifdef ES3ink
   #include <Adafruit_NeoPixel.h>
-  Adafruit_NeoPixel pixel(1, RGBledPin, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixel(1, RGBledPin, NEO_GRB + NEO_KHZ800);
 #endif
 
 #ifdef REMAP_SPI
@@ -604,8 +604,8 @@ Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 SCD4x SCD4(SCD4x_SENSOR_SCD41);
 
   // BME280
-  #include <Adafruit_Sensor.h>
   #include <Adafruit_BME280.h>
+  #include <Adafruit_Sensor.h>
 Adafruit_BME280 bme;
 #endif
 
@@ -629,12 +629,12 @@ Adafruit_BME280 bme;
   #define vBatPin 35
 
 #elif (defined ESPink_V35) || (defined ESP32S3Adapter)
-  #define vBatPin 9  
+  #define vBatPin 9
   #define dividerRatio 1.7693877551
 
 #elif defined ESPink_V3
   #include <SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library.h>
-  SFE_MAX1704X lipo(MAX1704X_MAX17048);
+SFE_MAX1704X lipo(MAX1704X_MAX17048);
 
 #elif defined SEEEDSTUDIO_XIAO_EDDB_ESP32S3
   #define vBatPin 1
@@ -671,11 +671,11 @@ uint64_t deepSleepTime = defaultDeepSleepTime; // actual sleep time in seconds, 
 #define DISPLAY_RESOLUTION_X display.epd2.WIDTH
 #define DISPLAY_RESOLUTION_Y display.epd2.HEIGHT
 #ifdef CROWPANEL_ESP32S3_213
-// Override logical resolution to match rotated orientation for 2.13"
-#undef DISPLAY_RESOLUTION_X
-#undef DISPLAY_RESOLUTION_Y
-#define DISPLAY_RESOLUTION_X 250
-#define DISPLAY_RESOLUTION_Y 122
+  // Override logical resolution to match rotated orientation for 2.13"
+  #undef DISPLAY_RESOLUTION_X
+  #undef DISPLAY_RESOLUTION_Y
+  #define DISPLAY_RESOLUTION_X 250
+  #define DISPLAY_RESOLUTION_Y 122
 #endif
 /* ---------------------------------------------- */
 
@@ -762,13 +762,13 @@ float getBatteryVoltage()
   {
     Serial.print(F("Reset Indicator is now: "));
     RI = lipo.isReset(); // Read the RI flag
-    Serial.println(RI); // Print the RI    
+    Serial.println(RI); // Print the RI
   }
 
-	lipo.setThreshold(1); // Set alert threshold to just 1% - we don't want to trigger the alert
+  lipo.setThreshold(1); // Set alert threshold to just 1% - we don't want to trigger the alert
   lipo.setVALRTMax((float)4.3); // Set high voltage threshold (Volts)
   lipo.setVALRTMin((float)2.9); // Set low voltage threshold (Volts)
-  
+
   volt = (float)lipo.getVoltage();
   // percentage could be read like this:
   // lipo.getSOC();
@@ -851,7 +851,7 @@ float getBatteryVoltage()
 #elif defined TTGO_T5_v23
   esp_adc_cal_characteristics_t adc_chars;
   esp_adc_cal_value_t val_type = esp_adc_cal_characterize((adc_unit_t)ADC_UNIT_1, (adc_atten_t)ADC_ATTEN_DB_2_5, (adc_bits_width_t)ADC_WIDTH_BIT_12, 1100, &adc_chars);
-  
+
   float measurement = (float)analogRead(vBatPin);
   volt = (float)(measurement / 4095.0) * 7.05;
 
@@ -1093,14 +1093,14 @@ void displayNoWiFiError()
   display.firstPage();
   do
   {
-      display.fillRect(0, 0, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_WHITE);
-      display.setTextColor(GxEPD_BLACK);
-      display.setFont(&OpenSansSB_20px);
-      centeredText("Cannot connect to Wi-Fi", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y / 2 - 15);
-      display.setFont(&OpenSansSB_16px);
-      centeredText("Retries in a " + String(deepSleepTime / 60) + " minutes.", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y / 2 + 15);
-      display.setFont(&OpenSansSB_14px);
-      centeredText("Docs: " + urlWiki, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
+    display.fillRect(0, 0, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_WHITE);
+    display.setTextColor(GxEPD_BLACK);
+    display.setFont(&OpenSansSB_20px);
+    centeredText("Cannot connect to Wi-Fi", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y / 2 - 15);
+    display.setFont(&OpenSansSB_16px);
+    centeredText("Retries in a " + String(deepSleepTime / 60) + " minutes.", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y / 2 + 15);
+    display.setFont(&OpenSansSB_14px);
+    centeredText("Docs: " + urlWiki, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
   } while (display.nextPage());
 
   setEPaperPowerOn(false);
@@ -1135,7 +1135,7 @@ void WiFiInit()
   // Check if Wi-Fi is connected
   if (WiFi.status() == WL_CONNECTED)
   {
-    // Reset counter    
+    // Reset counter
     notConnectedToAPCount = 0;
   }
 }
@@ -1414,7 +1414,7 @@ bool checkForNewTimestampOnServer(WiFiClient &client)
   #endif
 
   #if (defined PIN_SDA) && (defined PIN_SCL)
-    Wire.begin(PIN_SDA, PIN_SCL);
+  Wire.begin(PIN_SDA, PIN_SCL);
   #endif
 
   float temperature;
@@ -1921,7 +1921,8 @@ void setup()
   pixel.begin();
   pixel.setBrightness(15);
   pixel.clear();
-  for(int i=0; i<1; i++) { 
+  for (int i = 0; i < 1; i++)
+  {
     pixel.setPixelColor(i, pixel.Color(150, 0, 0));
     pixel.show();
   }
@@ -1965,7 +1966,7 @@ void setup()
   WiFiClient client;
 
   // Successfully connected to Wi-Fi?
-  if(notConnectedToAPCount == 0)
+  if (notConnectedToAPCount == 0)
   {
     // Do we need to update the screen?
     if (checkForNewTimestampOnServer(client))
@@ -1990,14 +1991,14 @@ void setup()
       setEPaperPowerOn(false);
     }
 
-  #ifdef ES3ink
+#ifdef ES3ink
     pixel.clear();
     for (int i = 0; i < 1; i++)
     {
       pixel.setPixelColor(i, pixel.Color(0, 150, 0));
       pixel.show();
     }
-  #endif
+#endif
   }
   else
   {
