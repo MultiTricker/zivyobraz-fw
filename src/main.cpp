@@ -38,6 +38,7 @@
 //#define CROWPANEL_ESP32S3_42  // Elecrow CrowPanel 4.2" 400x300, ESP32-S3-WROOM-1
 //#define CROWPANEL_ESP32S3_213 // Elecrow CrowPanel 2.13" 250x122, ESP32-S3-WROOM-1
 //#define WS_EPAPER_ESP32_BOARD // Waveshare ESP32 Driver Board
+//#define SVERIO_PAPERBOARD_SPI // Custom ESP32-S3 board with SPI ePaper (SVERIO)
 
 //////////////////////////////////////////////////////////////
 // Uncomment if one of the sensors will be connected
@@ -269,6 +270,24 @@
   #define PIN_SPI_MISO -1
   #define PIN_SPI_SS -1
 
+#elif defined SVERIO_PAPERBOARD_SPI
+  #define PIN_SS 12
+  #define PIN_DC 13
+  #define PIN_RST 14
+  #define PIN_BUSY 21
+  #define PIN_SPI_MOSI 10
+  #define PIN_SPI_CLK 11
+  #define PIN_SPI_MISO -1
+  #define PIN_SPI_SS PIN_SS
+
+  #define PIN_SDA 39
+  #define PIN_SCL 40
+
+  #define ePaperPowerPin 41
+  #define enableBattery 2
+
+  #include <esp_adc_cal.h>
+  #include <soc/adc_channel.h>
 #else
   #error "Board not defined!"
 #endif
@@ -621,6 +640,10 @@ Adafruit_BME280 bme;
   #define vBatPin 1
   #define dividerRatio (2.000f)
 
+#elif defined SVERIO_PAPERBOARD_SPI
+  #define vBatPin ADC1_GPIO1_CHANNEL
+  #define dividerRatio 2.7507665
+
 #elif (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42) || (defined CROWPANEL_ESP32S3_213)
   // CrowPanel: battery measurement not wired to ADC in our hardware; skip
   #define vBatPin -1
@@ -667,7 +690,7 @@ uint64_t timestampNow = 1; // initialize value for timestamp from server
 void setEPaperPowerOn(bool on)
 {
   // use HIGH/LOW notation for better readability
-#if (defined ES3ink) || (defined MakerBadge_revD)
+#if (defined ES3ink) || (defined MakerBadge_revD) || (defined SVERIO_PAPERBOARD_SPI)
   digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
 #elif !defined M5StackCoreInk
   digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
@@ -805,6 +828,27 @@ float getBatteryVoltage()
   volt = (BATT_V_CAL_SCALE * 2.0 * (2.50 * analogRead(vBatPin) / 8192));
   digitalWrite(enableBattery, HIGH);
 
+#elif defined SVERIO_PAPERBOARD_SPI
+  // Battery measurement with calibrated ADC on SVERIO SPI Paperboard
+  esp_adc_cal_characteristics_t adc_cal;
+  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_WIDTH_BIT_12, 0, &adc_cal);
+  adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_12);
+
+  // Enable the measurement path via PMOS gate
+  pinMode(enableBattery, OUTPUT);
+  digitalWrite(enableBattery, HIGH);
+  delay(200);
+
+  uint32_t raw = adc1_get_raw(vBatPin);
+  uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw, &adc_cal);
+
+  digitalWrite(enableBattery, LOW);
+
+  const uint32_t upper_divider = 1000;
+  const uint32_t lower_divider = 1000;
+  volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
+  volt = volt * dividerRatio;
+
 #elif defined TTGO_T5_v23
   esp_adc_cal_characteristics_t adc_chars;
   esp_adc_cal_value_t val_type = esp_adc_cal_characterize((adc_unit_t)ADC_UNIT_1, (adc_atten_t)ADC_ATTEN_DB_2_5, (adc_bits_width_t)ADC_WIDTH_BIT_12, 1100, &adc_chars);
@@ -882,7 +926,7 @@ void displayInit()
   display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
 #endif
 
-#if (defined ES3ink) || (defined ESP32S3Adapter) || (defined ESPink_V3) || (defined ESPink_V35) || (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42) || (defined CROWPANEL_ESP32S3_213)
+#if (defined ES3ink) || (defined ESP32S3Adapter) || (defined ESPink_V3) || (defined ESPink_V35) || (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42) || (defined CROWPANEL_ESP32S3_213) || (defined SVERIO_PAPERBOARD_SPI)
   display.init(115200, true, 2, false); // S3 boards with special reset circuits
 #else
   display.init();
@@ -1890,6 +1934,11 @@ void setup()
   M5.update();
 #else
   pinMode(ePaperPowerPin, OUTPUT);
+#endif
+
+#ifdef SVERIO_PAPERBOARD_SPI
+  pinMode(enableBattery, OUTPUT);
+  digitalWrite(enableBattery, LOW);
 #endif
 
 #ifdef CROWPANEL_ESP32S3_579
