@@ -835,7 +835,6 @@ float getBatteryVoltage()
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_12);
 
   // Enable the measurement path via PMOS gate
-  pinMode(enableBattery, OUTPUT);
   digitalWrite(enableBattery, HIGH);
   delay(200);
 
