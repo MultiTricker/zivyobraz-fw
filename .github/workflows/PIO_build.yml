@@ -1,6 +1,6 @@
 name: Compile firmware for Živý obraz service
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build-project:
