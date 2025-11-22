@@ -7,15 +7,10 @@
  *
  * Supported Formats:
  * - BMP: Standard bitmap format (1, 4, 8, 24, 32-bit depths)
+ * - PNG: Portable Network Graphics (using pngle - lightweight embedded decoder)
  * - Z1:  ZivyObraz RLE format (1 byte color + 1 byte count)
  * - Z2:  ZivyObraz RLE format (2-bit color + 6-bit count) - Most efficient
  * - Z3:  ZivyObraz RLE format (3-bit color + 5-bit count)
- *
- * Future Improvements:
- * - Add PNG support (libpng or similar)
- * - Optimize with display.writeLine() for row-based rendering
- * - Add progressive loading for large images
- * - Implement image caching/partial updates
  */
 
 #include "image_handler.h"
@@ -36,6 +31,8 @@
   #include <GxEPD2_7C.h>
 #endif
 
+#include <pngle.h>
+
 namespace ImageHandler
 {
 
@@ -43,7 +40,8 @@ namespace ImageHandler
 // Image Format Constants
 ///////////////////////////////////////////////
 
-constexpr uint16_t FORMAT_BMP = 0x4D42; // "BM"
+constexpr uint16_t FORMAT_BMP = 0x4D42; // "BM" signature (first 2 bytes: 'B' 'M')
+constexpr uint16_t FORMAT_PNG = 0x5089; // PNG signature (first 2 bytes: 0x89 0x50)
 constexpr uint16_t FORMAT_Z1 = 0x315A;  // Z1: 1 byte color + 1 byte count
 constexpr uint16_t FORMAT_Z2 = 0x325A;  // Z2: 2-bit color + 6-bit count
 constexpr uint16_t FORMAT_Z3 = 0x335A;  // Z3: 3-bit color + 5-bit count
@@ -285,6 +283,208 @@ static bool processBMP(HttpClient &http, uint32_t startTime)
 }
 
 ///////////////////////////////////////////////
+// PNG Image Processing
+///////////////////////////////////////////////
+
+// Callback: Draw pixel from PNG decoder
+static void pngleOnDraw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint8_t rgba[4])
+{
+  if ((x >= Display::getWidth()) || (y >= Display::getHeight()))
+  {
+    Serial.println("PNG size exceeds display");
+    return;
+  }
+
+  // Convert RGBA to grayscale
+  uint8_t r = rgba[0];
+  uint8_t g = rgba[1];
+  uint8_t b = rgba[2];
+  uint8_t a = rgba[3];
+
+  // Skip fully transparent pixels
+  if (a == 0)
+  {
+    Serial.println("Skipping transparent pixel");
+    return;
+  }
+
+  uint16_t color;
+
+#if defined(TYPE_BW)
+  // BW displays: Black & White only
+  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+  color = (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
+
+#elif defined(TYPE_3C)
+  // 3-color displays: Black, White, Red
+  // Detect red hue (high red, low green/blue)
+  if (r > 128 && r > (g + 80) && r > (b + 80))
+  {
+    color = GxEPD_RED;
+  }
+  else
+  {
+    uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+    color = (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
+  }
+
+#elif defined(TYPE_4C)
+  // 4-color displays: Black, White, Red, Yellow
+  // Detect yellow (high red & green, low blue)
+  if (r > 128 && g > 128 && b < 80)
+  {
+    color = GxEPD_YELLOW;
+  }
+  // Detect red hue
+  else if (r > 128 && r > (g + 80) && r > (b + 80))
+  {
+    color = GxEPD_RED;
+  }
+  else
+  {
+    uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+    color = (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
+  }
+
+#elif defined(TYPE_7C)
+  // 7-color displays: Black, White, Red, Yellow, Green, Blue, Orange
+  // Detect orange (red-yellow mix)
+  if (r > 200 && g > 80 && g < 180 && b < 80)
+  {
+    color = GxEPD_ORANGE;
+  }
+  // Detect red
+  else if (r > 128 && r > (g + 80) && r > (b + 80))
+  {
+    color = GxEPD_RED;
+  }
+  // Detect yellow
+  else if (r > 128 && g > 128 && b < 80)
+  {
+    color = GxEPD_YELLOW;
+  }
+  // Detect green
+  else if (g > 128 && g > (r + 80) && g > (b + 80))
+  {
+    color = GxEPD_GREEN;
+  }
+  // Detect blue
+  else if (b > 128 && b > (r + 80) && b > (g + 80))
+  {
+    color = GxEPD_BLUE;
+  }
+  else
+  {
+    uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+    color = (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
+  }
+
+#elif defined(TYPE_GRAYSCALE)
+  // Grayscale displays: 4-level grayscale
+  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+  color = (gray < 64)    ? GxEPD_BLACK
+          : (gray < 128) ? GxEPD_DARKGREY
+          : (gray < 192) ? GxEPD_LIGHTGREY
+                         : GxEPD_WHITE;
+
+#else
+  // Fallback: grayscale
+  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+  color = (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
+#endif
+
+  Display::drawPixel(x, y, color);
+
+  // Yield periodically to prevent watchdog timeout
+  static uint32_t pixelCount = 0;
+  if (++pixelCount % 1000 == 0)
+  {
+    yield();
+  }
+}
+
+static bool processPNG(HttpClient &http, uint32_t startTime)
+{
+  Serial.println("Got PNG format, processing");
+
+  // Create pngle decoder
+  pngle_t *pngle = pngle_new();
+  if (!pngle)
+  {
+    Serial.println("Failed to create PNG decoder");
+    return false;
+  }
+
+  // Set draw callback
+  pngle_set_draw_callback(pngle, pngleOnDraw);
+
+  // Reconstruct PNG signature: we already read first 2 bytes (0x89 0x50) for format detection
+  // PNG signature is 8 bytes: 0x89 0x50 0x4E 0x47 0x0D 0x0A 0x1A 0x0A
+  uint8_t pngSignature[8];
+  pngSignature[0] = 0x89;
+  pngSignature[1] = 0x50;
+
+  // Read remaining 6 bytes of signature
+  uint32_t sigBytesRead = http.readBytes(&pngSignature[2], 6);
+  if (sigBytesRead != 6)
+  {
+    printReadError(2 + sigBytesRead);
+    pngle_destroy(pngle);
+    return false;
+  }
+
+  // Feed complete signature
+  int fed = pngle_feed(pngle, pngSignature, 8);
+  if (fed < 0)
+  {
+    Serial.print("PNG signature error: ");
+    Serial.println(pngle_error(pngle));
+    pngle_destroy(pngle);
+    return false;
+  }
+
+  // Stream PNG data in chunks
+  uint8_t buffer[512];
+  uint32_t bytes_read = 8;
+  bool success = true;
+
+  while (http.isConnected() || http.available())
+  {
+    uint32_t chunkSize = http.readBytes(buffer, sizeof(buffer));
+    if (chunkSize == 0)
+      break;
+
+    bytes_read += chunkSize;
+
+    // Feed data to decoder
+    fed = pngle_feed(pngle, buffer, chunkSize);
+    if (fed < 0)
+    {
+      Serial.print("PNG decode error: ");
+      Serial.println(pngle_error(pngle));
+      success = false;
+      break;
+    }
+
+    // Yield periodically
+    yield();
+  }
+
+  pngle_destroy(pngle);
+
+  if (success)
+  {
+    Serial.print("bytes read ");
+    Serial.println(bytes_read);
+    Serial.print("loaded in ");
+    Serial.print(millis() - startTime);
+    Serial.println(" ms");
+  }
+
+  return success;
+}
+
+///////////////////////////////////////////////
 // Unified RLE Format Processing
 ///////////////////////////////////////////////
 
@@ -406,6 +606,10 @@ void readImageData(HttpClient &http)
   {
     case FORMAT_BMP:
       success = processBMP(http, startTime);
+      break;
+
+    case FORMAT_PNG:
+      success = processPNG(http, startTime);
       break;
 
     case FORMAT_Z1:
