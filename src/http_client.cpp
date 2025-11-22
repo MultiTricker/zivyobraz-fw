@@ -142,7 +142,8 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
     // Check for successful HTTP response (always check)
     if (!connectionOk)
     {
-      connectionOk = line.startsWith("HTTP/1.1 200 OK");
+      // Support both HTTP/1.0 and HTTP/1.1
+      connectionOk = line.startsWith("HTTP/1.1 200 OK") || line.startsWith("HTTP/1.0 200 OK");
       Serial.println(line);
     }
 
