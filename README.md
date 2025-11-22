@@ -43,7 +43,7 @@ In code **board.h** do not forget to uncomment:
 // #define TYPE_GRAYSCALE // grayscale - 4 colors
 // #define TYPE_7C        // 7 colors
 ```
-4. Uncomment the definition of the specific ePaper you are putting into operation. This section begins at line ``8`, and you need to select a specific display, e.g.:
+4. Uncomment the definition of the specific ePaper you are putting into operation. This section begins at line `18`, and you need to select a specific display, e.g.:
 ```c
 // BW
 // #define D_GDEY0213B7  // 122x250, 2.13"
