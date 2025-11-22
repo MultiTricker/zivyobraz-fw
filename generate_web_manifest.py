@@ -16,7 +16,7 @@ def generate_manifest(source, target, env):
     mcu = board_config.get("build.mcu", "esp32")
     prog_name = env.get("PROGNAME") + ".bin"
     build_dir = env.subst("$BUILD_DIR")
-    
+
     # Logika pro offsety
     if "esp32s3" in mcu:
         bootloader_offset = 0x0
@@ -45,16 +45,16 @@ def generate_manifest(source, target, env):
 
     # --- SESTAVENÍ JSON MANIFESTU ---
     parts_full = []
-    
+
     if os.path.exists(bootloader_path):
         parts_full.append({"path": "bootloader.bin", "offset": bootloader_offset})
 
     if os.path.exists(partitions_path):
         parts_full.append({"path": "partitions.bin", "offset": 0x8000})
-    
+
     if os.path.exists(boot_app0_target):
         parts_full.append({"path": "boot_app0.bin", "offset": 0xe000})
-    
+
     parts_full.append({"path": prog_name, "offset": 0x10000})
 
     # POUŽITÍ NAČTENÉHO NÁZVU (fw_name)
@@ -74,10 +74,10 @@ def generate_manifest(source, target, env):
     try:
         with open(os.path.join(build_dir, "manifest_full.json"), "w", encoding="utf-8") as f:
             json.dump(manifest_full, f, indent=2, ensure_ascii=False)
-        
+
         with open(os.path.join(build_dir, "manifest_update.json"), "w", encoding="utf-8") as f:
             json.dump(manifest_update, f, indent=2, ensure_ascii=False)
-        
+
         print(f"Manifesty pro '{fw_name}' vygenerovány.")
     except Exception as e:
         print(f"Chyba JSON: {e}")
