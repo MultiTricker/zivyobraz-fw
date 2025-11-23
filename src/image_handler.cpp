@@ -403,7 +403,7 @@ static void pngleOnDraw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint
   }
 }
 
-static bool processPNG(HttpClient &http, uint32_t startTime)
+static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, uint16_t bufferSize)
 {
   Serial.println("Got PNG format, processing");
 
@@ -443,14 +443,13 @@ static bool processPNG(HttpClient &http, uint32_t startTime)
     return false;
   }
 
-  // Stream PNG data in chunks
-  uint8_t buffer[512];
+  // Stream PNG data in chunks using passed buffer
   uint32_t bytes_read = 8;
   bool success = true;
 
   while (http.isConnected() || http.available())
   {
-    uint32_t chunkSize = http.readBytes(buffer, sizeof(buffer));
+    uint32_t chunkSize = http.readBytes(buffer, bufferSize);
     if (chunkSize == 0)
       break;
 
@@ -488,7 +487,7 @@ static bool processPNG(HttpClient &http, uint32_t startTime)
 // Unified RLE Format Processing
 ///////////////////////////////////////////////
 
-static bool processRLE(HttpClient &http, uint32_t startTime, uint16_t format)
+static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format, uint8_t *buffer, uint16_t bufferSize)
 {
   const char *formatName = (format == FORMAT_Z1) ? "Z1" : (format == FORMAT_Z2) ? "Z2" : "Z3";
   Serial.print("Got format ");
@@ -507,23 +506,54 @@ static bool processRLE(HttpClient &http, uint32_t startTime, uint16_t format)
   uint16_t col = 0;
   uint32_t pixelsProcessed = 0;
 
-  while (pixelsProcessed < totalPixels && http.isConnected())
+  // Use passed buffer for efficient reading
+  uint32_t bufferPos = 0;
+  uint32_t bufferAvailable = 0;
+  bool bufferEmpty = true;
+
+  while (pixelsProcessed < totalPixels)
   {
+    // Refill buffer if needed
+    if (bufferEmpty || bufferPos >= bufferAvailable)
+    {
+      if (!http.isConnected() && !http.available())
+      {
+        Serial.println("Connection lost during RLE decode");
+        return false;
+      }
+
+      uint32_t bytesRead = http.readBytes(buffer, bufferSize);
+      if (bytesRead == 0)
+      {
+        Serial.println("No more data available");
+        break;
+      }
+
+      bufferPos = 0;
+      bufferEmpty = false;
+      bytes_read += bytesRead;
+      bufferAvailable = bytesRead;
+    }
+
     uint8_t pixelColor, count;
 
     // Read and decode based on format
     if (format == FORMAT_Z1)
     {
       // Z1: 1 byte color + 1 byte count
-      pixelColor = http.readByte();
-      count = http.readByte();
-      bytes_read += 2;
+      if (bufferPos + 1 >= bufferAvailable)
+      {
+        // Need more data for Z1 (2 bytes)
+        bufferEmpty = true;
+        continue;
+      }
+      pixelColor = buffer[bufferPos++];
+      count = buffer[bufferPos++];
     }
     else
     {
       // Z2 and Z3: compressed into single byte
-      uint8_t compressed = http.readByte();
-      bytes_read++;
+      uint8_t compressed = buffer[bufferPos++];
 
       if (format == FORMAT_Z2)
       {
@@ -555,7 +585,7 @@ static bool processRLE(HttpClient &http, uint32_t startTime, uint16_t format)
     }
 
     // Yield periodically
-    if (bytes_read % 1000 == 0)
+    if (pixelsProcessed % 10000 == 0)
     {
       yield();
     }
@@ -568,22 +598,6 @@ static bool processRLE(HttpClient &http, uint32_t startTime, uint16_t format)
   Serial.println(" ms");
 
   return (pixelsProcessed == totalPixels);
-}
-
-// Wrapper functions for backward compatibility
-static bool processZ1(HttpClient &http, uint32_t startTime)
-{
-  return processRLE(http, startTime, FORMAT_Z1);
-}
-
-static bool processZ2(HttpClient &http, uint32_t startTime)
-{
-  return processRLE(http, startTime, FORMAT_Z2);
-}
-
-static bool processZ3(HttpClient &http, uint32_t startTime)
-{
-  return processRLE(http, startTime, FORMAT_Z3);
 }
 
 ///////////////////////////////////////////////
@@ -601,6 +615,11 @@ void readImageData(HttpClient &http)
   Serial.print("Header: 0x");
   Serial.println(header, HEX);
 
+  // Allocate buffer on stack for this function call only
+  // Released automatically when function returns
+  static const uint16_t STREAM_BUFFER_SIZE = 512;
+  uint8_t buffer[STREAM_BUFFER_SIZE];
+
   // Route to appropriate format handler
   switch (header)
   {
@@ -609,19 +628,19 @@ void readImageData(HttpClient &http)
       break;
 
     case FORMAT_PNG:
-      success = processPNG(http, startTime);
+      success = processPNG(http, startTime, buffer, STREAM_BUFFER_SIZE);
       break;
 
     case FORMAT_Z1:
-      success = processZ1(http, startTime);
+      success = processRLE(http, startTime, ImageFormat::Z1, buffer, STREAM_BUFFER_SIZE);
       break;
 
     case FORMAT_Z2:
-      success = processZ2(http, startTime);
+      success = processRLE(http, startTime, ImageFormat::Z2, buffer, STREAM_BUFFER_SIZE);
       break;
 
     case FORMAT_Z3:
-      success = processZ3(http, startTime);
+      success = processRLE(http, startTime, ImageFormat::Z3, buffer, STREAM_BUFFER_SIZE);
       break;
 
     default:
