@@ -37,18 +37,39 @@ namespace ImageHandler
 {
 
 ///////////////////////////////////////////////
-// Image Format Constants
+// Image Format Types
 ///////////////////////////////////////////////
-
-constexpr uint16_t FORMAT_BMP = 0x4D42; // "BM" signature (first 2 bytes: 'B' 'M')
-constexpr uint16_t FORMAT_PNG = 0x5089; // PNG signature (first 2 bytes: 0x89 0x50)
-constexpr uint16_t FORMAT_Z1 = 0x315A;  // Z1: 1 byte color + 1 byte count
-constexpr uint16_t FORMAT_Z2 = 0x325A;  // Z2: 2-bit color + 6-bit count
-constexpr uint16_t FORMAT_Z3 = 0x335A;  // Z3: 3-bit color + 5-bit count
+enum class ImageFormat : uint16_t
+{
+  BMP = 0x4D42, // "BM" signature (first 2 bytes: 'B' 'M')
+  PNG = 0x5089, // PNG signature (first 2 bytes: 0x89 0x50)
+  Z1  = 0x315A, // Z1: 1 byte color + 1 byte count
+  Z2  = 0x325A, // Z2: 2-bit color + 6-bit count
+  Z3  = 0x335A  // Z3: 3-bit color + 5-bit count
+};
 
 ///////////////////////////////////////////////
 // Helper Functions
 ///////////////////////////////////////////////
+
+static const char *formatToString(ImageFormat format)
+{
+  switch (format)
+  {
+    case ImageFormat::BMP:
+      return "BMP";
+    case ImageFormat::PNG:
+      return "PNG";
+    case ImageFormat::Z1:
+      return "Z1";
+    case ImageFormat::Z2:
+      return "Z2";
+    case ImageFormat::Z3:
+      return "Z3";
+    default:
+      return "Unknown";
+  }
+}
 
 static void printReadError(uint32_t bytesRead)
 {
@@ -489,9 +510,8 @@ static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, ui
 
 static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format, uint8_t *buffer, uint16_t bufferSize)
 {
-  const char *formatName = (format == FORMAT_Z1) ? "Z1" : (format == FORMAT_Z2) ? "Z2" : "Z3";
   Serial.print("Got format ");
-  Serial.print(formatName);
+  Serial.print(formatToString(format));
   Serial.println(", processing");
 
   uint32_t bytes_read = 2; // Already read header
@@ -538,7 +558,7 @@ static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format,
     uint8_t pixelColor, count;
 
     // Read and decode based on format
-    if (format == FORMAT_Z1)
+    if (format == ImageFormat::Z1)
     {
       // Z1: 1 byte color + 1 byte count
       if (bufferPos + 1 >= bufferAvailable)
@@ -555,7 +575,7 @@ static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format,
       // Z2 and Z3: compressed into single byte
       uint8_t compressed = buffer[bufferPos++];
 
-      if (format == FORMAT_Z2)
+      if (format == ImageFormat::Z2)
       {
         // Z2: 2-bit color + 6-bit count
         count = compressed & 0b00111111;
@@ -621,25 +641,25 @@ void readImageData(HttpClient &http)
   uint8_t buffer[STREAM_BUFFER_SIZE];
 
   // Route to appropriate format handler
-  switch (header)
+  switch (static_cast<ImageFormat>(header))
   {
-    case FORMAT_BMP:
+    case ImageFormat::BMP:
       success = processBMP(http, startTime);
       break;
 
-    case FORMAT_PNG:
+    case ImageFormat::PNG:
       success = processPNG(http, startTime, buffer, STREAM_BUFFER_SIZE);
       break;
 
-    case FORMAT_Z1:
+    case ImageFormat::Z1:
       success = processRLE(http, startTime, ImageFormat::Z1, buffer, STREAM_BUFFER_SIZE);
       break;
 
-    case FORMAT_Z2:
+    case ImageFormat::Z2:
       success = processRLE(http, startTime, ImageFormat::Z2, buffer, STREAM_BUFFER_SIZE);
       break;
 
-    case FORMAT_Z3:
+    case ImageFormat::Z3:
       success = processRLE(http, startTime, ImageFormat::Z3, buffer, STREAM_BUFFER_SIZE);
       break;
 
