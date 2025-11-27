@@ -12,6 +12,7 @@
  * Analog read with calibration data: https://github.com/madhephaestus/ESP32AnalogRead/
  * EPD library: https://github.com/ZinggJM/GxEPD2
  * EPD library for 4G "Grayscale": https://github.com/ZinggJM/GxEPD2_4G
+ * PNG Decoder Library: https://github.com/kikuchan/pngle
  * WiFi manager by tzapu https://github.com/tzapu/WiFiManager
  * QRCode generator: https://github.com/ricmoo/QRCode
  * SHT4x (temperature, humidity): https://github.com/adafruit/Adafruit_SHT4X

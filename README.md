@@ -21,6 +21,7 @@ lib_deps =
     adafruit/Adafruit SHT4x Library@^1.0.3
     adafruit/Adafruit BME280 Library@^2.2.4
     sparkfun/SparkFun SCD4x Arduino Library@^1.1.2
+    kikuchan98/pngle@^1.1.0
 ```
 
 In **platformio.ini**, comment out default build flags under section **common** (they are specified here for automatic compilation checks on GitHub), so you can use your own display type for compilation in next steps:
@@ -43,12 +44,12 @@ In code **board.h** do not forget to uncomment:
 // #define TYPE_GRAYSCALE // grayscale - 4 colors
 // #define TYPE_7C        // 7 colors
 ```
-4. Uncomment the definition of the specific ePaper you are putting into operation. This section begins at line ``8`, and you need to select a specific display, e.g.:
+4. Uncomment the definition of the specific ePaper you are putting into operation. This section begins at line `18`, and you need to select a specific display, e.g.:
 ```c
 // BW
-// #define D_GDEY0213B7  // 122x250, 2.13"
-// #define D_GDEW042T2   // 400x300, 4.2"
-#define D_GDEW075T7      // 800x480, 7.5"
+// #define D_GDEY0213B7 // 122x250, 2.13"
+// #define D_GDEW042T2  // 400x300, 4.2"
+#define D_GDEW075T7     // 800x480, 7.5"
 ```
 
 After successfully compiling and flashing the board, continue with the documentation "Bringing your own ePaper to life":
