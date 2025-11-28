@@ -454,6 +454,16 @@ void setToFullWindow()
   display.setFullWindow();
 }
 
+void setToPartialWindow(int16_t x, int16_t y, int16_t w, int16_t h)
+{
+  display.setPartialWindow(x, y, w, h);
+}
+
+bool supportsPartialRefresh()
+{
+  return display.epd2.hasPartialUpdate;
+}
+
 void setToFirstPage()
 {
   display.firstPage();

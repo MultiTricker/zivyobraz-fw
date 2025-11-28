@@ -101,11 +101,19 @@ void downloadAndDisplayImage(HttpClient &httpClient)
   Board::setEPaperPowerOn(true);
   delay(500);
 
-  // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
+  // Partial (fast) refresh if supported, driven by server request
+  if (httpClient.hasPartialRefresh() && Display::supportsPartialRefresh())
+  {
+      Display::setToPartialWindow(0, 0, Display::getResolutionX(), Display::getResolutionY());
+  }
+  else
+  {
+    Display::setToFullWindow();
+  }
 
+  // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
   // If you can't use whole display at once, there will be multiple pages and therefore
   // requests and downloads of one bitmap from server, since you have to always write whole image
-  Display::setToFullWindow();
   Display::setToFirstPage();
   do
   {

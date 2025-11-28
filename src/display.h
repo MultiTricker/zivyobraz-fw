@@ -105,6 +105,8 @@ void centeredText(const String &text, int xCord, int yCord);
 
 // Page functions
 void setToFullWindow();
+void setToPartialWindow(int16_t x, int16_t y, int16_t w, int16_t h);
+bool supportsPartialRefresh();
 void setToFirstPage();
 bool setToNextPage();
 

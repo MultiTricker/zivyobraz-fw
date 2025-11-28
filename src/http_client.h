@@ -30,6 +30,8 @@ public:
 
   bool hasRotation() const { return m_hasRotation; }
 
+  bool hasPartialRefresh() const { return m_partialRefresh; }
+
   // Data reading methods - no WiFiClient exposure!
   uint32_t readBytes(uint8_t *buf, int32_t bytes);
 
@@ -48,6 +50,7 @@ private:
   uint64_t m_serverTimestamp;
   uint8_t m_displayRotation;
   bool m_hasRotation;
+  bool m_partialRefresh;
 
   // Internal helpers
   bool sendRequest(bool timestampCheckOnly, const String &extraParams);
