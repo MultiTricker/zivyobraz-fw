@@ -623,12 +623,14 @@ void GxEPD2_750_GDEY075T7::_InitDisplay()
   _writeCommand(0x00); // PANEL SETTING
   _writeData(0x1f);    // KW: 3f, KWR: 2F, BWROTP: 0f, BWOTP: 1f
   // same POWER SETTING as from OTP
+  /*
   _writeCommand(0x01); // POWER SETTING
   _writeData (0x07); // enable internal
   _writeData (0x07); // VGH=20V,VGL=-20V
   _writeData (0x3f); // VDH=15V
   _writeData (0x3f); // VDL=-15V
   _writeData (0x09); // VDHR=4.2V
+  */
   //Enhanced display drive(Add 0x06 command)
   _writeCommand(0x06); //Booster Soft Start
   _writeData (0x17);
