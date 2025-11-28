@@ -101,6 +101,12 @@ void downloadAndDisplayImage(HttpClient &httpClient)
   Board::setEPaperPowerOn(true);
   delay(500);
 
+  // Display rotation?
+  if (httpClient.hasRotation())
+  {
+    Display::setRotation(2); // 2 = 180 degrees
+  }
+
   // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
 
   // If you can't use whole display at once, there will be multiple pages and therefore
