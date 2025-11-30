@@ -487,7 +487,11 @@ void showNoWiFiError(uint64_t sleepMinutes, const String &wikiUrl)
   Board::setEPaperPowerOn(true);
   delay(500);
 
-  setToFullWindow();
+  if (supportsPartialRefresh())
+    setToPartialWindow(0, 0, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y);
+  else {
+    setToFullWindow();
+  }
   setToFirstPage();
   do
   {
@@ -523,7 +527,11 @@ void showWiFiError(const String &hostname, const String &password, const String 
   Board::setEPaperPowerOn(true);
   delay(500);
 
-  setToFullWindow();
+  if (supportsPartialRefresh())
+    setToPartialWindow(0, 0, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y);
+  else {
+    setToFullWindow();
+  }
   setToFirstPage();
   do
   {
