@@ -3,7 +3,7 @@
 
 //////////////////////////////////////////////////////////////
 // Uncomment if one of the sensors will be connected
-// Supported sensors: SHT40/41/45, SCD40/41, BME280
+// Supported sensors: SHT40/41/45, SCD40/41, BME280, STCC4
 //////////////////////////////////////////////////////////////
 
 // #define SENSOR

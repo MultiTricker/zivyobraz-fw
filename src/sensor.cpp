@@ -17,6 +17,10 @@ static SCD4x SCD4(SCD4x_SENSOR_SCD41);
   #include <Adafruit_Sensor.h>
 static Adafruit_BME280 bme;
 
+  // STCC4
+  #include <SensirionI2cStcc4.h>
+static SensirionI2cStcc4 stcc4;
+
 namespace Sensor
 {
 
@@ -78,7 +82,68 @@ int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
     ret = 3;
   }
 
-  #if (defined ESPink_V2) || (defined ESPink_V3)
+  // Check for STCC4
+  if (!ret)
+  {
+    stcc4.begin(Wire, STCC4_I2C_ADDR_64);
+    
+    uint32_t productId;
+    uint64_t serialNumber;
+    int16_t error = stcc4.getProductId(productId, serialNumber);
+    
+    if (error == 0)
+    {
+      Serial.println("STCC4 FOUND");
+      
+      stcc4.exitSleepMode();  // Ensure sensor is awake (optional safety measure)
+      delay(50);
+
+      // Warmup to get rid of the 390 ppm start value
+      error = stcc4.startContinuousMeasurement();
+      if (error) { return false; }
+      Serial.println("Waiting 30s to warmup STCC4");
+      delay(30 * 1000);
+      Serial.println("STCC4 warmup complete");
+
+      error = stcc4.stopContinuousMeasurement();
+      if (error) { return false; }
+
+      // Perform single shot measurement
+      error = stcc4.measureSingleShot();
+      if (error == 0)
+      {
+        // Wait for measurement to complete (typical ~5 seconds for STCC4)
+        delay(5000);
+        
+        // Temporary variables to hold raw sensor data
+        int16_t temp_cpo2;
+        float temp_temp;
+        float temp_humidity;
+        uint16_t sensorStatus;
+        
+        // Read measurement
+        error = stcc4.readMeasurement(temp_cpo2, temp_temp, temp_humidity, sensorStatus);
+        if (error == 0)
+        {
+          // Assign to output variables
+          sen_temp = temp_temp;
+          sen_humi = (int)temp_humidity;
+          sen_pres = temp_cpo2;
+          ret = 3; // Same return code as SCD4x
+        }
+        else
+        {
+          Serial.println("STCC4 read measurement failed");
+        }
+      }
+      else
+      {
+        Serial.println("STCC4 single shot measurement failed");
+      }
+    }
+  }
+
+  #if (defined ESPink_V2) || (defined ESPink_V3) || (defined ESPink_V35) || (defined ESP32S3Adapter)
   // Power down for now
   Board::setEPaperPowerOn(false);
   #endif
