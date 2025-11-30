@@ -111,10 +111,22 @@ void downloadAndDisplayImage(HttpClient &httpClient)
     Display::setToFullWindow();
   }
 
+  // Display rotation?
+  if (httpClient.hasRotation())
+  {
+    Display::setRotation(2); // 2 = 180 degrees
+  }
+
+  // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
+
   // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
   // If you can't use whole display at once, there will be multiple pages and therefore
   // requests and downloads of one bitmap from server, since you have to always write whole image
   Display::setToFirstPage();
+
+  // Store number of pages needed to fill the buffer of the display to turn off the WiFi after last page is loaded
+  uint16_t pagesToLoad = Display::getNumberOfPages();
+
   do
   {
     // For paged displays, download image once per page
@@ -123,6 +135,13 @@ void downloadAndDisplayImage(HttpClient &httpClient)
       break;
     }
     ImageHandler::readImageData(httpClient);
+
+    // turn of WiFi if no more pages left
+    if (--pagesToLoad == 0)
+    {
+      httpClient.stop();
+      Wireless::turnOff();
+    }
   } while (Display::setToNextPage());
 
   // Disable ePaper power

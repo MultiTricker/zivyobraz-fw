@@ -370,6 +370,11 @@ const char *getColorType()
   return defined_color_type;
 }
 
+uint16_t getNumberOfPages()
+{
+  return display.pages();
+}
+
 void initM5()
 {
 #ifdef M5StackCoreInk

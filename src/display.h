@@ -88,6 +88,7 @@ uint16_t getHeight();
 uint16_t getResolutionX();
 uint16_t getResolutionY();
 const char *getColorType();
+uint16_t getNumberOfPages();
 
 // M5Stack specific
 void initM5();

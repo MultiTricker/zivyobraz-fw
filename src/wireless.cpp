@@ -99,4 +99,12 @@ bool isConnected()
 {
   return WiFi.status() == WL_CONNECTED;
 }
+
+void turnOff()
+{
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_OFF);
+  delay(20);
+  Serial.println("WiFi turned off");
+}
 } // namespace Wireless
