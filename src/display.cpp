@@ -459,9 +459,9 @@ void setToFullWindow()
   display.setFullWindow();
 }
 
-void setToPartialWindow(int16_t x, int16_t y, int16_t w, int16_t h)
+void setToPartialWindow(int16_t xCord, int16_t yCord, int16_t width, int16_t height)
 {
-  display.setPartialWindow(x, y, w, h);
+  display.setPartialWindow(xCord, yCord, width, height);
 }
 
 bool supportsPartialRefresh()
