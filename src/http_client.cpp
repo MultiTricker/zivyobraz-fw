@@ -11,7 +11,7 @@ extern const char *firmware;
 
 HttpClient::HttpClient()
   : m_sleepDuration(StateManager::DEFAULT_SLEEP_SECONDS), m_serverTimestamp(0), m_displayRotation(0),
-    m_hasRotation(false)
+    m_hasRotation(false), m_partialRefresh(false)
 {
 }
 
@@ -94,6 +94,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
   bool connectionOk = false;
   bool foundTimestamp = false;
   m_hasRotation = false;
+  m_partialRefresh = false;
 
   while (m_client.connected())
   {
@@ -136,6 +137,13 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
         m_hasRotation = true;
         Serial.print("Rotate: ");
         Serial.println(m_displayRotation);
+      }
+
+      // Partial refresh request from server (only if this line exists)
+      if (line.startsWith("PartialRefresh"))
+      {
+        m_partialRefresh = true;
+        Serial.println("Partial refresh requested");
       }
     }
 
