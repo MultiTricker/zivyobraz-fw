@@ -117,9 +117,7 @@ void downloadAndDisplayImage(HttpClient &httpClient)
     Display::setRotation(2); // 2 = 180 degrees
   }
 
-  // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
-
-  // Get that lovely bitmap and put it on your gorgeous grayscale ePaper screen!
+  // Get that lovely image and put it on your gorgeous grayscale ePaper screen!
   // If you can't use whole display at once, there will be multiple pages and therefore
   // requests and downloads of one bitmap from server, since you have to always write whole image
   Display::setToFirstPage();
