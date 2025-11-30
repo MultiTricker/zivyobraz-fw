@@ -10,8 +10,11 @@ extern const char *host;
 extern const char *firmware;
 
 HttpClient::HttpClient()
-  : m_sleepDuration(StateManager::DEFAULT_SLEEP_SECONDS), m_serverTimestamp(0), m_displayRotation(0),
-    m_hasRotation(false), m_partialRefresh(false)
+    : m_sleepDuration(StateManager::DEFAULT_SLEEP_SECONDS),
+      m_serverTimestamp(0),
+      m_displayRotation(0),
+      m_hasRotation(false),
+      m_partialRefresh(false)
 {
 }
 
@@ -21,9 +24,7 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
   String url = "/index.php?mac=" + Wireless::getMacAddress();
 
   if (timestampCheckOnly)
-  {
     url += "&timestamp_check=1";
-  }
 
   url += "&rssi=" + String(Wireless::getStrength());
   url += "&ssid=" + Wireless::getSSID();
@@ -42,24 +43,18 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
   for (uint8_t attempt = 0; attempt < 3; attempt++)
   {
     if (m_client.connect(host, 80))
-    {
       break;
-    }
 
     Serial.println("Connection failed, retrying... " + String(attempt + 1) + "/3");
     if (attempt == 2)
     {
       m_sleepDuration = StateManager::DEFAULT_SLEEP_SECONDS;
       if (!timestampCheckOnly)
-      {
         return false; // For image download, fail immediately
-      }
       delay(500);
     }
     if (!timestampCheckOnly)
-    {
       delay(200);
-    }
   }
 
   // Send HTTP request
@@ -79,9 +74,7 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
       Serial.println(">>> Client Timeout!");
       m_client.stop();
       if (timestampCheckOnly)
-      {
         m_sleepDuration = StateManager::DEFAULT_SLEEP_SECONDS;
-      }
       return false;
     }
   }
@@ -203,9 +196,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
 bool HttpClient::checkForUpdate(const String &sensorData)
 {
   if (!sendRequest(true, sensorData))
-  {
     return false;
-  }
 
   if (!parseHeaders(true, StateManager::getTimestamp()))
   {
@@ -223,9 +214,7 @@ bool HttpClient::checkForUpdate(const String &sensorData)
 bool HttpClient::startImageDownload()
 {
   if (!sendRequest(false, ""))
-  {
     return false;
-  }
 
   if (!parseHeaders(false, 0))
   {
@@ -237,20 +226,11 @@ bool HttpClient::startImageDownload()
   return true;
 }
 
-bool HttpClient::isConnected()
-{
-  return m_client.connected() || m_client.available();
-}
+bool HttpClient::isConnected() { return m_client.connected() || m_client.available(); }
 
-int HttpClient::available()
-{
-  return m_client.available();
-}
+int HttpClient::available() { return m_client.available(); }
 
-void HttpClient::stop()
-{
-  m_client.stop();
-}
+void HttpClient::stop() { m_client.stop(); }
 
 uint32_t HttpClient::readBytes(uint8_t *buf, int32_t bytes)
 {
@@ -270,11 +250,8 @@ uint32_t HttpClient::readBytes(uint8_t *buf, int32_t bytes)
     {
       delay(1);
     }
-
     if (millis() - startTime > 2000)
-    {
       break; // Timeout
-    }
   }
 
   return bytes - remaining;

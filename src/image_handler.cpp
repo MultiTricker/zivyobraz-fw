@@ -43,9 +43,9 @@ enum class ImageFormat : uint16_t
 {
   BMP = 0x4D42, // "BM" signature (first 2 bytes: 'B' 'M')
   PNG = 0x5089, // PNG signature (first 2 bytes: 0x89 0x50)
-  Z1  = 0x315A, // Z1: 1 byte color + 1 byte count
-  Z2  = 0x325A, // Z2: 2-bit color + 6-bit count
-  Z3  = 0x335A  // Z3: 3-bit color + 5-bit count
+  Z1 = 0x315A,  // Z1: 1 byte color + 1 byte count
+  Z2 = 0x325A,  // Z2: 2-bit color + 6-bit count
+  Z3 = 0x335A   // Z3: 3-bit color + 5-bit count
 };
 
 ///////////////////////////////////////////////
@@ -403,10 +403,7 @@ static void pngleOnDraw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint
 #elif defined(TYPE_GRAYSCALE)
   // Grayscale displays: 4-level grayscale
   uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-  color = (gray < 64)    ? GxEPD_BLACK
-          : (gray < 128) ? GxEPD_DARKGREY
-          : (gray < 192) ? GxEPD_LIGHTGREY
-                         : GxEPD_WHITE;
+  color = (gray < 64) ? GxEPD_BLACK : (gray < 128) ? GxEPD_DARKGREY : (gray < 192) ? GxEPD_LIGHTGREY : GxEPD_WHITE;
 
 #else
   // Fallback: grayscale
@@ -419,9 +416,7 @@ static void pngleOnDraw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint
   // Yield periodically to prevent watchdog timeout
   static uint32_t pixelCount = 0;
   if (++pixelCount % 1000 == 0)
-  {
     yield();
-  }
 }
 
 static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, uint16_t bufferSize)
@@ -616,9 +611,7 @@ static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format,
 
     // Yield periodically
     if (pixelsProcessed % 10000 == 0)
-    {
       yield();
-    }
   }
 
   Serial.print("bytes read ");

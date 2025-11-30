@@ -1,10 +1,31 @@
-name: Compile firmware for Živý obraz service
+name: Zivy obraz CI
 
 on: [push]
 
 jobs:
+  clang-format-check:
+    name: Check C++ code formatting
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+
+      - name: Check formatting
+        run: |
+          echo "Checking C++ code formatting..."
+          find src -name '*.cpp' -o -name '*.h' | grep -v 'src/fonts/' | while read file; do
+            clang-format --dry-run --Werror "$file"
+          done
+          echo "All files are properly formatted!"
+
   build-project:
-    name: Compile firmware binaries for Zivy obraz
+    name: Compile firmware binaries
     runs-on: ubuntu-latest
 
     steps:

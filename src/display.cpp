@@ -112,18 +112,20 @@ GxEPD2_BW<GxEPD2_750_GDEY075T7, GxEPD2_750_GDEY075T7::HEIGHT> display(GxEPD2_750
 
 // GDEM102T91 - BW, 960x640px, 10.2"
 #elif defined D_GDEM102T91
-GxEPD2_BW<GxEPD2_1020_GDEM102T91, GxEPD2_1020_GDEM102T91::HEIGHT / 2>
-  display(GxEPD2_1020_GDEM102T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_BW<GxEPD2_1020_GDEM102T91, GxEPD2_1020_GDEM102T91::HEIGHT / 2> display(GxEPD2_1020_GDEM102T91(PIN_SS, PIN_DC,
+                                                                                                     PIN_RST,
+                                                                                                     PIN_BUSY));
 
 // GDEM1085T51 - BW, 1360x480px, 10.85"
 #elif defined D_GDEM1085T51
-GxEPD2_BW<GxEPD2_1085_GDEM1085T51, GxEPD2_1085_GDEM1085T51::HEIGHT / 2>
-  display(GxEPD2_1085_GDEM1085T51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY, PIN_CS2));
+GxEPD2_BW<GxEPD2_1085_GDEM1085T51, GxEPD2_1085_GDEM1085T51::HEIGHT / 2> display(
+  GxEPD2_1085_GDEM1085T51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY, PIN_CS2));
 
 // GDEM133T91 - BW, 960x680px, 13.3"
 #elif defined D_GDEM133T91
-GxEPD2_BW<GxEPD2_1330_GDEM133T91, GxEPD2_1330_GDEM133T91::HEIGHT / 2>
-  display(GxEPD2_1330_GDEM133T91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_BW<GxEPD2_1330_GDEM133T91, GxEPD2_1330_GDEM133T91::HEIGHT / 2> display(GxEPD2_1330_GDEM133T91(PIN_SS, PIN_DC,
+                                                                                                     PIN_RST,
+                                                                                                     PIN_BUSY));
 
 ///////////////////////
 // Grayscale
@@ -150,8 +152,9 @@ GxEPD2_4G_4G<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> display(GxEPD
 
 // GDEQ0426T82 - Grayscale, 800x480px, 4.26"
 #elif defined D_GDEQ0426T82
-GxEPD2_4G_4G<GxEPD2_426_GDEQ0426T82, GxEPD2_426_GDEQ0426T82::HEIGHT / 2>
-  display(GxEPD2_426_GDEQ0426T82(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_4G_4G<GxEPD2_426_GDEQ0426T82, GxEPD2_426_GDEQ0426T82::HEIGHT / 2> display(GxEPD2_426_GDEQ0426T82(PIN_SS, PIN_DC,
+                                                                                                        PIN_RST,
+                                                                                                        PIN_BUSY));
 
 // GDEY075T7 - Grayscale, 800x480px, 7.5"
 #elif defined D_GDEW075T7
@@ -210,20 +213,22 @@ GxEPD2_3C<GxEPD2_750c_Z90, GxEPD2_750c_Z90::HEIGHT / 2> display(GxEPD2_750c_Z90(
 
 // GDEY116Z91 - 3C, 960x640px, 11.6"
 #elif defined D_GDEY116Z91
-GxEPD2_3C<GxEPD2_1160c_GDEY116Z91, GxEPD2_1160c_GDEY116Z91::HEIGHT / 4>
-  display(GxEPD2_1160c_GDEY116Z91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_3C<GxEPD2_1160c_GDEY116Z91, GxEPD2_1160c_GDEY116Z91::HEIGHT / 4> display(GxEPD2_1160c_GDEY116Z91(PIN_SS, PIN_DC,
+                                                                                                        PIN_RST,
+                                                                                                        PIN_BUSY));
 
 // GDEY1248Z51 - 3C, 1304x984px, 12.48"
 #elif defined D_GDEY1248Z51
-GxEPD2_3C<GxEPD2_1248c, GxEPD2_1248c::HEIGHT / 4>
-  display(GxEPD2_1248c(/*sck=*/12, /*miso=*/-1, /*mosi=*/11, /*cs_m1=*/10, /*cs_s1=*/18, /*cs_m2=*/48, /*cs_s2=*/41,
-                       /*dc1=*/46, /*dc2=*/45, /*rst1=*/3, /*rst2=*/39, /*busy_m1=*/8, /*busy_s1=*/17, /*busy_m2=*/40,
-                       /*busy_s2=*/16));
+GxEPD2_3C<GxEPD2_1248c, GxEPD2_1248c::HEIGHT / 4> display(
+  GxEPD2_1248c(/*sck=*/12, /*miso=*/-1, /*mosi=*/11, /*cs_m1=*/10, /*cs_s1=*/18, /*cs_m2=*/48, /*cs_s2=*/41,
+               /*dc1=*/46, /*dc2=*/45, /*rst1=*/3, /*rst2=*/39, /*busy_m1=*/8, /*busy_s1=*/17, /*busy_m2=*/40,
+               /*busy_s2=*/16));
 
 // GDEM133Z91 - 3C, 960x680px, 13.3"
 #elif defined D_GDEM133Z91
-GxEPD2_3C<GxEPD2_1330c_GDEM133Z91, GxEPD2_1330c_GDEM133Z91::HEIGHT / 4>
-  display(GxEPD2_1330c_GDEM133Z91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_3C<GxEPD2_1330c_GDEM133Z91, GxEPD2_1330c_GDEM133Z91::HEIGHT / 4> display(GxEPD2_1330c_GDEM133Z91(PIN_SS, PIN_DC,
+                                                                                                        PIN_RST,
+                                                                                                        PIN_BUSY));
 
 ///////////////////////
 // 4C
@@ -236,8 +241,9 @@ GxEPD2_4C<GxEPD2_213c_GDEY0213F51, GxEPD2_213c_GDEY0213F51::HEIGHT> display(GxEP
 
 // GDEY0266F51H - 4C, 184x460px, 2.66"
 #elif defined D_GDEY0266F51H
-GxEPD2_4C<GxEPD2_266c_GDEY0266F51H, GxEPD2_266c_GDEY0266F51H::HEIGHT>
-  display(GxEPD2_266c_GDEY0266F51H(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_4C<GxEPD2_266c_GDEY0266F51H, GxEPD2_266c_GDEY0266F51H::HEIGHT> display(GxEPD2_266c_GDEY0266F51H(PIN_SS, PIN_DC,
+                                                                                                       PIN_RST,
+                                                                                                       PIN_BUSY));
 
 // GDEY029F51H - 4C, 168x384px, 2.9"
 #elif defined D_GDEY029F51H
@@ -259,13 +265,15 @@ GxEPD2_4C<GxEPD2_437c, GxEPD2_437c::HEIGHT / 4> display(GxEPD2_437c(PIN_SS, PIN_
 
 // GDEY0579F51 - 4C, 792x272px, 5.79"
 #elif defined D_GDEY0579F51
-GxEPD2_4C<GxEPD2_0579c_GDEY0579F51, GxEPD2_0579c_GDEY0579F51::HEIGHT>
-  display(GxEPD2_0579c_GDEY0579F51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_4C<GxEPD2_0579c_GDEY0579F51, GxEPD2_0579c_GDEY0579F51::HEIGHT> display(GxEPD2_0579c_GDEY0579F51(PIN_SS, PIN_DC,
+                                                                                                       PIN_RST,
+                                                                                                       PIN_BUSY));
 
 // GDEY116F51 - 4C, 960x640px, 11.6"
 #elif defined D_GDEY116F51
-GxEPD2_4C<GxEPD2_1160c_GDEY116F51, GxEPD2_1160c_GDEY116F51::HEIGHT / 4>
-  display(GxEPD2_1160c_GDEY116F51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_4C<GxEPD2_1160c_GDEY116F51, GxEPD2_1160c_GDEY116F51::HEIGHT / 4> display(GxEPD2_1160c_GDEY116F51(PIN_SS, PIN_DC,
+                                                                                                        PIN_RST,
+                                                                                                        PIN_BUSY));
 
 ///////////////////////
 // 7C
@@ -277,13 +285,15 @@ GxEPD2_7C<GxEPD2_565c, GxEPD2_565c::HEIGHT / 2> display(GxEPD2_565c(PIN_SS, PIN_
 
 // GDEY073D46 - 7C, 800x480px, 7.3"
 #elif defined D_GDEY073D46
-GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4>
-  display(GxEPD2_730c_GDEY073D46(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(GxEPD2_730c_GDEY073D46(PIN_SS, PIN_DC,
+                                                                                                     PIN_RST,
+                                                                                                     PIN_BUSY));
 
 // GDEP073E01 - 7C, 800x480px, 7.3"
 #elif defined D_GDEP073E01
-GxEPD2_7C<GxEPD2_730c_GDEP073E01, GxEPD2_730c_GDEP073E01::HEIGHT / 4>
-  display(GxEPD2_730c_GDEP073E01(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_7C<GxEPD2_730c_GDEP073E01, GxEPD2_730c_GDEP073E01::HEIGHT / 4> display(GxEPD2_730c_GDEP073E01(PIN_SS, PIN_DC,
+                                                                                                     PIN_RST,
+                                                                                                     PIN_BUSY));
 
 #else
   #error "ePaper display not defined!"
@@ -340,40 +350,19 @@ void init()
   display.setTextColor(GxEPD_BLACK); // black font
 }
 
-void setRotation(uint8_t rotation)
-{
-  display.setRotation(rotation);
-}
+void setRotation(uint8_t rotation) { display.setRotation(rotation); }
 
-uint16_t getWidth()
-{
-  return display.width();
-}
+uint16_t getWidth() { return display.width(); }
 
-uint16_t getHeight()
-{
-  return display.height();
-}
+uint16_t getHeight() { return display.height(); }
 
-uint16_t getResolutionX()
-{
-  return DISPLAY_RESOLUTION_X;
-}
+uint16_t getResolutionX() { return DISPLAY_RESOLUTION_X; }
 
-uint16_t getResolutionY()
-{
-  return DISPLAY_RESOLUTION_Y;
-}
+uint16_t getResolutionY() { return DISPLAY_RESOLUTION_Y; }
 
-const char *getColorType()
-{
-  return defined_color_type;
-}
+const char *getColorType() { return defined_color_type; }
 
-uint16_t getNumberOfPages()
-{
-  return display.pages();
-}
+uint16_t getNumberOfPages() { return display.pages(); }
 
 void initM5()
 {
@@ -407,10 +396,7 @@ void resetPixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b)
 #endif
 }
 
-void drawPixel(int16_t xCord, int16_t yCord, uint16_t color)
-{
-  display.drawPixel(xCord, yCord, color);
-}
+void drawPixel(int16_t xCord, int16_t yCord, uint16_t color) { display.drawPixel(xCord, yCord, color); }
 
 void drawQrCode(const char *qrStr, int qrSize, int yCord, int xCord, byte qrSizeMulti)
 {
@@ -454,30 +440,18 @@ void centeredText(const String &text, int xCord, int yCord)
   display.println(text);
 }
 
-void setToFullWindow()
-{
-  display.setFullWindow();
-}
+void setToFullWindow() { display.setFullWindow(); }
 
 void setToPartialWindow(int16_t xCord, int16_t yCord, int16_t width, int16_t height)
 {
   display.setPartialWindow(xCord, yCord, width, height);
 }
 
-bool supportsPartialRefresh()
-{
-  return display.epd2.hasPartialUpdate;
-}
+bool supportsPartialRefresh() { return display.epd2.hasPartialUpdate; }
 
-void setToFirstPage()
-{
-  display.firstPage();
-}
+void setToFirstPage() { display.firstPage(); }
 
-bool setToNextPage()
-{
-  return display.nextPage();
-}
+bool setToNextPage() { return display.nextPage(); }
 
 void showNoWiFiError(uint64_t sleepMinutes, const String &wikiUrl)
 {
