@@ -21,6 +21,7 @@ lib_deps =
     adafruit/Adafruit SHT4x Library@^1.0.3
     adafruit/Adafruit BME280 Library@^2.2.4
     sparkfun/SparkFun SCD4x Arduino Library@^1.1.2
+    sensirion/Sensirion I2C STCC4@^1.0.0
     kikuchan98/pngle@^1.1.0
 ```
 

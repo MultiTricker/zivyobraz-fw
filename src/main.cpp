@@ -79,7 +79,7 @@ String getSensorData()
         data += "&pres=" + String(pressure); // BME280
         break;
       case 3:
-        data += "&co2=" + String(pressure); // SCD4x
+        data += "&co2=" + String(pressure); // SCD4x, STCC4
         break;
     }
     return data;
