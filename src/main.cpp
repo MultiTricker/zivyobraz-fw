@@ -104,7 +104,7 @@ void downloadAndDisplayImage(HttpClient &httpClient)
   // Partial (fast) refresh if supported, driven by server request
   if (httpClient.hasPartialRefresh() && Display::supportsPartialRefresh())
   {
-      Display::setToPartialWindow(0, 0, Display::getResolutionX(), Display::getResolutionY());
+    Display::setToPartialWindow(0, 0, Display::getResolutionX(), Display::getResolutionY());
   }
   else
   {
@@ -113,9 +113,7 @@ void downloadAndDisplayImage(HttpClient &httpClient)
 
   // Display rotation?
   if (httpClient.hasRotation())
-  {
     Display::setRotation(2); // 2 = 180 degrees
-  }
 
   // Get that lovely image and put it on your gorgeous grayscale ePaper screen!
   // If you can't use whole display at once, there will be multiple pages and therefore
@@ -129,9 +127,7 @@ void downloadAndDisplayImage(HttpClient &httpClient)
   {
     // For paged displays, download image once per page
     if (!httpClient.startImageDownload())
-    {
       break;
-    }
     ImageHandler::readImageData(httpClient);
 
     // turn of WiFi if no more pages left
@@ -207,13 +203,9 @@ void setup()
   initializeWiFi();
 
   if (Wireless::isConnected())
-  {
     handleConnectedState();
-  }
   else
-  {
     handleDisconnectedState();
-  }
 
   enterDeepSleepMode();
 }
