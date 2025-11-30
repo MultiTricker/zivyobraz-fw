@@ -538,14 +538,24 @@ static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format,
     {
       if (!http.isConnected() && !http.available())
       {
-        Serial.println("Connection lost during RLE decode");
+        Serial.print("Incomplete image received. Pixels processed: ");
+
+        // If we're close to complete (95%+), consider it a success
+        if (pixelsProcessed >= (totalPixels * 95 / 100))
+        {
+          Serial.println("Image is 95%+ complete, accepting as valid");
+          return true;
+        }
         return false;
       }
 
       uint32_t bytesRead = http.readBytes(buffer, bufferSize);
       if (bytesRead == 0)
       {
-        Serial.println("No more data available");
+        Serial.print("No more data available. Pixels processed: ");
+        Serial.print(pixelsProcessed);
+        Serial.print("/");
+        Serial.println(totalPixels);
         break;
       }
 
