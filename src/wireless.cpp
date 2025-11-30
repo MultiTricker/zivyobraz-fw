@@ -14,9 +14,7 @@ static void (*userlCallback)() = nullptr;
 void APCallback(WiFiManager *wm)
 {
   if (userlCallback != nullptr)
-  {
     userlCallback();
-  }
 }
 
 void init(const String &hostname, const String &password, void (*callback)())
@@ -80,25 +78,13 @@ int8_t getStrength()
   return rssi;
 }
 
-String getMacAddress()
-{
-  return WiFi.macAddress();
-}
+String getMacAddress() { return WiFi.macAddress(); }
 
-String getSoftAPSSID()
-{
-  return WiFi.softAPSSID();
-}
+String getSoftAPSSID() { return WiFi.softAPSSID(); }
 
-String getSoftAPIP()
-{
-  return WiFi.softAPIP().toString();
-}
+String getSoftAPIP() { return WiFi.softAPIP().toString(); }
 
-bool isConnected()
-{
-  return WiFi.status() == WL_CONNECTED;
-}
+bool isConnected() { return WiFi.status() == WL_CONNECTED; }
 
 void turnOff()
 {
