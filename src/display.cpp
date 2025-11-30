@@ -614,7 +614,7 @@ void showWiFiError(const String &hostname, const String &password, const String 
       // Use landscape mode - many small displays are in portrait mode
       if (DISPLAY_RESOLUTION_X < DISPLAY_RESOLUTION_Y)
       {
-        Display::setRotation(3);
+        setRotation(3);
 
         // Swap resolution for X and Y
         small_resolution_x = DISPLAY_RESOLUTION_Y;
