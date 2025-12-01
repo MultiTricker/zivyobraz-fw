@@ -119,6 +119,11 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
       if (line.startsWith("SleepSeconds"))
       {
         m_sleepDuration = line.substring(14).toInt(); // already in seconds
+
+        // Deal with program runtime compensation (if not already set) for more accurate sleep time in seconds
+        if (StateManager::getProgramRuntimeCompensation() == 0)
+          StateManager::setProgramRuntimeCompensation(millis());
+
         Serial.print("SleepSeconds: ");
         Serial.println(m_sleepDuration);
       }

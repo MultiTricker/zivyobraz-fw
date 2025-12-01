@@ -185,8 +185,22 @@ void handleDisconnectedState()
 void enterDeepSleepMode()
 {
   uint64_t sleepDuration = StateManager::getSleepDuration();
+  // Calculate compensation and convert to seconds
+  unsigned long programRuntimeCompensation = (millis() - StateManager::getProgramRuntimeCompensation()) / 1000;
+
+  // Compensation is capped to max 60 seconds
+  if (programRuntimeCompensation > 60)
+    programRuntimeCompensation = 60;
+
+  if (programRuntimeCompensation < sleepDuration)
+    sleepDuration -= programRuntimeCompensation;
+
   Serial.print("Going to sleep for (seconds): ");
-  Serial.println(sleepDuration);
+  Serial.print(sleepDuration);
+  Serial.print(" (compensated by ");
+  Serial.print(programRuntimeCompensation);
+  Serial.println(" seconds)");
+
   Board::enterDeepSleepMode(sleepDuration);
 }
 
