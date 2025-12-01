@@ -1,6 +1,7 @@
 #include "board.h"
 
 #include "display.h"
+#include "sensor.h"
 
 // M5Stack CoreInk
 #ifdef M5StackCoreInk
@@ -51,6 +52,10 @@ void setupHW()
   pinMode(ePaperPowerPin, OUTPUT);
   setEPaperPowerOn(true);
   delay(50);
+#endif
+
+#ifdef SENSOR
+  Sensor::init();
 #endif
 
   // Initialize display

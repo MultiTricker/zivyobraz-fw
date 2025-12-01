@@ -42,4 +42,35 @@ uint64_t calculateSleepDuration()
     sleepDuration = 43200; // 12 hours
   return sleepDuration;
 }
+
+ResetReason getResetReason()
+{
+  esp_reset_reason_t reason = esp_reset_reason();
+
+  switch (reason)
+  {
+    case ESP_RST_POWERON:
+      return ResetReason::POWERON;
+    case ESP_RST_EXT:
+      return ResetReason::EXT;
+    case ESP_RST_SW:
+      return ResetReason::SW;
+    case ESP_RST_PANIC:
+      return ResetReason::PANIC;
+    case ESP_RST_INT_WDT:
+      return ResetReason::INT_WDT;
+    case ESP_RST_TASK_WDT:
+      return ResetReason::TASK_WDT;
+    case ESP_RST_WDT:
+      return ResetReason::WDT;
+    case ESP_RST_DEEPSLEEP:
+      return ResetReason::DEEPSLEEP;
+    case ESP_RST_BROWNOUT:
+      return ResetReason::BROWNOUT;
+    case ESP_RST_SDIO:
+      return ResetReason::SDIO;
+    default:
+      return ResetReason::UNKNOWN;
+  }
+}
 } // namespace StateManager
