@@ -8,9 +8,26 @@
 
 // #define SENSOR
 
+#include <Arduino.h>
+
 namespace Sensor
 {
-int readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres);
+
+enum class SensorType : uint8_t
+{
+  NONE = 0,
+  SHT4X = 1,
+  BME280 = 2,
+  SCD4X = 3,
+  STCC4 = 4
+};
+
+void init();
+bool readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres);
+
+SensorType getSensorType();
+const char *getSensorTypeStr();
+
 } // namespace Sensor
 
 #endif // SENSOR_H

@@ -67,19 +67,20 @@ String getSensorData()
   float temperature;
   int humidity;
   int pressure;
-  uint8_t sensorType = Sensor::readSensorsVal(temperature, humidity, pressure);
-
-  if (sensorType)
+  if (Sensor::readSensorsVal(temperature, humidity, pressure))
   {
     String data = "&temp=" + String(temperature) + "&hum=" + String(humidity);
 
-    switch (sensorType)
+    switch (Sensor::getSensorType())
     {
-      case 2:
-        data += "&pres=" + String(pressure); // BME280
+      case Sensor::SensorType::BME280:
+        data += "&pres=" + String(pressure);
         break;
-      case 3:
-        data += "&co2=" + String(pressure); // SCD4x, STCC4
+      case Sensor::SensorType::SCD4X:
+      case Sensor::SensorType::STCC4:
+        data += "&co2=" + String(pressure);
+        break;
+      default:
         break;
     }
     return data;
