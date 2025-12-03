@@ -38,6 +38,10 @@ uint64_t getSleepDuration();
 void setSleepDuration(uint64_t seconds);
 uint64_t calculateSleepDuration();
 
+// Program runtime compensation
+void setProgramRuntimeCompensation(unsigned long compensation);
+unsigned long getProgramRuntimeCompensation();
+
 // Default sleep time
 static const uint64_t DEFAULT_SLEEP_SECONDS = 120;
 } // namespace StateManager
