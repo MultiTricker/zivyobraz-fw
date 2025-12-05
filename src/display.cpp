@@ -2,6 +2,13 @@
 
 #include "board.h"
 
+// Calculate optimal page height based on buffer size, display dimensions, and bits per pixel
+// Returns full height if it fits in buffer, otherwise the maximum height that fits
+#define CALC_PAGE_HEIGHT(height, width, bpp)                                                                           \
+  (((BOARD_MAX_PAGE_BUFFER_SIZE * 8) / ((width) * (bpp)) >= (height))                                                  \
+     ? (height)                                                                                                        \
+     : ((BOARD_MAX_PAGE_BUFFER_SIZE * 8) / ((width) * (bpp))))
+
 #ifdef ES3ink
   #include <Adafruit_NeoPixel.h>
 static Adafruit_NeoPixel pixel(1, RGBledPin, NEO_GRB + NEO_KHZ800);
@@ -112,20 +119,18 @@ GxEPD2_BW<GxEPD2_750_GDEY075T7, GxEPD2_750_GDEY075T7::HEIGHT> display(GxEPD2_750
 
 // GDEM102T91 - BW, 960x640px, 10.2"
 #elif defined D_GDEM102T91
-GxEPD2_BW<GxEPD2_1020_GDEM102T91, GxEPD2_1020_GDEM102T91::HEIGHT / 2> display(GxEPD2_1020_GDEM102T91(PIN_SS, PIN_DC,
-                                                                                                     PIN_RST,
-                                                                                                     PIN_BUSY));
+GxEPD2_BW<GxEPD2_1020_GDEM102T91, CALC_PAGE_HEIGHT(GxEPD2_1020_GDEM102T91::HEIGHT, GxEPD2_1020_GDEM102T91::WIDTH, 1)>
+  display(GxEPD2_1020_GDEM102T91(PIN_SS, PIN_DC, PIN_ RST, PIN_BUSY));
 
 // GDEM1085T51 - BW, 1360x480px, 10.85"
 #elif defined D_GDEM1085T51
-GxEPD2_BW<GxEPD2_1085_GDEM1085T51, GxEPD2_1085_GDEM1085T51::HEIGHT / 2> display(
-  GxEPD2_1085_GDEM1085T51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY, PIN_CS2));
+GxEPD2_BW<GxEPD2_1085_GDEM1085T51, CALC_PAGE_HEIGHT(GxEPD2_1085_GDEM1085T51::HEIGHT, GxEPD2_1085_GDEM1085T51::WIDTH, 1)>
+  display(GxEPD2_1085_GDEM1085T51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY, PIN_CS2));
 
 // GDEM133T91 - BW, 960x680px, 13.3"
 #elif defined D_GDEM133T91
-GxEPD2_BW<GxEPD2_1330_GDEM133T91, GxEPD2_1330_GDEM133T91::HEIGHT / 2> display(GxEPD2_1330_GDEM133T91(PIN_SS, PIN_DC,
-                                                                                                     PIN_RST,
-                                                                                                     PIN_BUSY));
+GxEPD2_BW<GxEPD2_1330_GDEM133T91, CALC_PAGE_HEIGHT(GxEPD2_1330_GDEM133T91::HEIGHT, GxEPD2_1330_GDEM133T91::WIDTH, 1)>
+  display(GxEPD2_1330_GDEM133T91(PIN_SS, PIN_DC, PIN_BUSY));
 
 ///////////////////////
 // Grayscale
@@ -152,18 +157,18 @@ GxEPD2_4G_4G<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> display(GxEPD
 
 // GDEQ0426T82 - Grayscale, 800x480px, 4.26"
 #elif defined D_GDEQ0426T82
-GxEPD2_4G_4G<GxEPD2_426_GDEQ0426T82, GxEPD2_426_GDEQ0426T82::HEIGHT / 2> display(GxEPD2_426_GDEQ0426T82(PIN_SS, PIN_DC,
-                                                                                                        PIN_RST,
-                                                                                                        PIN_BUSY));
+GxEPD2_4G_4G<GxEPD2_426_GDEQ0426T82, CALC_PAGE_HEIGHT(GxEPD2_426_GDEQ0426T82::HEIGHT, GxEPD2_426_GDEQ0426T82::WIDTH, 2)>
+  display(GxEPD2_426_GDEQ0426T82(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075T7 - Grayscale, 800x480px, 7.5"
 #elif defined D_GDEW075T7
-GxEPD2_4G_4G<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2> display(GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_4G_4G<GxEPD2_750_T7, CALC_PAGE_HEIGHT(GxEPD2_750_T7::HEIGHT, GxEPD2_750_T7::WIDTH, 2)> display(
+  GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075T7 - Grayscale, 800x480px, 7.5"
 #elif defined D_GDEY075T7
-GxEPD2_4G_4G<GxEPD2_750_GDEY075T7, GxEPD2_750_GDEY075T7::HEIGHT / 2> display(GxEPD2_750_GDEY075T7(PIN_SS, PIN_DC,
-                                                                                                  PIN_RST, PIN_BUSY));
+GxEPD2_4G_4G<GxEPD2_750_GDEY075T7, CALC_PAGE_HEIGHT(GxEPD2_750_GDEY075T7::HEIGHT, GxEPD2_750_GDEY075T7::WIDTH, 2)>
+  display(GxEPD2_750_GDEY075T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 ///////////////////////
 // 3C
@@ -201,34 +206,35 @@ GxEPD2_3C<GxEPD2_579c_GDEY0579Z93, GxEPD2_579c_GDEY0579Z93::HEIGHT> display(GxEP
 
 // GDEQ0583Z31 - 3C, 648x480px, 5.83"
 #elif defined D_GDEQ0583Z31
-GxEPD2_3C<GxEPD2_583c_Z83, GxEPD2_583c_Z83::HEIGHT / 2> display(GxEPD2_583c_Z83(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_3C<GxEPD2_583c_Z83, CALC_PAGE_HEIGHT(GxEPD2_583c_Z83::HEIGHT, GxEPD2_583c_Z83::WIDTH, 2)> display(
+  GxEPD2_583c_Z83(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075Z08 - 3C, 800x480px, 7.5"
 #elif defined D_GDEY075Z08
-GxEPD2_3C<GxEPD2_750c_Z08, GxEPD2_750c_Z08::HEIGHT / 2> display(GxEPD2_750c_Z08(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_3C<GxEPD2_750c_Z08, CALC_PAGE_HEIGHT(GxEPD2_750c_Z08::HEIGHT, GxEPD2_750c_Z08::WIDTH, 2)> display(
+  GxEPD2_750c_Z08(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEH075Z90 - 3C, 880x528px, 7.5"
 #elif defined D_GDEH075Z90
-GxEPD2_3C<GxEPD2_750c_Z90, GxEPD2_750c_Z90::HEIGHT / 2> display(GxEPD2_750c_Z90(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_3C<GxEPD2_750c_Z90, CALC_PAGE_HEIGHT(GxEPD2_750c_Z90::HEIGHT, GxEPD2_750c_Z90::WIDTH, 2)> display(
+  GxEPD2_750c_Z90(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY116Z91 - 3C, 960x640px, 11.6"
 #elif defined D_GDEY116Z91
-GxEPD2_3C<GxEPD2_1160c_GDEY116Z91, GxEPD2_1160c_GDEY116Z91::HEIGHT / 4> display(GxEPD2_1160c_GDEY116Z91(PIN_SS, PIN_DC,
-                                                                                                        PIN_RST,
-                                                                                                        PIN_BUSY));
+GxEPD2_3C<GxEPD2_1160c_GDEY116Z91, CALC_PAGE_HEIGHT(GxEPD2_1160c_GDEY116Z91::HEIGHT, GxEPD2_1160c_GDEY116Z91::WIDTH, 2)>
+  display(GxEPD2_1160c_GDEY116Z91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY1248Z51 - 3C, 1304x984px, 12.48"
 #elif defined D_GDEY1248Z51
-GxEPD2_3C<GxEPD2_1248c, GxEPD2_1248c::HEIGHT / 4> display(
+GxEPD2_3C<GxEPD2_1248c, CALC_PAGE_HEIGHT(GxEPD2_1248c::HEIGHT, GxEPD2_1248c::WIDTH, 2)> display(
   GxEPD2_1248c(/*sck=*/12, /*miso=*/-1, /*mosi=*/11, /*cs_m1=*/10, /*cs_s1=*/18, /*cs_m2=*/48, /*cs_s2=*/41,
                /*dc1=*/46, /*dc2=*/45, /*rst1=*/3, /*rst2=*/39, /*busy_m1=*/8, /*busy_s1=*/17, /*busy_m2=*/40,
                /*busy_s2=*/16));
 
 // GDEM133Z91 - 3C, 960x680px, 13.3"
 #elif defined D_GDEM133Z91
-GxEPD2_3C<GxEPD2_1330c_GDEM133Z91, GxEPD2_1330c_GDEM133Z91::HEIGHT / 4> display(GxEPD2_1330c_GDEM133Z91(PIN_SS, PIN_DC,
-                                                                                                        PIN_RST,
-                                                                                                        PIN_BUSY));
+GxEPD2_3C<GxEPD2_1330c_GDEM133Z91, CALC_PAGE_HEIGHT(GxEPD2_1330c_GDEM133Z91::HEIGHT, GxEPD2_1330c_GDEM133Z91::WIDTH, 2)>
+  display(GxEPD2_1330c_GDEM133Z91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 ///////////////////////
 // 4C
@@ -253,7 +259,6 @@ GxEPD2_4C<GxEPD2_290c_GDEY029F51H, GxEPD2_290c_GDEY029F51H::HEIGHT> display(GxEP
 // WS3004YRBW - 4C, 168x400px, 3.00"
 #elif defined D_WS3004YRBW
 GxEPD2_4C<GxEPD2_300c, GxEPD2_300c::HEIGHT> display(GxEPD2_300c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
-
 // GDEY0420F51 - 4C, 400x300px, 4.2"
 #elif defined D_GDEY0420F51
 GxEPD2_4C<GxEPD2_420c_GDEY0420F51, GxEPD2_420c_GDEY0420F51::HEIGHT> display(GxEPD2_420c_GDEY0420F51(PIN_SS, PIN_DC,
@@ -261,7 +266,9 @@ GxEPD2_4C<GxEPD2_420c_GDEY0420F51, GxEPD2_420c_GDEY0420F51::HEIGHT> display(GxEP
 
 // WS437YRBW - 4C, 512x368px, 4.37"
 #elif defined D_WS437YRBW
-GxEPD2_4C<GxEPD2_437c, GxEPD2_437c::HEIGHT / 4> display(GxEPD2_437c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_4C<GxEPD2_437c, CALC_PAGE_HEIGHT(GxEPD2_437c::HEIGHT, GxEPD2_437c::WIDTH, 4)> display(GxEPD2_437c(PIN_SS, PIN_DC,
+                                                                                                         PIN_RST,
+                                                                                                         PIN_BUSY));
 
 // GDEY0579F51 - 4C, 792x272px, 5.79"
 #elif defined D_GDEY0579F51
@@ -271,9 +278,8 @@ GxEPD2_4C<GxEPD2_0579c_GDEY0579F51, GxEPD2_0579c_GDEY0579F51::HEIGHT> display(Gx
 
 // GDEY116F51 - 4C, 960x640px, 11.6"
 #elif defined D_GDEY116F51
-GxEPD2_4C<GxEPD2_1160c_GDEY116F51, GxEPD2_1160c_GDEY116F51::HEIGHT / 4> display(GxEPD2_1160c_GDEY116F51(PIN_SS, PIN_DC,
-                                                                                                        PIN_RST,
-                                                                                                        PIN_BUSY));
+GxEPD2_4C<GxEPD2_1160c_GDEY116F51, CALC_PAGE_HEIGHT(GxEPD2_1160c_GDEY116F51::HEIGHT, GxEPD2_1160c_GDEY116F51::WIDTH, 4)>
+  display(GxEPD2_1160c_GDEY116F51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 ///////////////////////
 // 7C
@@ -281,19 +287,19 @@ GxEPD2_4C<GxEPD2_1160c_GDEY116F51, GxEPD2_1160c_GDEY116F51::HEIGHT / 4> display(
 
 // GDEP0565D90 - 7C, 600x448px, 5.65"
 #elif defined D_GDEP0565D90
-GxEPD2_7C<GxEPD2_565c, GxEPD2_565c::HEIGHT / 2> display(GxEPD2_565c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+GxEPD2_7C<GxEPD2_565c, CALC_PAGE_HEIGHT(GxEPD2_565c::HEIGHT, GxEPD2_565c::WIDTH, 4)> display(GxEPD2_565c(PIN_SS, PIN_DC,
+                                                                                                         PIN_RST,
+                                                                                                         PIN_BUSY));
 
 // GDEY073D46 - 7C, 800x480px, 7.3"
 #elif defined D_GDEY073D46
-GxEPD2_7C<GxEPD2_730c_GDEY073D46, GxEPD2_730c_GDEY073D46::HEIGHT / 4> display(GxEPD2_730c_GDEY073D46(PIN_SS, PIN_DC,
-                                                                                                     PIN_RST,
-                                                                                                     PIN_BUSY));
+GxEPD2_7C<GxEPD2_730c_GDEY073D46, CALC_PAGE_HEIGHT(GxEPD2_730c_GDEY073D46::HEIGHT, GxEPD2_730c_GDEY073D46::WIDTH, 4)>
+  display(GxEPD2_730c_GDEY073D46(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEP073E01 - 7C, 800x480px, 7.3"
 #elif defined D_GDEP073E01
-GxEPD2_7C<GxEPD2_730c_GDEP073E01, GxEPD2_730c_GDEP073E01::HEIGHT / 4> display(GxEPD2_730c_GDEP073E01(PIN_SS, PIN_DC,
-                                                                                                     PIN_RST,
-                                                                                                     PIN_BUSY));
+GxEPD2_7C<GxEPD2_730c_GDEP073E01, CALC_PAGE_HEIGHT(GxEPD2_730c_GDEP073E01::HEIGHT, GxEPD2_730c_GDEP073E01::WIDTH, 4)>
+  display(GxEPD2_730c_GDEP073E01(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 #else
   #error "ePaper display not defined!"
