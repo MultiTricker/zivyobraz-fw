@@ -247,6 +247,15 @@
   #define dividerRatio (1.769f)
 #endif
 
+// Default page height dividers for backward compatibility (used for large displays that need paging due to 
+// RAM constraints, 1 = full height, higher = more pages)
+#ifndef PAGE_HEIGHT_DIVIDER_2
+  #define PAGE_HEIGHT_DIVIDER_2 2
+#endif
+#ifndef PAGE_HEIGHT_DIVIDER_4
+  #define PAGE_HEIGHT_DIVIDER_4 4
+#endif
+
 namespace Board
 {
 void setupHW();
