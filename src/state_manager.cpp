@@ -15,10 +15,20 @@ namespace StateManager
 {
 
 uint64_t sleepDuration = DEFAULT_SLEEP_SECONDS;
+unsigned long programRuntimeCompensation = 0; // in milliseconds
 
 uint64_t getTimestamp() { return rtc_timestamp; }
 
 void setTimestamp(uint64_t ts) { rtc_timestamp = ts; }
+
+void setProgramRuntimeCompensation(unsigned long compensation)
+{
+  // Only set once if not already set
+  if (programRuntimeCompensation == 0)
+    programRuntimeCompensation = compensation;
+}
+
+unsigned long getProgramRuntimeCompensation() { return programRuntimeCompensation; }
 
 uint8_t getFailureCount() { return rtc_failureCount; }
 

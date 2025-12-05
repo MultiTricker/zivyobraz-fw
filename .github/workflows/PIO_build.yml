@@ -19,9 +19,17 @@ jobs:
       - name: Check formatting
         run: |
           echo "Checking C++ code formatting..."
-          find src -name '*.cpp' -o -name '*.h' | grep -v 'src/fonts/' | while read file; do
-            clang-format --dry-run --Werror "$file"
-          done
+          FORMAT_ISSUES=0
+          while read -r file; do
+            if ! clang-format "$file" | diff -u --label "$file (current)" --label "$file (formatted)" "$file" - ; then
+              FORMAT_ISSUES=1
+            fi
+          done < <(find src -name '*.cpp' -o -name '*.h' -not -path 'src/fonts/*')
+
+          if [ "$FORMAT_ISSUES" = "1" ]; then
+            echo "Formatting issues found!"
+            exit 1
+          fi
           echo "All files are properly formatted!"
 
   build-project:

@@ -116,11 +116,16 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
         Serial.println(sleepMinutes);
       }
 
-      // Is there another header (after the Sleep one) with sleep, but in Seconds?
-      if (line.startsWith("SleepSeconds"))
+      // Is there another header (after the Sleep one) with sleep in Seconds?
+      if (line.startsWith("PreciseSleep"))
       {
-        m_sleepDuration = line.substring(14).toInt(); // already in seconds
-        Serial.print("SleepSeconds: ");
+        m_sleepDuration = line.substring(14).toInt();
+
+        // Deal with program runtime compensation (if not already set) for more accurate sleep time in seconds
+        if (StateManager::getProgramRuntimeCompensation() == 0)
+          StateManager::setProgramRuntimeCompensation(millis());
+
+        Serial.print("Sleep in seconds: ");
         Serial.println(m_sleepDuration);
       }
 

@@ -42,6 +42,10 @@ uint64_t calculateSleepDuration();
 void initPIN();
 uint32_t getStoredPIN();
 
+// Program runtime compensation
+void setProgramRuntimeCompensation(unsigned long compensation);
+unsigned long getProgramRuntimeCompensation();
+
 // Default sleep time
 static const uint64_t DEFAULT_SLEEP_SECONDS = 120;
 } // namespace StateManager
