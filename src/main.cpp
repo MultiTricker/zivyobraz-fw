@@ -9,7 +9,6 @@
  * Pájeníčko: https://pajenicko.cz/vyhledavani?search=%C5%BEiv%C3%BD%20obraz
  *
  * Libraries:
- * Analog read with calibration data: https://github.com/madhephaestus/ESP32AnalogRead/
  * EPD library: https://github.com/ZinggJM/GxEPD2
  * EPD library for 4G "Grayscale": https://github.com/ZinggJM/GxEPD2_4G
  * PNG Decoder Library: https://github.com/kikuchan/pngle
@@ -18,6 +17,7 @@
  * SHT4x (temperature, humidity): https://github.com/adafruit/Adafruit_SHT4X
  * BME280 (temperature, humidity, pressure): https://github.com/adafruit/Adafruit_BME280_Library
  * SCD41 (CO2, temperature, humidity): https://github.com/sparkfun/SparkFun_SCD4x_Arduino_Library
+ * STCC4 (CO2, temperature, humidity): https://github.com/Sensirion/arduino-i2c-stcc4
  */
 
 ///////////////////////////////////////////////
