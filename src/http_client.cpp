@@ -33,6 +33,7 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
   url += "&y=" + String(Display::getResolutionY());
   url += "&c=" + String(Display::getColorType());
   url += "&fw=" + String(firmware);
+  url += "&pin=" + String(StateManager::getStoredPIN());
   url += "&ap_retries=" + String(StateManager::getFailureCount());
   url += extraParams;
 

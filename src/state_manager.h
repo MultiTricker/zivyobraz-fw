@@ -38,6 +38,10 @@ uint64_t getSleepDuration();
 void setSleepDuration(uint64_t seconds);
 uint64_t calculateSleepDuration();
 
+// PIN code management (stored in NVS, survives power cycles)
+void initPIN();
+uint32_t getStoredPIN();
+
 // Default sleep time
 static const uint64_t DEFAULT_SLEEP_SECONDS = 120;
 } // namespace StateManager

@@ -1,8 +1,15 @@
 #include "state_manager.h"
 
+#include "Preferences.h"
+#include "esp_random.h"
+
 // RTC persistent data (survives deep sleep)
 RTC_DATA_ATTR uint64_t rtc_timestamp = 0;
 RTC_DATA_ATTR uint8_t rtc_failureCount = 0;
+RTC_DATA_ATTR uint32_t rtc_cachedPIN = 0;
+
+// NVS storage for PIN (survives power cycles)
+static Preferences prefs;
 
 namespace StateManager
 {
@@ -72,5 +79,38 @@ ResetReason getResetReason()
     default:
       return ResetReason::UNKNOWN;
   }
+}
+
+void initPIN()
+{
+  prefs.begin("zivyobraz", false);
+
+  if (!prefs.isKey("pin"))
+  {
+    // Generate 8-digit PIN without leading zeros (range: 10000000 - 99999999)
+    rtc_cachedPIN = (esp_random() % 90000000) + 10000000;
+    prefs.putULong("pin", rtc_cachedPIN);
+    Serial.print("Generated new device PIN: ");
+    Serial.println(rtc_cachedPIN);
+  }
+  else
+  {
+    rtc_cachedPIN = prefs.getULong("pin", 0);
+    Serial.print("Device PIN: ");
+    Serial.println(rtc_cachedPIN);
+  }
+
+  prefs.end();
+}
+
+uint32_t getStoredPIN()
+{
+  if (rtc_cachedPIN == 0)
+  {
+    prefs.begin("zivyobraz", true); // read-only
+    rtc_cachedPIN = prefs.getULong("pin", 0);
+    prefs.end();
+  }
+  return rtc_cachedPIN;
 }
 } // namespace StateManager
