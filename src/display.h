@@ -63,6 +63,7 @@
 // #define D_GDEY0420F51   // 400x300, 4.2"
 // #define D_WS437YRBW     // 512x368, 4.37"
 // #define D_GDEY0579F51   // 792x272, 5.79"
+// #define D_GDEM075F52    // 800x480, 7.5"
 // #define D_GDEY116F51    // 960x640, 11.6"
 
 // 7C
