@@ -39,11 +39,11 @@ void setupHW()
   M5.begin(false, false, true);
   Display::initM5();
   M5.update();
-#else
+#elif !defined SEEEDSTUDIO_RETERMINAL
   pinMode(ePaperPowerPin, OUTPUT);
 #endif
 
-#ifdef SVERIO_PAPERBOARD_SPI
+#if (defined SVERIO_PAPERBOARD_SPI) || (defined SEEEDSTUDIO_RETERMINAL)
   pinMode(enableBattery, OUTPUT);
   digitalWrite(enableBattery, LOW);
 #endif
@@ -67,7 +67,7 @@ void setEPaperPowerOn(bool on)
   // use HIGH/LOW notation for better readability
 #if (defined ES3ink) || (defined MakerBadge_revD) || (defined SVERIO_PAPERBOARD_SPI)
   digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
-#elif !defined M5StackCoreInk
+#elif (!defined M5StackCoreInk) && (!defined SEEEDSTUDIO_RETERMINAL)
   digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
 #endif
 }
@@ -216,6 +216,16 @@ float getBatteryVoltage()
   digitalWrite(enableBattery, HIGH);
   pinMode(enableBattery, OUTPUT);
   delay(8); // slow tON time TPS22916C. 6500us typical for 1V. Set 8ms as margin.
+  volt = ((float)analogReadMilliVolts(vBatPin) * dividerRatio) / 1000;
+  digitalWrite(enableBattery, LOW);
+  pinMode(enableBattery, INPUT);
+
+#elif defined SEEEDSTUDIO_RETERMINAL
+  Serial.println("Reading battery on SeeedStudio reTerminal board");
+  // Enable battery voltage measurement circuit via GPIO21
+  digitalWrite(enableBattery, HIGH);
+  pinMode(enableBattery, OUTPUT);
+  delay(10); // Allow measurement circuit to stabilize
   volt = ((float)analogReadMilliVolts(vBatPin) * dividerRatio) / 1000;
   digitalWrite(enableBattery, LOW);
   pinMode(enableBattery, INPUT);
