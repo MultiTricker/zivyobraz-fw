@@ -247,14 +247,12 @@
   #define dividerRatio (1.769f)
 #endif
 
-// Default page height dividers for backward compatibility (used for large displays that need paging due to 
-// RAM constraints, 1 = full height, higher = more pages)
-#ifndef PAGE_HEIGHT_DIVIDER_2
-  #define PAGE_HEIGHT_DIVIDER_2 2
-#endif
-#ifndef PAGE_HEIGHT_DIVIDER_4
-  #define PAGE_HEIGHT_DIVIDER_4 4
-#endif
+// Calculate optimal page height based on buffer size, display dimensions, and bits per pixel
+// Returns full height if it fits in buffer, otherwise the maximum height that fits
+#define CALC_PAGE_HEIGHT(height, width, bpp) \
+  (((BOARD_MAX_PAGE_BUFFER_SIZE * 8) / ((width) * (bpp)) >= (height)) \
+    ? (height) \
+    : ((BOARD_MAX_PAGE_BUFFER_SIZE * 8) / ((width) * (bpp))))
 
 namespace Board
 {
