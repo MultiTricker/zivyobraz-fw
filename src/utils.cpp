@@ -12,6 +12,21 @@ static Preferences prefs;
 namespace Utils
 {
 
+size_t getTotalHeap() { return ESP.getHeapSize(); }
+
+size_t getFreeHeap() { return ESP.getFreeHeap(); }
+
+size_t getLargestFreeBlock() { return ESP.getMaxAllocHeap(); }
+
+void printMemoryStats()
+{
+  Serial.println("[Memory Stats]");
+  Serial.printf("  Total Heap:  %zu bytes\n", getTotalHeap());
+  Serial.printf("  Free Heap:   %zu bytes\n", getFreeHeap());
+  Serial.printf("  Largest Block: %zu bytes\n", getLargestFreeBlock());
+  Serial.printf("  Usage:       %.1f%%\n", 100.0 * (1.0 - (float)getFreeHeap() / (float)getTotalHeap()));
+}
+
 void initializeAPIKey()
 {
   prefs.begin("zivyobraz");

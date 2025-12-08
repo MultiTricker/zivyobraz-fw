@@ -36,18 +36,19 @@ In code **board.h** do not forget to uncomment:
 1. Type of board used (ESPink_V2, ES3ink, ...)
 2. Select connection type (http/https) which will be used for contacting the server by using `-DUSE_CLIENT_HTTP`
 or `-DUSE_CLIENT_HTTPS` compiler flag. Default value is `https` variant.
-3. If you plan to connect one of the supported sensors via uŠup for reading temperature, humidity, and pressure/CO2 and sending the values to the server, uncomment in **sensor.h**
+3. **Streaming feature** is ENABLED by default for all ESP32 devices. This allows efficient buffering of image data in RAM before streaming to the display. To disable on resource-constrained devices, add `-D STREAMING_DISABLED` to your build_flags in **platformio.ini**
+4. If you plan to connect one of the supported sensors via uŠup for reading temperature, humidity, and pressure/CO2 and sending the values to the server, uncomment in **sensor.h**
 ```c
 // #define SENSOR
 ```
-4. Display type has to be changed in **display.h** In the case of GRAYSCALE, you must remove `zinggjm/GxEPD2` from **platformio.ini** (just comment it out), otherwise there will be a library collision and the code will not work. In that case, `lib/GxEPD2_4G` will be used. For other displays (BW, 3C, 7C), leave `zinggjm/GxEPD2` active, you don't need to do anything with the 4G version.
+5. Display type has to be changed in **display.h** In the case of GRAYSCALE, you must remove `zinggjm/GxEPD2` from **platformio.ini** (just comment it out), otherwise there will be a library collision and the code will not work. In that case, `lib/GxEPD2_4G` will be used. For other displays (BW, 3C, 7C), leave `zinggjm/GxEPD2` active, you don't need to do anything with the 4G version.
 ```c
 #define COLOR_TYPE=BW           // black and white
 // #define COLOR_TYPE=3C        // 3 colors - black, white and red/yellow
 // #define COLOR_TYPE=GRAYSCALE // grayscale - 4 colors
 // #define COLOR_TYPE=7C        // 7 colors
 ```
-5. Uncomment the definition of the specific ePaper you are putting into operation. This section begins at line `18`, and you need to select a specific display, e.g.:
+6. Uncomment the definition of the specific ePaper you are putting into operation. This section begins at line `18`, and you need to select a specific display, e.g.:
 ```c
 // BW
 // #define DISPLAY_TYPE=GDEY0213B7 // 122x250, 2.13"
