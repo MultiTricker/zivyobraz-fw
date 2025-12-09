@@ -41,7 +41,7 @@ void setupHW()
   M5.update();
 #else
   #ifdef ePaperPowerPin
-    pinMode(ePaperPowerPin, OUTPUT);
+  pinMode(ePaperPowerPin, OUTPUT);
   #endif
 #endif
 
@@ -75,9 +75,9 @@ void setEPaperPowerOn(bool on)
   // use HIGH/LOW notation for better readability
 #if defined ePaperPowerPin
   #if (defined ES3ink) || (defined MakerBadge_revD) || (defined SVERIO_PAPERBOARD_SPI)
-    digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
+  digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
   #elif !defined M5StackCoreInk
-    digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
+  digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
   #endif
 #endif
 }
@@ -90,6 +90,10 @@ void enterDeepSleepMode(uint64_t sleepDuration)
   M5.shutdown(sleepDuration);
 #else
   esp_sleep_enable_timer_wakeup(sleepDuration * 1000000ULL);
+  #ifdef EXT_BUTTON
+  // Configure button as additional wake source (wake on LOW level - active low button)
+  esp_sleep_enable_ext1_wakeup(BIT(EXT_BUTTON), ESP_EXT1_WAKEUP_ANY_LOW);
+  #endif
   delay(100);
   esp_deep_sleep_start();
 #endif
@@ -246,5 +250,37 @@ float getBatteryVoltage()
 
   Serial.println("Battery voltage: " + String(volt) + " V");
   return volt;
+}
+
+unsigned long checkButtonPressDuration()
+{
+#ifdef EXT_BUTTON
+  pinMode(EXT_BUTTON, INPUT_PULLUP);
+
+  // Check if button is pressed (LOW = pressed with pull-up)
+  if (digitalRead(EXT_BUTTON) == HIGH)
+    return 0; // Button not pressed
+
+  Serial.println("Button detected as pressed at boot, measuring duration...");
+
+  unsigned long pressStart = millis();
+  const unsigned long maxWaitTime = 10000;
+
+  // Wait while button is pressed (LOW)
+  while (digitalRead(EXT_BUTTON) == LOW)
+  {
+    delay(50);
+
+    if (millis() - pressStart > maxWaitTime)
+      break;
+  }
+
+  unsigned long pressDuration = millis() - pressStart;
+  Serial.println("Button press duration: " + String(pressDuration) + " ms");
+  return pressDuration;
+#else
+  // EXT_BUTTON not defined for this board
+  return 0;
+#endif
 }
 } // namespace Board

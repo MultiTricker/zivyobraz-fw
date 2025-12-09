@@ -47,6 +47,7 @@
   #define PIN_SDA 42
   #define PIN_SCL 2
   #define PIN_ALERT 9
+  #define EXT_BUTTON 40
   // ESP32-S3 with PSRAM - large buffer for single-page rendering
   #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
 
@@ -61,6 +62,7 @@
   #define PIN_SPI_CLK 12
   #define PIN_SDA 42
   #define PIN_SCL 2
+  #define EXT_BUTTON 40
   #define vBatPin 9
   #define dividerRatio (1.7693877551f)
   // ESP32-S3 with PSRAM - large buffer for single-page rendering
@@ -229,6 +231,7 @@
   #define PIN_SPI_MOSI 9
   #define PIN_SPI_MISO -1
   #define PIN_SPI_SS PIN_SS
+  #define EXT_BUTTON 3
   #define enableBattery 21
   #define vBatPin 1
   #define dividerRatio (2.0f)
@@ -268,10 +271,10 @@
 
 // Calculate optimal page height based on buffer size, display dimensions, and bits per pixel
 // Returns full height if it fits in buffer, otherwise the maximum height that fits
-#define CALC_PAGE_HEIGHT(height, width, bpp) \
-  (((BOARD_MAX_PAGE_BUFFER_SIZE * 8) / ((width) * (bpp)) >= (height)) \
-    ? (height) \
-    : ((BOARD_MAX_PAGE_BUFFER_SIZE * 8) / ((width) * (bpp))))
+#define CALC_PAGE_HEIGHT(height, width, bpp)                                                                           \
+  (((BOARD_MAX_PAGE_BUFFER_SIZE * 8) / ((width) * (bpp)) >= (height))                                                  \
+     ? (height)                                                                                                        \
+     : ((BOARD_MAX_PAGE_BUFFER_SIZE * 8) / ((width) * (bpp))))
 
 namespace Board
 {
@@ -280,6 +283,7 @@ void setEPaperPowerOn(bool on);
 void enterDeepSleepMode(uint64_t sleepDuration);
 
 float getBatteryVoltage();
+unsigned long checkButtonPressDuration();
 } // namespace Board
 
 #endif // BOARD_H
