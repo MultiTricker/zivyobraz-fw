@@ -30,6 +30,7 @@
 #include "image_handler.h"
 #include "sensor.h"
 #include "state_manager.h"
+#include "utils.h"
 #include "wireless.h"
 
 ///////////////////////////////////////////////
@@ -214,6 +215,8 @@ void setup()
   Serial.println("Starting firmware for Zivy Obraz service");
 
   Board::setupHW();
+
+  Utils::initializeAPIKey();
 
   initializeWiFi();
 
