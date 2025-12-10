@@ -30,6 +30,7 @@
 #include "image_handler.h"
 #include "sensor.h"
 #include "state_manager.h"
+#include "utils.h"
 #include "wireless.h"
 
 ///////////////////////////////////////////////
@@ -213,10 +214,9 @@ void setup()
   Serial.begin(115200);
   Serial.println("Starting firmware for Zivy Obraz service");
 
-  // Initialize PIN code (generates new one on first boot, stored in NVS)
-  StateManager::initPIN();
-
   Board::setupHW();
+
+  Utils::initializeAPIKey();
 
   initializeWiFi();
 

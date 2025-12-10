@@ -3,6 +3,7 @@
 #include "board.h"
 #include "display.h"
 #include "state_manager.h"
+#include "utils.h"
 #include "wireless.h"
 
 // External configuration
@@ -33,7 +34,6 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
   url += "&y=" + String(Display::getResolutionY());
   url += "&c=" + String(Display::getColorType());
   url += "&fw=" + String(firmware);
-  url += "&pin=" + String(StateManager::getStoredPIN());
   url += "&ap_retries=" + String(StateManager::getFailureCount());
   url += extraParams;
 
@@ -63,7 +63,9 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
   Serial.print(host);
   Serial.println(url);
 
-  m_client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
+  m_client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" +
+                 "X-API-Key: " + String(Utils::getStoredAPIKey()) + "\r\n" + "Connection: close\r\n\r\n");
+
   Serial.println("Request sent");
 
   // Wait for response with timeout

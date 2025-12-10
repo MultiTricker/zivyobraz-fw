@@ -38,10 +38,6 @@ uint64_t getSleepDuration();
 void setSleepDuration(uint64_t seconds);
 uint64_t calculateSleepDuration();
 
-// PIN code management (stored in NVS, survives power cycles)
-void initPIN();
-uint32_t getStoredPIN();
-
 // Program runtime compensation
 void setProgramRuntimeCompensation(unsigned long compensation);
 unsigned long getProgramRuntimeCompensation();
