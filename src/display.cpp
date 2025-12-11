@@ -272,8 +272,7 @@ GxEPD2_4C<GxEPD2_0579c_GDEY0579F51, GxEPD2_0579c_GDEY0579F51::HEIGHT> display(Gx
 // GDEY116F51 - 4C, 800x480px, 7.5"
 #elif defined D_GDEM075F52
 GxEPD2_4C<GxEPD2_750c_GDEM075F52, GxEPD2_750c_GDEM075F52::HEIGHT> display(GxEPD2_750c_GDEM075F52(PIN_SS, PIN_DC,
-                                                                                                     PIN_RST,
-                                                                                                     PIN_BUSY));
+                                                                                                 PIN_RST, PIN_BUSY));
 
 // GDEY116F51 - 4C, 960x640px, 11.6"
 #elif defined D_GDEY116F51
