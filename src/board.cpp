@@ -273,4 +273,5 @@ unsigned long checkButtonPressDuration()
   return 0;
 #endif
 }
+
 } // namespace Board
