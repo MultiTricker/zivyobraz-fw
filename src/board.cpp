@@ -227,4 +227,6 @@ float getBatteryVoltage()
   Serial.println("Battery voltage: " + String(volt) + " V");
   return volt;
 }
+
+const char *getBoardType() { return BOARD_TYPE_TO_STRING(BOARD_TYPE); }
 } // namespace Board
