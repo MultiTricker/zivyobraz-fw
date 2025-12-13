@@ -10,8 +10,6 @@
 // #define ESPink_V35 // LáskaKit ESPInk 3.5, ESP32-S3, ADC battery measurement, extra buton
 // #define ESP32S3Adapter // LáskaKit ESP32-S3 with adapter for 6/7 color ePaper displays
 // #define ES3ink // Board from dronecz
-// #define SEEEDSTUDIO_XIAO_ESP32C3 // Seeed Studio XIAO ESP32C3, bundled with 800x480 BW display
-// #define SEEEDSTUDIO_XIAO_EDDB_ESP32S3 //Development board distributed as part of the TRMNL 7.5" (OG) DIY Kit
 // #define MakerBadge_revB // also works with A and C
 // #define MakerBadge_revD
 // #define REMAP_SPI
@@ -21,6 +19,9 @@
 // #define CROWPANEL_ESP32S3_213 // Elecrow CrowPanel 2.13" 250x122, ESP32-S3-WROOM-1
 // #define WS_EPAPER_ESP32_BOARD // Waveshare ESP32 Driver Board
 // #define SVERIO_PAPERBOARD_SPI // Custom ESP32-S3 board with SPI ePaper (SVERIO)
+// #define SEEEDSTUDIO_XIAO_ESP32C3 // Seeed Studio XIAO ESP32C3, bundled with 800x480 BW display
+// #define SEEEDSTUDIO_XIAO_EDDB_ESP32S3 //Development board distributed as part of the TRMNL 7.5" (OG) DIY Kit
+// #define SEEEDSTUDIO_RETERMINAL // SeeedStudio reTerminal E1001/E1002
 
 #include <Arduino.h>
 
@@ -46,6 +47,7 @@
   #define PIN_SDA 42
   #define PIN_SCL 2
   #define PIN_ALERT 9
+  #define EXT_BUTTON 40
   // ESP32-S3 with PSRAM - large buffer for single-page rendering
   #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
 
@@ -60,6 +62,7 @@
   #define PIN_SPI_CLK 12
   #define PIN_SDA 42
   #define PIN_SCL 2
+  #define EXT_BUTTON 40
   #define vBatPin 9
   #define dividerRatio (1.7693877551f)
   // ESP32-S3 with PSRAM - large buffer for single-page rendering
@@ -130,31 +133,6 @@
   // Maximum page buffer size in bytes (ESP32 has limited RAM)
   #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
-#elif defined SEEEDSTUDIO_XIAO_ESP32C3
-  #define PIN_SS 3
-  #define PIN_DC 5
-  #define PIN_RST 2
-  #define PIN_BUSY 4
-  #define ePaperPowerPin 7
-  #define PIN_SPI_CLK 8
-  #define PIN_SPI_MOSI 11
-  // Maximum page buffer size in bytes (ESP32-C3 has limited RAM)
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
-
-#elif defined SEEEDSTUDIO_XIAO_EDDB_ESP32S3
-  #define PIN_SS 44
-  #define PIN_DC 10
-  #define PIN_RST 38
-  #define PIN_BUSY 4
-  #define ePaperPowerPin 43
-  #define PIN_SPI_CLK 7
-  #define PIN_SPI_MOSI 9
-  #define enableBattery 6
-  #define vBatPin 1
-  #define dividerRatio (2.000f)
-  // ESP32-S3 with PSRAM - large buffer for single-page rendering
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
-
 #elif (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42)
   #define PIN_SS 45
   #define PIN_DC 46
@@ -217,6 +195,50 @@
   // ESP32-S3 with PSRAM - large buffer for single-page rendering
   #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
 
+#elif defined SEEEDSTUDIO_XIAO_ESP32C3
+  #define PIN_SS 3
+  #define PIN_DC 5
+  #define PIN_RST 2
+  #define PIN_BUSY 4
+  #define ePaperPowerPin 7
+  #define PIN_SPI_CLK 8
+  #define PIN_SPI_MOSI 11
+  // Maximum page buffer size in bytes (ESP32-C3 has limited RAM)
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
+
+#elif defined SEEEDSTUDIO_XIAO_EDDB_ESP32S3
+  #define PIN_SS 44
+  #define PIN_DC 10
+  #define PIN_RST 38
+  #define PIN_BUSY 4
+  #define ePaperPowerPin 43
+  #define PIN_SPI_CLK 7
+  #define PIN_SPI_MOSI 9
+  #define enableBattery 6
+  #define vBatPin 1
+  #define dividerRatio (2.000f)
+  // ESP32-S3 with PSRAM - large buffer for single-page rendering
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+
+#elif defined SEEEDSTUDIO_RETERMINAL
+  // SeeedStudio reTerminal E1001 (800x480 BW) and E1002 (800x480 7-color Spectra E6)
+  // Same ESP32-S3 board, different display connectors
+  #define PIN_SS 10
+  #define PIN_DC 11
+  #define PIN_RST 12
+  #define PIN_BUSY 13
+  #define PIN_SPI_CLK 7
+  #define PIN_SPI_MOSI 9
+  #define PIN_SPI_MISO -1
+  #define PIN_SPI_SS PIN_SS
+  #define EXT_BUTTON 3
+  #define enableBattery 21
+  #define vBatPin 1
+  #define dividerRatio (2.0f)
+  // ESP32-S3 with PSRAM - large buffer for single-page rendering
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+  #define REMAP_SPI
+
 #else
   #error "Board not defined!"
 #endif
@@ -247,6 +269,13 @@
   #define dividerRatio (1.769f)
 #endif
 
+// Calculate optimal page height based on buffer size, display dimensions, and bits per pixel
+// Returns full height if it fits in buffer, otherwise the maximum height that fits
+#define CALC_PAGE_HEIGHT(height, width, bpp)                                                                           \
+  (((BOARD_MAX_PAGE_BUFFER_SIZE * 8) / ((width) * (bpp)) >= (height))                                                  \
+     ? (height)                                                                                                        \
+     : ((BOARD_MAX_PAGE_BUFFER_SIZE * 8) / ((width) * (bpp))))
+
 namespace Board
 {
 void setupHW();
@@ -254,6 +283,7 @@ void setEPaperPowerOn(bool on);
 void enterDeepSleepMode(uint64_t sleepDuration);
 
 float getBatteryVoltage();
+unsigned long checkButtonPressDuration();
 } // namespace Board
 
 #endif // BOARD_H

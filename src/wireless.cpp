@@ -93,4 +93,18 @@ void turnOff()
   delay(20);
   Serial.println("WiFi turned off");
 }
+
+void resetCredentialsAndReboot()
+{
+  // Disconnect WiFi
+  turnOff();
+
+  // Reset WiFi settings (erase stored credentials)
+  Serial.println("Erasing stored WiFi credentials...");
+  wm.resetSettings();
+
+  // Restart ESP to start configuration portal
+  Serial.println("Rebooting ESP...");
+  ESP.restart();
+}
 } // namespace Wireless
