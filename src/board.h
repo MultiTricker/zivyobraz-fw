@@ -5,24 +5,83 @@
 // Uncomment for correct board
 /////////////////////////////////
 
-// #define ESPink_V2 // LáskaKit ESPInk 2.x, ESP32-WROOM-32, ADC battery measurement
-// #define ESPink_V3 // LáskaKit ESPInk 3.0-3.4, ESP32-S3, with FuelGauge, about 100 pcs
-// #define ESPink_V35 // LáskaKit ESPInk 3.5, ESP32-S3, ADC battery measurement, extra buton
-// #define ESP32S3Adapter // LáskaKit ESP32-S3 with adapter for 6/7 color ePaper displays
-// #define ES3ink // Board from dronecz
-// #define SEEEDSTUDIO_XIAO_ESP32C3 // Seeed Studio XIAO ESP32C3, bundled with 800x480 BW display
-// #define SEEEDSTUDIO_XIAO_EDDB_ESP32S3 //Development board distributed as part of the TRMNL 7.5" (OG) DIY Kit
-// #define MakerBadge_revB // also works with A and C
-// #define MakerBadge_revD
-// #define REMAP_SPI
-// #define TTGO_T5_v23 // tested only with 2.13" variant
-// #define CROWPANEL_ESP32S3_579 // Elecrow CrowPanel 5.79" 272x792, ESP32-S3-WROOM-1
-// #define CROWPANEL_ESP32S3_42  // Elecrow CrowPanel 4.2" 400x300, ESP32-S3-WROOM-1
-// #define CROWPANEL_ESP32S3_213 // Elecrow CrowPanel 2.13" 250x122, ESP32-S3-WROOM-1
-// #define WS_EPAPER_ESP32_BOARD // Waveshare ESP32 Driver Board
-// #define SVERIO_PAPERBOARD_SPI // Custom ESP32-S3 board with SPI ePaper (SVERIO)
+// #define BOARD_TYPE BT_ESPink_V2 // LáskaKit ESPInk 2.x, ESP32-WROOM-32, ADC battery measurement
+// #define BOARD_TYPE BT_ESPink_V3 // LáskaKit ESPInk 3.0-3.4, ESP32-S3, with FuelGauge, about 100 pcs
+// #define BOARD_TYPE BT_ESPink_V35 // LáskaKit ESPInk 3.5, ESP32-S3, ADC battery measurement, extra buton
+// #define BOARD_TYPE BT_ESP32S3Adapter // LáskaKit ESP32-S3 with adapter for 6/7 color ePaper displays
+// #define BOARD_TYPE BT_ES3ink // Board from dronecz
+// #define BOARD_TYPE BT_SEEEDSTUDIO_XIAO_ESP32C3 // Seeed Studio XIAO ESP32C3, bundled with 800x480 BW display
+// #define BOARD_TYPE BT_SEEEDSTUDIO_XIAO_EDDB_ESP32S3 //Development board distributed as part of the TRMNL 7.5" (OG)
+// DIY Kit #define BOARD_TYPE BT_MakerBadge_revB // also works with A and C #define BOARD_TYPE BT_MakerBadge_revD
+// #define BOARD_TYPE BT_REMAP_SPI
+// #define BOARD_TYPE BT_TTGO_T5_v23 // tested only with 2.13" variant
+// #define BOARD_TYPE BT_CROWPANEL_ESP32S3_579 // Elecrow CrowPanel 5.79" 272x792, ESP32-S3-WROOM-1
+// #define BOARD_TYPE BT_CROWPANEL_ESP32S3_42  // Elecrow CrowPanel 4.2" 400x300, ESP32-S3-WROOM-1
+// #define BOARD_TYPE BT_CROWPANEL_ESP32S3_213 // Elecrow CrowPanel 2.13" 250x122, ESP32-S3-WROOM-1
+// #define BOARD_TYPE BT_WS_EPAPER_ESP32_BOARD // Waveshare ESP32 Driver Board
+// #define BOARD_TYPE BT_SVERIO_PAPERBOARD_SPI // Custom ESP32-S3 board with SPI ePaper (SVERIO)
 
 #include <Arduino.h>
+
+// Stringify macro helper
+#define BOARD_TYPE_STRINGIFY(x) #x
+#define BOARD_TYPE_TO_STRING(x) BOARD_TYPE_STRINGIFY(x)
+
+#ifdef BOARD_TYPE
+  // Define board type constants for comaparison
+  #define BT_ESPink_V2 1
+  #define BT_ESPink_V3 2
+  #define BT_ESPink_V35 3
+  #define BT_ESP32S3Adapter 4
+  #define BT_ES3ink 5
+  #define BT_SEEEDSTUDIO_XIAO_ESP32C3 6
+  #define BT_SEEEDSTUDIO_XIAO_EDDB_ESP32S3 7
+  #define BT_MakerBadge_revB 8
+  #define BT_MakerBadge_revD 9
+  #define BT_TTGO_T5_v23 10
+  #define BT_CROWPANEL_ESP32S3_579 11
+  #define BT_CROWPANEL_ESP32S3_42 12
+  #define BT_CROWPANEL_ESP32S3_213 13
+  #define BT_WS_EPAPER_ESP32_BOARD 14
+  #define BT_SVERIO_PAPERBOARD_SPI 15
+  // Set defines based on BOARD_TYPE value to keep backward compatibility
+  #if BOARD_TYPE == BT_ESPink_V2
+    #define ESPink_V2
+  #elif BOARD_TYPE == BT_ESPink_V3
+    #define ESPink_V3
+  #elif BOARD_TYPE == BT_ESPink_V35
+    #define ESPink_V35
+  #elif BOARD_TYPE == BT_ESP32S3Adapter
+    #define ESP32S3Adapter
+  #elif BOARD_TYPE == BT_ES3ink
+    #define ES3ink
+  #elif BOARD_TYPE == BT_SEEEDSTUDIO_XIAO_ESP32C3
+    #define SEEEDSTUDIO_XIAO_ESP32C3
+  #elif BOARD_TYPE == BT_SEEEDSTUDIO_XIAO_EDDB_ESP32S3
+    #define SEEEDSTUDIO_XIAO_EDDB_ESP32S3
+  #elif BOARD_TYPE == BT_MakerBadge_revB
+    #define MakerBadge_revB
+  #elif BOARD_TYPE == BT_MakerBadge_revD
+    #define MakerBadge_revD
+  #elif BOARD_TYPE == BT_TTGO_T5_v23
+    #define TTGO_T5_v23
+  #elif BOARD_TYPE == BT_CROWPANEL_ESP32S3_579
+    #define CROWPANEL_ESP32S3_579
+  #elif BOARD_TYPE == BT_CROWPANEL_ESP32S3_42
+    #define CROWPANEL_ESP32S3_42
+  #elif BOARD_TYPE == BT_CROWPANEL_ESP32S3_213
+    #define CROWPANEL_ESP32S3_213
+  #elif BOARD_TYPE == BT_WS_EPAPER_ESP32_BOARD
+    #define WS_EPAPER_ESP32_BOARD
+  #elif BOARD_TYPE == BT_SVERIO_PAPERBOARD_SPI
+    #define SVERIO_PAPERBOARD_SPI
+  #else
+    #pragma message("BOARD_TYPE: " BOARD_TYPE_TO_STRING(BOARD_TYPE))
+    #error "BOARD_TYPE not supported!"
+  #endif
+#else
+  #error "BOARD_TYPE not defined!"
+#endif
 
 #ifdef ESPink_V2
   #define PIN_SS 5
@@ -216,9 +275,6 @@
   #define dividerRatio (2.7507665f)
   // ESP32-S3 with PSRAM - large buffer for single-page rendering
   #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
-
-#else
-  #error "Board not defined!"
 #endif
 
 #ifdef REMAP_SPI
@@ -254,6 +310,8 @@ void setEPaperPowerOn(bool on);
 void enterDeepSleepMode(uint64_t sleepDuration);
 
 float getBatteryVoltage();
+
+const char *getBoardType();
 } // namespace Board
 
 #endif // BOARD_H
