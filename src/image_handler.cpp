@@ -17,6 +17,7 @@
 
 #include "display.h"
 #include "state_manager.h"
+#include "streaming_handler.h"
 
 #ifdef TYPE_BW
   #include <GxEPD2_BW.h>
@@ -172,17 +173,33 @@ static bool processBMP(HttpClient &http, uint32_t startTime)
     return false;
   }
 
-  // Static buffer for one row - conservative size for embedded systems
-  // 800 bytes = 800px at 1-bit, 400px at 2-bit, 200px at 4-bit, or ~260px at 24-bit
-  // This handles most common e-paper displays without excessive stack usage
-  static const uint16_t MAX_ROW_BUFFER = 800;
-  uint8_t rowBuffer[MAX_ROW_BUFFER];
+  // Dynamic buffer allocation for row data
+  // Use streaming buffer if available and large enough, otherwise allocate dynamically
+  uint8_t *rowBuffer = nullptr;
+  bool usingStreamBuffer = false;
 
-  if (rowSize > MAX_ROW_BUFFER)
+#ifdef STREAMING_ENABLED
+  StreamingHandler::StreamingManager &streamMgr = StreamingHandler::StreamingManager::getInstance();
+  StreamingHandler::RowStreamBuffer *streamBuf = streamMgr.getBuffer();
+  if (streamBuf && streamBuf->getTotalSize() >= rowSize)
   {
-    Serial.printf("ERROR: Row size %d exceeds buffer %d (reduce color depth or use smaller image)\n", rowSize,
-                  MAX_ROW_BUFFER);
-    return false;
+    // Use streaming buffer for large rows
+    streamBuf->clear();
+    usingStreamBuffer = true;
+    Serial.printf("[BMP] Using streaming buffer for rows (%u bytes)\n", rowSize);
+  }
+#endif
+
+  if (!usingStreamBuffer)
+  {
+    // Dynamically allocate row buffer
+    rowBuffer = new (std::nothrow) uint8_t[rowSize];
+    if (!rowBuffer)
+    {
+      Serial.printf("ERROR: Failed to allocate %u bytes for row buffer\n", rowSize);
+      return false;
+    }
+    Serial.printf("[BMP] Allocated dynamic row buffer (%u bytes)\n", rowSize);
   }
 
   // Skip to image data
@@ -194,18 +211,56 @@ static bool processBMP(HttpClient &http, uint32_t startTime)
     if (!http.isConnected())
     {
       Serial.printf("Connection lost at row %d/%d\n", row, height);
+
+      // Cleanup on error
+      if (!usingStreamBuffer && rowBuffer)
+        delete[] rowBuffer;
       return false;
     }
 
-    // Read one row
-    uint32_t bytesRead = http.readBytes(rowBuffer, rowSize);
+    // Read one row into appropriate buffer
+    uint32_t bytesRead = 0;
+
+#ifdef STREAMING_ENABLED
+    if (usingStreamBuffer && streamBuf)
+    {
+      // Read directly into streaming buffer (row 0)
+      streamBuf->resetRow(0);
+      uint8_t *tempBuf = new (std::nothrow) uint8_t[rowSize];
+      if (tempBuf)
+      {
+        bytesRead = http.readBytes(tempBuf, rowSize);
+        streamBuf->writeRow(0, tempBuf, bytesRead);
+        delete[] tempBuf;
+      }
+    }
+    else
+#endif
+    {
+      // Read into dynamic buffer
+      bytesRead = http.readBytes(rowBuffer, rowSize);
+    }
+
     bytes_read += bytesRead;
 
     if (bytesRead != rowSize)
     {
       Serial.printf("Row %d incomplete: got %d/%d bytes\n", row, bytesRead, rowSize);
+
+      // Cleanup on error
+      if (!usingStreamBuffer && rowBuffer)
+        delete[] rowBuffer;
       return false;
     }
+
+    // Get pointer to row data
+    const uint8_t *rowData = nullptr;
+#ifdef STREAMING_ENABLED
+    if (usingStreamBuffer && streamBuf)
+      rowData = streamBuf->getRowData(0);
+    else
+#endif
+      rowData = rowBuffer;
 
     // Determine display row (BMP is bottom-up unless negative height)
     uint16_t displayRow = flip ? row : (height - 1 - row);
@@ -223,13 +278,13 @@ static bool processBMP(HttpClient &http, uint32_t startTime)
           uint8_t bit = 7 - (col % 8);
           if (col % 8 == 0 && col > 0)
             bufIdx++;
-          color = (rowBuffer[bufIdx] & (1 << bit)) ? GxEPD_WHITE : GxEPD_BLACK;
+          color = (rowData[bufIdx] & (1 << bit)) ? GxEPD_WHITE : GxEPD_BLACK;
           break;
         }
 
         case 4: // 4-bit indexed
         {
-          uint8_t nibble = (col & 1) ? (rowBuffer[bufIdx] & 0x0F) : (rowBuffer[bufIdx] >> 4);
+          uint8_t nibble = (col & 1) ? (rowData[bufIdx] & 0x0F) : (rowData[bufIdx] >> 4);
           if (col & 1)
             bufIdx++;
           // Simple grayscale mapping
@@ -242,7 +297,7 @@ static bool processBMP(HttpClient &http, uint32_t startTime)
 
         case 8: // 8-bit grayscale
         {
-          uint8_t gray = rowBuffer[bufIdx++];
+          uint8_t gray = rowData[bufIdx++];
           color = (gray < 64)    ? GxEPD_BLACK
                   : (gray < 128) ? GxEPD_DARKGREY
                   : (gray < 192) ? GxEPD_LIGHTGREY
@@ -252,9 +307,9 @@ static bool processBMP(HttpClient &http, uint32_t startTime)
 
         case 24: // 24-bit RGB
         {
-          uint8_t b = rowBuffer[bufIdx++];
-          uint8_t g = rowBuffer[bufIdx++];
-          uint8_t r = rowBuffer[bufIdx++];
+          uint8_t b = rowData[bufIdx++];
+          uint8_t g = rowData[bufIdx++];
+          uint8_t r = rowData[bufIdx++];
 
           // Convert to grayscale
           uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
@@ -267,9 +322,9 @@ static bool processBMP(HttpClient &http, uint32_t startTime)
 
         case 32: // 32-bit RGBA
         {
-          uint8_t b = rowBuffer[bufIdx++];
-          uint8_t g = rowBuffer[bufIdx++];
-          uint8_t r = rowBuffer[bufIdx++];
+          uint8_t b = rowData[bufIdx++];
+          uint8_t g = rowData[bufIdx++];
+          uint8_t r = rowData[bufIdx++];
           bufIdx++; // skip alpha
 
           uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
@@ -289,9 +344,21 @@ static bool processBMP(HttpClient &http, uint32_t startTime)
 
     // Yield periodically
     if (row % 50 == 0)
-    {
       yield();
-    }
+
+#ifdef STREAMING_ENABLED
+    // If using streaming buffer, reset for next row
+    if (usingStreamBuffer && streamBuf)
+      streamBuf->resetRow(0);
+#endif
+  }
+
+  // Cleanup dynamic buffer if allocated
+  if (!usingStreamBuffer && rowBuffer)
+  {
+    delete[] rowBuffer;
+    rowBuffer = nullptr;
+    Serial.println("[BMP] Freed dynamic row buffer");
   }
 
   Serial.print("bytes read ");
@@ -632,16 +699,46 @@ void readImageData(HttpClient &http)
   uint32_t startTime = millis();
   bool success = false;
 
+#ifdef STREAMING_ENABLED
+  // Initialize streaming if enabled
+  StreamingHandler::StreamingManager &streamMgr = StreamingHandler::StreamingManager::getInstance();
+  if (!streamMgr.isEnabled())
+  {
+    // Calculate row size: width * bytes_per_pixel (for most formats, 1 byte per pixel)
+    // For safety, use display width as row size estimate
+    size_t rowSize = Display::getWidth();
+
+    if (streamMgr.init(rowSize))
+      Serial.println("[Image] Streaming enabled");
+    else
+      Serial.println("[Image] Streaming init failed, falling back to direct mode");
+  }
+
+  // Print memory stats
+  if (streamMgr.isEnabled())
+  {
+    size_t totalHeap, freeHeap, bufferUsed;
+    streamMgr.getMemoryStats(totalHeap, freeHeap, bufferUsed);
+    Serial.printf("[Image] Memory - Total: %zu, Free: %zu, Buffer: %zu\n", totalHeap, freeHeap, bufferUsed);
+  }
+#endif
+
   // Read format header (2 bytes)
   uint16_t header = http.read16();
 
   Serial.print("Header: 0x");
   Serial.println(header, HEX);
 
-  // Allocate buffer on stack for this function call only
-  // Released automatically when function returns
-  static const uint16_t STREAM_BUFFER_SIZE = 512;
-  uint8_t buffer[STREAM_BUFFER_SIZE];
+  // Dynamic buffer for PNG/RLE processing
+  // BMP handles its own buffer allocation
+  const uint16_t STREAM_BUFFER_SIZE = 512;
+  uint8_t *buffer = new (std::nothrow) uint8_t[STREAM_BUFFER_SIZE];
+
+  if (!buffer)
+  {
+    Serial.println("[Image] Failed to allocate processing buffer");
+    return;
+  }
 
   // Route to appropriate format handler
   switch (static_cast<ImageFormat>(header))
@@ -673,6 +770,10 @@ void readImageData(HttpClient &http)
       break;
   }
 
+  // Cleanup processing buffer
+  delete[] buffer;
+  buffer = nullptr;
+
   // Handle errors
   if (!success)
   {
@@ -680,6 +781,12 @@ void readImageData(HttpClient &http)
     StateManager::setSleepDuration(StateManager::DEFAULT_SLEEP_SECONDS);
     StateManager::setTimestamp(0);
   }
+
+#ifdef STREAMING_ENABLED
+  // Cleanup streaming resources after processing
+  if (streamMgr.isEnabled())
+    streamMgr.cleanup();
+#endif
 }
 
 } // namespace ImageHandler

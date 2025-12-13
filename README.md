@@ -34,18 +34,19 @@ build_flags =
 
 In code **board.h** do not forget to uncomment:
 1. Type of board used (ESPink_V2, ES3ink, ...)
-2. If you plan to connect one of the supported sensors via uŠup for reading temperature, humidity, and pressure/CO2 and sending the values to the server, uncomment in **sensor.h**
+2. **Streaming feature** is ENABLED by default for all ESP32 devices. This allows efficient buffering of image data in RAM before streaming to the display. To disable on resource-constrained devices, add `-D STREAMING_DISABLED` to your build_flags in **platformio.ini**
+3. If you plan to connect one of the supported sensors via uŠup for reading temperature, humidity, and pressure/CO2 and sending the values to the server, uncomment in **sensor.h**
 ```c
 // #define SENSOR
 ```
-3. Display type has to be changed in **display.h** In the case of GRAYSCALE, you must remove `zinggjm/GxEPD2` from **platformio.ini** (just comment it out), otherwise there will be a library collision and the code will not work. In that case, `lib/GxEPD2_4G` will be used. For other displays (BW, 3C, 7C), leave `zinggjm/GxEPD2` active, you don't need to do anything with the 4G version.
+4. Display type has to be changed in **display.h** In the case of GRAYSCALE, you must remove `zinggjm/GxEPD2` from **platformio.ini** (just comment it out), otherwise there will be a library collision and the code will not work. In that case, `lib/GxEPD2_4G` will be used. For other displays (BW, 3C, 7C), leave `zinggjm/GxEPD2` active, you don't need to do anything with the 4G version.
 ```c
 #define TYPE_BW           // black and white
 // #define TYPE_3C        // 3 colors - black, white and red/yellow
 // #define TYPE_GRAYSCALE // grayscale - 4 colors
 // #define TYPE_7C        // 7 colors
 ```
-4. Uncomment the definition of the specific ePaper you are putting into operation. This section begins at line `18`, and you need to select a specific display, e.g.:
+5. Uncomment the definition of the specific ePaper you are putting into operation. This section begins at line `18`, and you need to select a specific display, e.g.:
 ```c
 // BW
 // #define D_GDEY0213B7 // 122x250, 2.13"
