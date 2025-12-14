@@ -81,6 +81,7 @@
 namespace Display
 {
 void init();
+void clear();
 void setRotation(uint8_t rotation);
 
 // Display info

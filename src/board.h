@@ -47,6 +47,7 @@
   #define PIN_SDA 42
   #define PIN_SCL 2
   #define PIN_ALERT 9
+  #define EXT_BUTTON 40
   // ESP32-S3 with PSRAM - large buffer for single-page rendering
   #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
 
@@ -61,6 +62,7 @@
   #define PIN_SPI_CLK 12
   #define PIN_SDA 42
   #define PIN_SCL 2
+  #define EXT_BUTTON 40
   #define vBatPin 9
   #define dividerRatio (1.7693877551f)
   // ESP32-S3 with PSRAM - large buffer for single-page rendering
@@ -231,6 +233,7 @@
   #define PIN_SPI_SS PIN_SS
   #define PIN_SDA 19
   #define PIN_SCL 20
+  #define EXT_BUTTON 3
   #define enableBattery 21
   #define vBatPin 1
   #define dividerRatio (2.0f)
@@ -275,6 +278,7 @@ void setEPaperPowerOn(bool on);
 void enterDeepSleepMode(uint64_t sleepDuration);
 
 float getBatteryVoltage();
+unsigned long checkButtonPressDuration();
 } // namespace Board
 
 #endif // BOARD_H

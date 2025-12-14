@@ -205,6 +205,40 @@ void enterDeepSleepMode()
   Board::enterDeepSleepMode(sleepDuration);
 }
 
+// Handle special actions with extra button at boot (clear display, reset WiFi credentials)
+void handleButtonActions()
+{
+  unsigned long pressDuration = Board::checkButtonPressDuration();
+
+  // Button not pressed or EXT_BUTTON not defined
+  if (pressDuration == 0)
+    return;
+
+  // >6 seconds: Reset WiFi credentials and reboot
+  if (pressDuration > 6000)
+  {
+    Serial.println("Long press detected (>6s): Clearing display and resetting WiFi...");
+    Wireless::resetCredentialsAndReboot();
+  }
+  // >2 seconds: Clear display only
+  else if (pressDuration > 2000)
+  {
+    Serial.println("Medium press detected (>2s): Clearing display for storage...");
+    Display::clear();
+    Serial.println("Display cleared. Entering deep sleep...");
+
+    // Enter deep sleep indefinitely (until next reset)
+    Board::enterDeepSleepMode(StateManager::DEFAULT_SLEEP_SECONDS);
+  }
+  // <2 seconds: Perform normal restart
+  else
+  {
+    Serial.println("Short press detected (<2s): Restarting ESP...");
+    delay(100);
+    ESP.restart();
+  }
+}
+
 ///////////////////////////////////////////////
 // Main Setup
 ///////////////////////////////////////////////
@@ -215,6 +249,8 @@ void setup()
   Serial.println("Starting firmware for Zivy Obraz service");
 
   Board::setupHW();
+
+  handleButtonActions();
 
   Utils::initializeAPIKey();
 

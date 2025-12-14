@@ -15,6 +15,7 @@ String getSoftAPIP();
 
 bool isConnected();
 void turnOff();
+void resetCredentialsAndReboot();
 } // namespace Wireless
 
 #endif // WIRELESS_H
