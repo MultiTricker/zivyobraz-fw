@@ -361,6 +361,30 @@ void init()
   display.setTextColor(GxEPD_BLACK); // black font
 }
 
+void clear()
+{
+  Serial.println("Clearing display...");
+
+  init();
+
+  // Enable power supply for ePaper
+  Board::setEPaperPowerOn(true);
+  delay(500);
+
+  setToFullWindow();
+  setToFirstPage();
+  do
+  {
+    display.fillRect(0, 0, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_WHITE);
+  } while (setToNextPage());
+
+  delay(100);
+  // Disable power supply for ePaper
+  Board::setEPaperPowerOn(false);
+
+  Serial.println("done");
+}
+
 void setRotation(uint8_t rotation) { display.setRotation(rotation); }
 
 uint16_t getWidth() { return display.width(); }
