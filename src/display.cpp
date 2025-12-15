@@ -26,35 +26,28 @@ static SPIClass hspi(HSPI);
 // 2 colors (Black and White)
 #ifdef TYPE_BW
   #include <GxEPD2_BW.h>
-static const char *defined_color_type = "BW";
 
 // 3 colors (Black, White and Red/Yellow)
 #elif defined TYPE_3C
   #include <GxEPD2_3C.h>
-static const char *defined_color_type = "3C";
 
 // 4 colors (Black, White, Red and Yellow)
 #elif defined TYPE_4C
   #include <GxEPD2_4C.h>
-static const char *defined_color_type = "4C";
 
 // 4 colors (Grayscale - Black, Darkgrey, Lightgrey, White) (https://github.com/ZinggJM/GxEPD2_4G)
 #elif defined TYPE_GRAYSCALE
   #include "GxEPD2_4G_4G.h"
   #include "GxEPD2_4G_BW.h"
-static const char *defined_color_type = "4G";
 
 // 7 colors
 #elif defined TYPE_7C
   #include <GxEPD2_7C.h>
-static const char *defined_color_type = "7C";
 
-#else
-  #error "ePaper type not defined!"
 #endif
 
 ///////////////////////
-// Display instance - selected by defines
+// Display instance - selected by DISPLAY_ID
 ///////////////////////
 
 ///////////////////////
@@ -62,73 +55,73 @@ static const char *defined_color_type = "7C";
 ///////////////////////
 
 // GDEW0154T8 - BW, 152x152px, 1.54"
-#ifdef D_GDEW0154T8
+#if DISPLAY_ID == DT_GDEW0154T8
 GxEPD2_BW<GxEPD2_154_T8, GxEPD2_154_T8::HEIGHT> display(GxEPD2_154_T8(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY027T91 - BW, 176x264px, 2.7"
-#elif defined D_GDEY027T91
+#elif DISPLAY_ID == DT_GDEY027T91
 GxEPD2_BW<GxEPD2_270_GDEY027T91, GxEPD2_270_GDEY027T91::HEIGHT> display(GxEPD2_270_GDEY027T91(PIN_SS, PIN_DC, PIN_RST,
                                                                                               PIN_BUSY));
 
 // GDEY029T94 - BW, 128x296px, 2.9"
-#elif defined D_GDEY029T94
+#elif DISPLAY_ID == DT_GDEY029T94
 GxEPD2_BW<GxEPD2_290_GDEY029T94, GxEPD2_290_GDEY029T94::HEIGHT> display(GxEPD2_290_GDEY029T94(PIN_SS, PIN_DC, PIN_RST,
                                                                                               PIN_BUSY));
 
 // GDEY029T71H - BW, 168x384px, 2.9"
-#elif defined D_GDEY029T71H
+#elif DISPLAY_ID == DT_GDEY029T71H
 GxEPD2_BW<GxEPD2_290_GDEY029T71H, GxEPD2_290_GDEY029T71H::HEIGHT> display(GxEPD2_290_GDEY029T71H(PIN_SS, PIN_DC,
                                                                                                  PIN_RST, PIN_BUSY));
 
 // GDEQ031T10 - BW, 240x320px, 3.1"
-#elif defined D_GDEQ031T10
+#elif DISPLAY_ID == DT_GDEQ031T10
 GxEPD2_BW<GxEPD2_310_GDEQ031T10, GxEPD2_310_GDEQ031T10::HEIGHT> display(GxEPD2_310_GDEQ031T10(PIN_SS, PIN_DC, PIN_RST,
                                                                                               PIN_BUSY));
 
 // 2.13" BW, 250x122px
-#elif defined D_GDEH0213BN
+#elif DISPLAY_ID == DT_GDEH0213BN
 GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ042T81 - BW, 400x300px, 4.2"
-#elif defined D_GDEQ042T81
+#elif DISPLAY_ID == DT_GDEQ042T81
 GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> display(GxEPD2_420_GDEY042T81(PIN_SS, PIN_DC, PIN_RST,
                                                                                               PIN_BUSY));
 
 // GDEY0579T93 - BW, 792x272px, 5.79"
-#elif defined D_GDEY0579T93
+#elif DISPLAY_ID == DT_GDEY0579T93
 GxEPD2_BW<GxEPD2_579_GDEY0579T93, GxEPD2_579_GDEY0579T93::HEIGHT> display(GxEPD2_579_GDEY0579T93(PIN_SS, PIN_DC,
                                                                                                  PIN_RST, PIN_BUSY));
 
 // GDEQ0583T31 - BW, 648x480px, 5.83"
-#elif defined D_GDEQ0583T31
+#elif DISPLAY_ID == DT_GDEQ0583T31
 GxEPD2_BW<GxEPD2_583_GDEQ0583T31, GxEPD2_583_GDEQ0583T31::HEIGHT> display(GxEPD2_583_GDEQ0583T31(PIN_SS, PIN_DC,
                                                                                                  PIN_RST, PIN_BUSY));
 
 // WS75BWT7 - BW, 800x480px, 7.5"
-#elif defined D_WS75BWT7
+#elif DISPLAY_ID == DT_WS75BWT7
 GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> display(GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEW075T7 - BW, 800x480px, 7.5"
-#elif defined D_GDEW075T7BW
+#elif DISPLAY_ID == DT_GDEW075T7BW
 GxEPD2_BW<GxEPD2_750, GxEPD2_750::HEIGHT> display(GxEPD2_750(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075T7BW - BW, 800x480px, 7.5"
-#elif defined D_GDEY075T7BW
+#elif DISPLAY_ID == DT_GDEY075T7BW
 GxEPD2_BW<GxEPD2_750_GDEY075T7, GxEPD2_750_GDEY075T7::HEIGHT> display(GxEPD2_750_GDEY075T7(PIN_SS, PIN_DC, PIN_RST,
                                                                                            PIN_BUSY));
 
 // GDEM102T91 - BW, 960x640px, 10.2"
-#elif defined D_GDEM102T91
+#elif DISPLAY_ID == DT_GDEM102T91
 GxEPD2_BW<GxEPD2_1020_GDEM102T91, CALC_PAGE_HEIGHT(GxEPD2_1020_GDEM102T91::HEIGHT, GxEPD2_1020_GDEM102T91::WIDTH, 1)>
   display(GxEPD2_1020_GDEM102T91(PIN_SS, PIN_DC, PIN_ RST, PIN_BUSY));
 
 // GDEM1085T51 - BW, 1360x480px, 10.85"
-#elif defined D_GDEM1085T51
+#elif DISPLAY_ID == DT_GDEM1085T51
 GxEPD2_BW<GxEPD2_1085_GDEM1085T51, CALC_PAGE_HEIGHT(GxEPD2_1085_GDEM1085T51::HEIGHT, GxEPD2_1085_GDEM1085T51::WIDTH, 1)>
   display(GxEPD2_1085_GDEM1085T51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY, PIN_CS2));
 
 // GDEM133T91 - BW, 960x680px, 13.3"
-#elif defined D_GDEM133T91
+#elif DISPLAY_ID == DT_GDEM133T91
 GxEPD2_BW<GxEPD2_1330_GDEM133T91, CALC_PAGE_HEIGHT(GxEPD2_1330_GDEM133T91::HEIGHT, GxEPD2_1330_GDEM133T91::WIDTH, 1)>
   display(GxEPD2_1330_GDEM133T91(PIN_SS, PIN_DC, PIN_BUSY));
 
@@ -137,36 +130,36 @@ GxEPD2_BW<GxEPD2_1330_GDEM133T91, CALC_PAGE_HEIGHT(GxEPD2_1330_GDEM133T91::HEIGH
 ///////////////////////
 
 // GDEY0154D67 - Grayscale, 200x200px, 1.54"
-#elif defined D_GDEY0154D67
+#elif DISPLAY_ID == DT_GDEY0154D67
 GxEPD2_4G_4G<GxEPD2_154_GDEY0154D67, GxEPD2_154_GDEY0154D67::HEIGHT> display(GxEPD2_154_GDEY0154D67(PIN_SS, PIN_DC,
                                                                                                     PIN_RST, PIN_BUSY));
 
 // GDEY0213B74 - Grayscale, 128x250px, 2.13"
-#elif defined D_GDEY0213B74
+#elif DISPLAY_ID == DT_GDEY0213B74
 GxEPD2_4G_4G<GxEPD2_213_GDEY0213B74, GxEPD2_213_GDEY0213B74::HEIGHT> display(GxEPD2_213_GDEY0213B74(PIN_SS, PIN_DC,
                                                                                                     PIN_RST, PIN_BUSY));
 
 // GDEW042T2_G - Grayscale, 400x300px, 4.2"
-#elif defined D_GDEW042T2_G
+#elif DISPLAY_ID == DT_GDEW042T2_G
 GxEPD2_4G_4G<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY042T81 - Grayscale, 400x300px, 4.2"
-#elif defined D_GDEY042T81
+#elif DISPLAY_ID == DT_GDEY042T81
 GxEPD2_4G_4G<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> display(GxEPD2_420_GDEY042T81(PIN_SS, PIN_DC,
                                                                                                  PIN_RST, PIN_BUSY));
 
 // GDEQ0426T82 - Grayscale, 800x480px, 4.26"
-#elif defined D_GDEQ0426T82
+#elif DISPLAY_ID == DT_GDEQ0426T82
 GxEPD2_4G_4G<GxEPD2_426_GDEQ0426T82, CALC_PAGE_HEIGHT(GxEPD2_426_GDEQ0426T82::HEIGHT, GxEPD2_426_GDEQ0426T82::WIDTH, 2)>
   display(GxEPD2_426_GDEQ0426T82(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075T7 - Grayscale, 800x480px, 7.5"
-#elif defined D_GDEW075T7
+#elif DISPLAY_ID == DT_GDEW075T7
 GxEPD2_4G_4G<GxEPD2_750_T7, CALC_PAGE_HEIGHT(GxEPD2_750_T7::HEIGHT, GxEPD2_750_T7::WIDTH, 2)> display(
   GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075T7 - Grayscale, 800x480px, 7.5"
-#elif defined D_GDEY075T7
+#elif DISPLAY_ID == DT_GDEY075T7
 GxEPD2_4G_4G<GxEPD2_750_GDEY075T7, CALC_PAGE_HEIGHT(GxEPD2_750_GDEY075T7::HEIGHT, GxEPD2_750_GDEY075T7::WIDTH, 2)>
   display(GxEPD2_750_GDEY075T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
@@ -175,64 +168,64 @@ GxEPD2_4G_4G<GxEPD2_750_GDEY075T7, CALC_PAGE_HEIGHT(GxEPD2_750_GDEY075T7::HEIGHT
 ///////////////////////
 
 // GDEY0154Z90 - 3C, 200x200px, 1.54"
-#elif defined D_GDEY0154Z90
+#elif DISPLAY_ID == DT_GDEY0154Z90
 GxEPD2_3C<GxEPD2_154_Z90c, GxEPD2_154_Z90c::HEIGHT> display(GxEPD2_154_Z90c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // D_WS27RBW264176 - 3C, 264x176px, 2.7"
-#elif defined D_WS27RBW264176
+#elif DISPLAY_ID == DT_WS27RBW264176
 GxEPD2_3C<GxEPD2_270c, GxEPD2_270c::HEIGHT> display(GxEPD2_270c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // WS42YBW400300 - 3C, 400x300px, 4.2"
-#elif defined D_WS42YBW400300
+#elif DISPLAY_ID == DT_WS42YBW400300
 GxEPD2_3C<GxEPD2_420c, GxEPD2_420c::HEIGHT> display(GxEPD2_420c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEQ042Z21 - 3C, 400x300px, 4.2"
-#elif defined D_GDEQ042Z21
+#elif DISPLAY_ID == DT_GDEQ042Z21
 GxEPD2_3C<GxEPD2_420c_Z21, GxEPD2_420c_Z21::HEIGHT> display(GxEPD2_420c_Z21(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY042Z98 - 3C, 400x300px, 4.2"
-#elif defined D_GDEY042Z98
+#elif DISPLAY_ID == DT_GDEY042Z98
 GxEPD2_3C<GxEPD2_420c_GDEY042Z98, GxEPD2_420c_GDEY042Z98::HEIGHT> display(GxEPD2_420c_GDEY042Z98(PIN_SS, PIN_DC,
                                                                                                  PIN_RST, PIN_BUSY));
 
 // HINK_E075A01 - 3C, 640x384px, 7.5"
-#elif defined D_HINK_E075A01
+#elif DISPLAY_ID == DT_HINK_E075A01
 GxEPD2_3C<GxEPD2_750c, GxEPD2_750c::HEIGHT> display(GxEPD2_750c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY0579Z93 - 3C, 792x272px, 5.79"
-#elif defined D_GDEY0579Z93
+#elif DISPLAY_ID == DT_GDEY0579Z93
 GxEPD2_3C<GxEPD2_579c_GDEY0579Z93, GxEPD2_579c_GDEY0579Z93::HEIGHT> display(GxEPD2_579c_GDEY0579Z93(PIN_SS, PIN_DC,
                                                                                                     PIN_RST, PIN_BUSY));
 
 // GDEQ0583Z31 - 3C, 648x480px, 5.83"
-#elif defined D_GDEQ0583Z31
+#elif DISPLAY_ID == DT_GDEQ0583Z31
 GxEPD2_3C<GxEPD2_583c_Z83, CALC_PAGE_HEIGHT(GxEPD2_583c_Z83::HEIGHT, GxEPD2_583c_Z83::WIDTH, 2)> display(
   GxEPD2_583c_Z83(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY075Z08 - 3C, 800x480px, 7.5"
-#elif defined D_GDEY075Z08
+#elif DISPLAY_ID == DT_GDEY075Z08
 GxEPD2_3C<GxEPD2_750c_Z08, CALC_PAGE_HEIGHT(GxEPD2_750c_Z08::HEIGHT, GxEPD2_750c_Z08::WIDTH, 2)> display(
   GxEPD2_750c_Z08(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEH075Z90 - 3C, 880x528px, 7.5"
-#elif defined D_GDEH075Z90
+#elif DISPLAY_ID == DT_GDEH075Z90
 GxEPD2_3C<GxEPD2_750c_Z90, CALC_PAGE_HEIGHT(GxEPD2_750c_Z90::HEIGHT, GxEPD2_750c_Z90::WIDTH, 2)> display(
   GxEPD2_750c_Z90(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY116Z91 - 3C, 960x640px, 11.6"
-#elif defined D_GDEY116Z91
+#elif DISPLAY_ID == DT_GDEY116Z91
 GxEPD2_3C<GxEPD2_1160c_GDEY116Z91, CALC_PAGE_HEIGHT(GxEPD2_1160c_GDEY116Z91::HEIGHT, GxEPD2_1160c_GDEY116Z91::WIDTH, 2)>
   display(GxEPD2_1160c_GDEY116Z91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEY1248Z51 - 3C, 1304x984px, 12.48"
-#elif defined D_GDEY1248Z51
+#elif DISPLAY_ID == DT_GDEY1248Z51
 GxEPD2_3C<GxEPD2_1248c, CALC_PAGE_HEIGHT(GxEPD2_1248c::HEIGHT, GxEPD2_1248c::WIDTH, 2)> display(
   GxEPD2_1248c(/*sck=*/12, /*miso=*/-1, /*mosi=*/11, /*cs_m1=*/10, /*cs_s1=*/18, /*cs_m2=*/48, /*cs_s2=*/41,
                /*dc1=*/46, /*dc2=*/45, /*rst1=*/3, /*rst2=*/39, /*busy_m1=*/8, /*busy_s1=*/17, /*busy_m2=*/40,
                /*busy_s2=*/16));
 
 // GDEM133Z91 - 3C, 960x680px, 13.3"
-#elif defined D_GDEM133Z91
+#elif DISPLAY_ID == DT_GDEM133Z91
 GxEPD2_3C<GxEPD2_1330c_GDEM133Z91, CALC_PAGE_HEIGHT(GxEPD2_1330c_GDEM133Z91::HEIGHT, GxEPD2_1330c_GDEM133Z91::WIDTH, 2)>
   display(GxEPD2_1330c_GDEM133Z91(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
@@ -241,48 +234,49 @@ GxEPD2_3C<GxEPD2_1330c_GDEM133Z91, CALC_PAGE_HEIGHT(GxEPD2_1330c_GDEM133Z91::HEI
 ///////////////////////
 
 // GDEY0213F51 - 4C, 128x250px, 2.13"
-#elif defined D_GDEY0213F51
+#elif DISPLAY_ID == DT_GDEY0213F51
 GxEPD2_4C<GxEPD2_213c_GDEY0213F51, GxEPD2_213c_GDEY0213F51::HEIGHT> display(GxEPD2_213c_GDEY0213F51(PIN_SS, PIN_DC,
                                                                                                     PIN_RST, PIN_BUSY));
 
 // GDEY0266F51H - 4C, 184x460px, 2.66"
-#elif defined D_GDEY0266F51H
+#elif DISPLAY_ID == DT_GDEY0266F51H
 GxEPD2_4C<GxEPD2_266c_GDEY0266F51H, GxEPD2_266c_GDEY0266F51H::HEIGHT> display(GxEPD2_266c_GDEY0266F51H(PIN_SS, PIN_DC,
                                                                                                        PIN_RST,
                                                                                                        PIN_BUSY));
 
 // GDEY029F51H - 4C, 168x384px, 2.9"
-#elif defined D_GDEY029F51H
+#elif DISPLAY_ID == DT_GDEY029F51H
 GxEPD2_4C<GxEPD2_290c_GDEY029F51H, GxEPD2_290c_GDEY029F51H::HEIGHT> display(GxEPD2_290c_GDEY029F51H(PIN_SS, PIN_DC,
                                                                                                     PIN_RST, PIN_BUSY));
 
 // WS3004YRBW - 4C, 168x400px, 3.00"
-#elif defined D_WS3004YRBW
+#elif DISPLAY_ID == DT_WS3004YRBW
 GxEPD2_4C<GxEPD2_300c, GxEPD2_300c::HEIGHT> display(GxEPD2_300c(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
+
 // GDEY0420F51 - 4C, 400x300px, 4.2"
-#elif defined D_GDEY0420F51
+#elif DISPLAY_ID == DT_GDEY0420F51
 GxEPD2_4C<GxEPD2_420c_GDEY0420F51, GxEPD2_420c_GDEY0420F51::HEIGHT> display(GxEPD2_420c_GDEY0420F51(PIN_SS, PIN_DC,
                                                                                                     PIN_RST, PIN_BUSY));
 
 // WS437YRBW - 4C, 512x368px, 4.37"
-#elif defined D_WS437YRBW
+#elif DISPLAY_ID == DT_WS437YRBW
 GxEPD2_4C<GxEPD2_437c, CALC_PAGE_HEIGHT(GxEPD2_437c::HEIGHT, GxEPD2_437c::WIDTH, 4)> display(GxEPD2_437c(PIN_SS, PIN_DC,
                                                                                                          PIN_RST,
                                                                                                          PIN_BUSY));
 
 // GDEY0579F51 - 4C, 792x272px, 5.79"
-#elif defined D_GDEY0579F51
+#elif DISPLAY_ID == DT_GDEY0579F51
 GxEPD2_4C<GxEPD2_0579c_GDEY0579F51, GxEPD2_0579c_GDEY0579F51::HEIGHT> display(GxEPD2_0579c_GDEY0579F51(PIN_SS, PIN_DC,
                                                                                                        PIN_RST,
                                                                                                        PIN_BUSY));
 
-// GDEY116F51 - 4C, 800x480px, 7.5"
-#elif defined D_GDEM075F52
+// GDEM075F52 - 4C, 800x480px, 7.5"
+#elif DISPLAY_ID == DT_GDEM075F52
 GxEPD2_4C<GxEPD2_750c_GDEM075F52, GxEPD2_750c_GDEM075F52::HEIGHT> display(GxEPD2_750c_GDEM075F52(PIN_SS, PIN_DC,
                                                                                                  PIN_RST, PIN_BUSY));
 
 // GDEY116F51 - 4C, 960x640px, 11.6"
-#elif defined D_GDEY116F51
+#elif DISPLAY_ID == DT_GDEY116F51
 GxEPD2_4C<GxEPD2_1160c_GDEY116F51, CALC_PAGE_HEIGHT(GxEPD2_1160c_GDEY116F51::HEIGHT, GxEPD2_1160c_GDEY116F51::WIDTH, 4)>
   display(GxEPD2_1160c_GDEY116F51(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
@@ -291,23 +285,21 @@ GxEPD2_4C<GxEPD2_1160c_GDEY116F51, CALC_PAGE_HEIGHT(GxEPD2_1160c_GDEY116F51::HEI
 ///////////////////////
 
 // GDEP0565D90 - 7C, 600x448px, 5.65"
-#elif defined D_GDEP0565D90
+#elif DISPLAY_ID == DT_GDEP0565D90
 GxEPD2_7C<GxEPD2_565c, CALC_PAGE_HEIGHT(GxEPD2_565c::HEIGHT, GxEPD2_565c::WIDTH, 4)> display(GxEPD2_565c(PIN_SS, PIN_DC,
                                                                                                          PIN_RST,
                                                                                                          PIN_BUSY));
 
 // GDEY073D46 - 7C, 800x480px, 7.3"
-#elif defined D_GDEY073D46
+#elif DISPLAY_ID == DT_GDEY073D46
 GxEPD2_7C<GxEPD2_730c_GDEY073D46, CALC_PAGE_HEIGHT(GxEPD2_730c_GDEY073D46::HEIGHT, GxEPD2_730c_GDEY073D46::WIDTH, 4)>
   display(GxEPD2_730c_GDEY073D46(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
 // GDEP073E01 - 7C, 800x480px, 7.3"
-#elif defined D_GDEP073E01
+#elif DISPLAY_ID == DT_GDEP073E01
 GxEPD2_7C<GxEPD2_730c_GDEP073E01, CALC_PAGE_HEIGHT(GxEPD2_730c_GDEP073E01::HEIGHT, GxEPD2_730c_GDEP073E01::WIDTH, 4)>
   display(GxEPD2_730c_GDEP073E01(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
-#else
-  #error "ePaper display not defined!"
 #endif
 
 // Font
@@ -351,7 +343,7 @@ void init()
 #endif
 
 // Default rotation for all displays; adjust per-board below
-#if (defined CROWPANEL_ESP32S3_213) || (defined D_WS27RBW264176)
+#if (defined CROWPANEL_ESP32S3_213) || (DISPLAY_ID == DT_WS27RBW264176)
   display.setRotation(3); // rotate 90 degrees
 #else
   display.setRotation(0);
@@ -394,8 +386,6 @@ uint16_t getHeight() { return display.height(); }
 uint16_t getResolutionX() { return DISPLAY_RESOLUTION_X; }
 
 uint16_t getResolutionY() { return DISPLAY_RESOLUTION_Y; }
-
-const char *getColorType() { return defined_color_type; }
 
 uint16_t getNumberOfPages() { return display.pages(); }
 

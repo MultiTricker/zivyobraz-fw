@@ -23,13 +23,7 @@
 // #define BOARD_TYPE SEEEDSTUDIO_RETERMINAL // SeeedStudio reTerminal E1001/E1002
 
 #include <Arduino.h>
-
-// Helper macros
-#define STR(x) #x
-#define XSTR(x) STR(x)
-
-#define CAT(a, b) a##b
-#define XCAT(a, b) CAT(a, b)
+#include "utils.h"
 
 #ifdef BOARD_TYPE
   // Define board type constants for comaparison
