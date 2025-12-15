@@ -19,7 +19,7 @@
 // #define BOARD_TYPE WS_EPAPER_ESP32_BOARD // Waveshare ESP32 Driver Board
 // #define BOARD_TYPE SVERIO_PAPERBOARD_SPI // Custom ESP32-S3 board with SPI ePaper (SVERIO)
 // #define BOARD_TYPE SEEEDSTUDIO_XIAO_ESP32C3 // Seeed Studio XIAO ESP32C3, bundled with 800x480 BW display
-// #define BOARD_TYPE SEEEDSTUDIO_XIAO_EDDB_ESP32S3 //Development board distributed as part of the TRMNL 7.5" (OG) DIY Kit
+// #define BOARD_TYPE SEEEDSTUDIO_XIAO_EDDB_ESP32S3 // Dev board distributed as part of the TRMNL 7.5" (OG) DIY Kit
 // #define BOARD_TYPE SEEEDSTUDIO_RETERMINAL // SeeedStudio reTerminal E1001/E1002
 
 #include <Arduino.h>
@@ -50,8 +50,8 @@
   #define BT_SEEEDSTUDIO_XIAO_EDDB_ESP32S3 15
   #define BT_SEEEDSTUDIO_RETERMINAL 16
 
-  // Create BOARD_TYPE_STRING constant here before board type is defined
-  static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
+// Create BOARD_TYPE_STRING constant here before board type is defined
+static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
 
   // Set defines based on BOARD_TYPE value to keep backward compatibility
   #define BOARD_ID XCAT(BT_, BOARD_TYPE)
