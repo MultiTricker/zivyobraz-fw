@@ -3,6 +3,13 @@
 
 #include <Arduino.h>
 
+// Helper macros (used in board.h and display.h for board/display type strings)
+#define STR(x) #x
+#define XSTR(x) STR(x)
+
+#define CAT(a, b) a##b
+#define XCAT(a, b) CAT(a, b)
+
 namespace Utils
 {
 

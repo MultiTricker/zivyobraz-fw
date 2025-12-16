@@ -27,6 +27,8 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
   if (timestampCheckOnly)
     url += "&timestamp_check=1";
 
+  url += "&b=" + String(Board::getBoardType());
+  url += "&d=" + String(Display::getDisplayType());
   url += "&rssi=" + String(Wireless::getStrength());
   url += "&ssid=" + Wireless::getSSID();
   url += "&v=" + String(Board::getBatteryVoltage());

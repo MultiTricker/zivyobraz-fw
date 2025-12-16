@@ -28,8 +28,8 @@ lib_deps =
 In **platformio.ini**, comment out default build flags under section **common** (they are specified here for automatic compilation checks on GitHub), so you can use your own display type for compilation in next steps:
 ```ini
 build_flags =
-    -D TYPE_BW      # Comment out this for your own display type enabled by you in display.h
-    -D D_GDEW0154T8 # Also comment out this
+    -D COLOR_TYPE=BW      # Comment out this for your own display type enabled by you in display.h
+    -D DISPLAY_TYPE=GDEW0154T8 # Also comment out this
 ```
 
 In code **board.h** do not forget to uncomment:
@@ -40,17 +40,17 @@ In code **board.h** do not forget to uncomment:
 ```
 3. Display type has to be changed in **display.h** In the case of GRAYSCALE, you must remove `zinggjm/GxEPD2` from **platformio.ini** (just comment it out), otherwise there will be a library collision and the code will not work. In that case, `lib/GxEPD2_4G` will be used. For other displays (BW, 3C, 7C), leave `zinggjm/GxEPD2` active, you don't need to do anything with the 4G version.
 ```c
-#define TYPE_BW           // black and white
-// #define TYPE_3C        // 3 colors - black, white and red/yellow
-// #define TYPE_GRAYSCALE // grayscale - 4 colors
-// #define TYPE_7C        // 7 colors
+#define COLOR_TYPE=BW           // black and white
+// #define COLOR_TYPE=3C        // 3 colors - black, white and red/yellow
+// #define COLOR_TYPE=GRAYSCALE // grayscale - 4 colors
+// #define COLOR_TYPE=7C        // 7 colors
 ```
 4. Uncomment the definition of the specific ePaper you are putting into operation. This section begins at line `18`, and you need to select a specific display, e.g.:
 ```c
 // BW
-// #define D_GDEY0213B7 // 122x250, 2.13"
-// #define D_GDEW042T2  // 400x300, 4.2"
-#define D_GDEW075T7     // 800x480, 7.5"
+// #define DISPLAY_TYPE=GDEY0213B7 // 122x250, 2.13"
+// #define DISPLAY_TYPE=GDEW042T2  // 400x300, 4.2"
+#define DISPLAY_TYPE=GDEW075T7     // 800x480, 7.5"
 ```
 
 After successfully compiling and flashing the board, continue with the documentation "Bringing your own ePaper to life":
