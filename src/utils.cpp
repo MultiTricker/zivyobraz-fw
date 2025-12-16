@@ -16,7 +16,7 @@ void initializeAPIKey()
 {
   prefs.begin("zivyobraz");
 
-  if (!prefs.isKey("pin"))
+  if (!prefs.isKey("apikey"))
   {
     // Generate 8-digit PIN without leading zeros (range: 10000000 - 99999999)
     rtc_cachedPIN = (esp_random() % 90000000) + 10000000;
