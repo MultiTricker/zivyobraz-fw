@@ -21,7 +21,7 @@ void init(const String &hostname, const String &password, void (*callback)())
 {
   // Connecting to WiFi
   Serial.println();
-  Serial.print("Connecting... ");
+  Serial.print("[WiFi] Connecting... ");
   WiFi.mode(WIFI_STA);
   wm.setWiFiAutoReconnect(true);
   wm.setConnectRetries(5);
@@ -42,7 +42,7 @@ void init(const String &hostname, const String &password, void (*callback)())
 String getSSID()
 {
   String in = WiFi.SSID();
-  Serial.println("Wifi SSID: " + in);
+  Serial.println("[WiFi] SSID: " + in);
   if (in.length() == 0)
     return in;
 
@@ -74,7 +74,7 @@ String getSSID()
 int8_t getStrength()
 {
   int8_t rssi = WiFi.RSSI();
-  Serial.println("Wifi Strength: " + String(rssi) + " dB");
+  Serial.println("[WiFi] Strength: " + String(rssi) + " dB");
   return rssi;
 }
 
@@ -91,7 +91,7 @@ void turnOff()
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
   delay(20);
-  Serial.println("WiFi turned off");
+  Serial.println("[WiFi] Turned off");
 }
 
 void resetCredentialsAndReboot()
@@ -100,11 +100,11 @@ void resetCredentialsAndReboot()
   turnOff();
 
   // Reset WiFi settings (erase stored credentials)
-  Serial.println("Erasing stored WiFi credentials...");
+  Serial.println("[WiFi] Erasing stored credentials...");
   wm.resetSettings();
 
   // Restart ESP to start configuration portal
-  Serial.println("Rebooting ESP...");
+  Serial.println("[SYSTEM] Rebooting ESP...");
   ESP.restart();
 }
 } // namespace Wireless

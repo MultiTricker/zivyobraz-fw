@@ -69,7 +69,7 @@ static const char *formatToString(ImageFormat format)
 
 static void printReadError(uint32_t bytesRead)
 {
-  Serial.print("Client got disconnected after bytes: ");
+  Serial.print("[HTTP] Client got disconnected after bytes: ");
   Serial.println(bytesRead);
 }
 
@@ -125,7 +125,7 @@ static void pngleOnDraw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint
 {
   if ((x >= Display::getWidth()) || (y >= Display::getHeight()))
   {
-    Serial.println("PNG size exceeds display");
+    Serial.println("[IMAGE-PNG] Size exceeds display");
     return;
   }
 
@@ -138,7 +138,7 @@ static void pngleOnDraw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint
   // Skip fully transparent pixels
   if (a == 0)
   {
-    Serial.println("Skipping transparent pixel");
+    Serial.println("[IMAGE-PNG] Skipping transparent pixel");
     return;
   }
 
@@ -234,13 +234,13 @@ static void pngleOnDraw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint
 
 static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, uint16_t bufferSize)
 {
-  Serial.println("Got PNG format, processing");
+  Serial.println("[IMAGE-PNG] Processing");
 
   // Create pngle decoder
   pngle_t *pngle = pngle_new();
   if (!pngle)
   {
-    Serial.println("Failed to create PNG decoder");
+    Serial.println("[IMAGE-PNG] Failed to create decoder");
     return false;
   }
 
@@ -266,7 +266,7 @@ static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, ui
   int fed = pngle_feed(pngle, pngSignature, 8);
   if (fed < 0)
   {
-    Serial.print("PNG signature error: ");
+    Serial.print("[IMAGE-PNG] Signature error: ");
     Serial.println(pngle_error(pngle));
     pngle_destroy(pngle);
     return false;
@@ -288,7 +288,7 @@ static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, ui
     fed = pngle_feed(pngle, buffer, chunkSize);
     if (fed < 0)
     {
-      Serial.print("PNG decode error: ");
+      Serial.print("[IMAGE-PNG] Decode error: ");
       Serial.println(pngle_error(pngle));
       success = false;
       break;
@@ -302,9 +302,9 @@ static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, ui
 
   if (success)
   {
-    Serial.print("bytes read ");
+    Serial.print("[HTTP] Bytes read ");
     Serial.println(bytes_read);
-    Serial.print("loaded in ");
+    Serial.print("[HTTP] Loaded in ");
     Serial.print(millis() - startTime);
     Serial.println(" ms");
   }
@@ -318,7 +318,7 @@ static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, ui
 
 static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format, uint8_t *buffer, uint16_t bufferSize)
 {
-  Serial.print("Got format ");
+  Serial.print("[IMAGE-Z] Got format ");
   Serial.print(formatToString(format));
   Serial.println(", processing");
 
@@ -346,12 +346,12 @@ static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format,
     {
       if (!http.isConnected() && !http.available())
       {
-        Serial.print("Incomplete image received. Pixels processed: ");
+        Serial.print("[IMAGE-Z] Incomplete image received. Pixels processed: ");
 
         // If we're close to complete (95%+), consider it a success
         if (pixelsProcessed >= (totalPixels * 95 / 100))
         {
-          Serial.println("Image is 95%+ complete, accepting as valid");
+          Serial.println("[IMAGE-Z] Image is 95%+ complete, accepting as valid");
           return true;
         }
         return false;
@@ -360,7 +360,7 @@ static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format,
       uint32_t bytesRead = http.readBytes(buffer, bufferSize);
       if (bytesRead == 0)
       {
-        Serial.print("No more data available. Pixels processed: ");
+        Serial.print("[IMAGE-Z] No more data available. Pixels processed: ");
         Serial.print(pixelsProcessed);
         Serial.print("/");
         Serial.println(totalPixels);
@@ -427,9 +427,9 @@ static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format,
       yield();
   }
 
-  Serial.print("bytes read ");
+  Serial.print("[HTTP] Bytes read ");
   Serial.println(bytes_read);
-  Serial.print("loaded in ");
+  Serial.print("[HTTP] Loaded in ");
   Serial.print(millis() - startTime);
   Serial.println(" ms");
 
@@ -448,7 +448,7 @@ void readImageData(HttpClient &http)
   // Read format header (2 bytes)
   uint16_t header = http.read16();
 
-  Serial.print("Header: 0x");
+  Serial.print("[IMAGE] Header: 0x");
   Serial.println(header, HEX);
 
   // Allocate buffer on stack for this function call only
@@ -476,7 +476,7 @@ void readImageData(HttpClient &http)
       break;
 
     default:
-      Serial.print("Unknown format header: 0x");
+      Serial.print("[IMAGE] Unknown format header: 0x");
       Serial.println(header, HEX);
       success = false;
       break;
@@ -485,7 +485,7 @@ void readImageData(HttpClient &http)
   // Handle errors
   if (!success)
   {
-    Serial.println("ERROR: Image processing failed");
+    Serial.println("[IMAGE] ERROR: Processing failed");
     StateManager::setSleepDuration(StateManager::DEFAULT_SLEEP_SECONDS);
     StateManager::setTimestamp(0);
   }

@@ -45,7 +45,7 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
 
   url += extraParams;
 
-  Serial.print("Connecting to: ");
+  Serial.print("[HTTP] Connecting to: ");
   Serial.println(host);
 
 #ifdef USE_CLIENT_HTTPS
@@ -60,7 +60,7 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
     if (m_client.connect(host, CONNECTION_PORT))
       break;
 
-    Serial.println("Connection failed, retrying... " + String(attempt + 1) + "/3");
+    Serial.println("[HTTP] Connection failed, retrying... " + String(attempt + 1) + "/3");
     if (attempt == 2)
     {
       m_sleepDuration = StateManager::DEFAULT_SLEEP_SECONDS;
@@ -73,7 +73,7 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
   }
 
   // Send HTTP/HTTPS request
-  Serial.print("Requesting URL: ");
+  Serial.print("[HTTP] Requesting URL: ");
   Serial.print(CONNECTION_URL_PREFIX);
   Serial.print(host);
   Serial.println(url);
@@ -81,7 +81,7 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
   m_client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" +
                  "X-API-Key: " + String(Utils::getStoredAPIKey()) + "\r\n" + "Connection: close\r\n\r\n");
 
-  Serial.println("Request sent");
+  Serial.println("[HTTP] Request sent");
 
   // Wait for response with timeout
   uint32_t timeout = millis();
@@ -89,7 +89,7 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
   {
     if (millis() - timeout > 10000)
     {
-      Serial.println(">>> Client Timeout!");
+      Serial.println("[HTTP] >>> Client Timeout!");
       m_client.stop();
       if (timestampCheckOnly)
         m_sleepDuration = StateManager::DEFAULT_SLEEP_SECONDS;
@@ -120,7 +120,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
         foundTimestamp = true;
         // Skipping also colon and space - also in following code for sleep, rotate, ...
         m_serverTimestamp = line.substring(11).toInt();
-        Serial.print("Timestamp now: ");
+        Serial.print("[HEADER] Timestamp now: ");
         Serial.println(m_serverTimestamp);
       }
 
@@ -129,7 +129,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
       {
         uint64_t sleepMinutes = line.substring(7).toInt();
         m_sleepDuration = sleepMinutes * 60; // convert minutes to seconds
-        Serial.print("Sleep: ");
+        Serial.print("[HEADER] Sleep: ");
         Serial.println(sleepMinutes);
       }
 
@@ -142,7 +142,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
         if (StateManager::getProgramRuntimeCompensationStart() == 0)
           StateManager::setProgramRuntimeCompensationStart(millis());
 
-        Serial.print("Sleep in seconds: ");
+        Serial.print("[HEADER] Sleep in seconds: ");
         Serial.println(m_sleepDuration);
       }
 
@@ -151,7 +151,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
       {
         m_displayRotation = line.substring(8).toInt();
         m_hasRotation = true;
-        Serial.print("Rotate: ");
+        Serial.print("[HEADER] Rotate: ");
         Serial.println(m_displayRotation);
       }
 
@@ -159,7 +159,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
       if (line.startsWith("PartialRefresh"))
       {
         m_partialRefresh = true;
-        Serial.println("Partial refresh requested");
+        Serial.println("[HEADER] Partial refresh requested");
       }
     }
 
@@ -174,7 +174,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
     // End of headers
     if (line == "\r")
     {
-      Serial.println("headers received");
+      Serial.println("[HTTP] Headers received");
       break;
     }
   }
@@ -188,7 +188,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
 
   // For debug purposes - print out the whole response
   /*
-  Serial.println("Byte by byte:");
+  Serial.println("[HTTP] Byte by byte:");
 
   while (m_client.connected() || m_client.available()) {
     if (m_client.available()) {
@@ -204,7 +204,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
   {
     if (foundTimestamp && (m_serverTimestamp == storedTimestamp))
     {
-      Serial.print("No screen reload, because we already are at current timestamp: ");
+      Serial.print("[TIMESTAMP] No screen reload, still at current timestamp: ");
       Serial.println(storedTimestamp);
       return false;
     }
