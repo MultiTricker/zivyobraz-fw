@@ -37,6 +37,7 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
   url += "&c=" + String(Display::getColorType());
   url += "&fw=" + String(firmware);
   url += "&ap_retries=" + String(StateManager::getFailureCount());
+  url += "&r=" + String(static_cast<uint8_t>(StateManager::getResetReason()));
   url += extraParams;
 
   Serial.print("Connecting to: ");
