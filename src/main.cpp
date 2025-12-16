@@ -70,7 +70,8 @@ String getSensorData()
   int pressure;
   if (Sensor::readSensorsVal(temperature, humidity, pressure))
   {
-    String data = "&temp=" + String(temperature) + "&hum=" + String(humidity);
+    String data = "&s=" + String(Sensor::getSensorTypeStr());
+    data += "&temp=" + String(temperature) + "&hum=" + String(humidity);
 
     switch (Sensor::getSensorType())
     {
