@@ -48,10 +48,16 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
   Serial.print("Connecting to: ");
   Serial.println(host);
 
+#ifdef USE_CLIENT_HTTPS
+  // Configure secure connection without certificate verification
+  m_client.setInsecure();
+  m_client.setTimeout(15); // Increased timeout for TLS handshake
+#endif
+
   // Try to connect with retries
   for (uint8_t attempt = 0; attempt < 3; attempt++)
   {
-    if (m_client.connect(host, 80))
+    if (m_client.connect(host, CONNECTION_PORT))
       break;
 
     Serial.println("Connection failed, retrying... " + String(attempt + 1) + "/3");
@@ -66,8 +72,9 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
       delay(200);
   }
 
-  // Send HTTP request
-  Serial.print("Requesting URL: http://");
+  // Send HTTP/HTTPS request
+  Serial.print("Requesting URL: ");
+  Serial.print(CONNECTION_URL_PREFIX);
   Serial.print(host);
   Serial.println(url);
 

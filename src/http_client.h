@@ -1,9 +1,23 @@
 #ifndef HTTP_CLIENT_H
 #define HTTP_CLIENT_H
 
+// Select http/https connection type (default: https)
+#ifndef USE_CLIENT_HTTP
+  #define USE_CLIENT_HTTPS
+#endif
+
+#ifdef USE_CLIENT_HTTP
+  #include <WiFiClient.h>
+  #define CONNECTION_PORT 80
+  #define CONNECTION_URL_PREFIX "http://"
+#else
+  #include <WiFiClientSecure.h>
+  #define CONNECTION_PORT 443
+  #define CONNECTION_URL_PREFIX "https://"
+#endif
+
 #include <Arduino.h>
 #include <WiFi.h>
-#include <WiFiClient.h>
 
 class HttpClient
 {
@@ -43,7 +57,11 @@ public:
   uint32_t read32();
 
 private:
+#ifdef USE_CLIENT_HTTP
   WiFiClient m_client;
+#else
+  WiFiClientSecure m_client;
+#endif
 
   // Server response data
   uint64_t m_sleepDuration;
