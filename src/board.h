@@ -96,7 +96,6 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define PIN_BUSY 4
   #define PIN_CS2 35
   #define ePaperPowerPin 2
-  // Maximum page buffer size in bytes (ESP32-WROOM has limited RAM)
   #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined ESPink_V3
@@ -112,8 +111,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define PIN_SCL 2
   #define PIN_ALERT 9
   #define EXT_BUTTON 40
-  // ESP32-S3 with PSRAM - large buffer for single-page rendering
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined ESPink_V35
   #define PIN_SS 10
@@ -129,8 +127,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define EXT_BUTTON 40
   #define vBatPin 9
   #define dividerRatio (1.7693877551f)
-  // ESP32-S3 with PSRAM - large buffer for single-page rendering
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined ESP32S3Adapter
   // With ESP32-S3 DEVKIT from laskakit.cz
@@ -145,8 +142,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define PIN_SCL 2
   #define vBatPin 9
   #define dividerRatio (1.7693877551f)
-  // ESP32-S3 with PSRAM - large buffer for single-page rendering
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined ES3ink
   // for version P1.1
@@ -161,8 +157,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define RGBledPowerPin 14
   #define vBatPin ADC1_GPIO2_CHANNEL
   #define dividerRatio (2.018f)
-  // ESP32-S3 with PSRAM - large buffer for single-page rendering
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined MakerBadge_revB
   #define PIN_SS 41
@@ -172,8 +167,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define ePaperPowerPin 16
   #define vBatPin 6
   #define BATT_V_CAL_SCALE (1.00f)
-  // ESP32-S3 with PSRAM - large buffer for single-page rendering
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined MakerBadge_revD
   #define PIN_SS 41
@@ -184,8 +178,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define enableBattery 14
   #define vBatPin 6
   #define BATT_V_CAL_SCALE (1.05f)
-  // ESP32-S3 with PSRAM - large buffer for single-page rendering
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined TTGO_T5_v23
   #define PIN_SS 5
@@ -194,7 +187,6 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define PIN_BUSY 4
   #define ePaperPowerPin 2
   #define vBatPin 35
-  // Maximum page buffer size in bytes (ESP32 has limited RAM)
   #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42)
@@ -208,8 +200,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define PIN_SPI_MOSI 11
   #define PIN_SPI_SS PIN_SS
   #define vBatPin -1
-  // ESP32-S3 with PSRAM - large buffer for single-page rendering
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined CROWPANEL_ESP32S3_213
   #define PIN_SS 14
@@ -222,8 +213,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define PIN_SPI_MOSI 11
   #define PIN_SPI_SS PIN_SS
   #define vBatPin -1
-  // ESP32-S3 with PSRAM - large buffer for single-page rendering
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined WS_EPAPER_ESP32_BOARD
   #define PIN_SS 15
@@ -232,14 +222,12 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define PIN_BUSY 25
   #define PIN_CS2 35
   #define ePaperPowerPin 2
-  // Maximum page buffer size in bytes (ESP32 has limited RAM)
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
-
   #define REMAP_SPI
   #define PIN_SPI_CLK 13
   #define PIN_SPI_MOSI 14
   #define PIN_SPI_MISO -1
   #define PIN_SPI_SS -1
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined SVERIO_PAPERBOARD_SPI
   #define PIN_SS 12
@@ -256,7 +244,6 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define enableBattery 2
   #define vBatPin ADC1_GPIO1_CHANNEL
   #define dividerRatio (2.7507665f)
-  // ESP32-S3 with PSRAM - large buffer for single-page rendering
   #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
 
 #elif defined SEEEDSTUDIO_XIAO_ESP32C3
@@ -267,7 +254,6 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define ePaperPowerPin 7
   #define PIN_SPI_CLK 8
   #define PIN_SPI_MOSI 11
-  // Maximum page buffer size in bytes (ESP32-C3 has limited RAM)
   #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined SEEEDSTUDIO_XIAO_EDDB_ESP32S3
@@ -281,8 +267,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define enableBattery 6
   #define vBatPin 1
   #define dividerRatio (2.000f)
-  // ESP32-S3 with PSRAM - large buffer for single-page rendering
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined SEEEDSTUDIO_RETERMINAL
   // SeeedStudio reTerminal E1001 (800x480 BW) and E1002 (800x480 7-color Spectra E6)
@@ -301,8 +286,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define enableBattery 21
   #define vBatPin 1
   #define dividerRatio (2.0f)
-  // ESP32-S3 with PSRAM - large buffer for single-page rendering
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
   #define REMAP_SPI
 #endif
 
