@@ -39,8 +39,12 @@ void setSleepDuration(uint64_t seconds);
 uint64_t calculateSleepDuration();
 
 // Program runtime compensation
-void setProgramRuntimeCompensation(unsigned long compensation);
-unsigned long getProgramRuntimeCompensation();
+unsigned long getProgramRuntimeCompensationStart();
+void setProgramRuntimeCompensationStart(unsigned long compensation);
+
+// Last runtime compensation time (in RTC memory to send as part of a report to server next run)
+long getLastCompensationTime();
+void setLastCompensationTime(long time);
 
 // Default sleep time
 static const uint64_t DEFAULT_SLEEP_SECONDS = 120;

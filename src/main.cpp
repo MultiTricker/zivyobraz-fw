@@ -70,7 +70,8 @@ String getSensorData()
   int pressure;
   if (Sensor::readSensorsVal(temperature, humidity, pressure))
   {
-    String data = "&temp=" + String(temperature) + "&hum=" + String(humidity);
+    String data = "&s=" + String(Sensor::getSensorTypeStr());
+    data += "&temp=" + String(temperature) + "&hum=" + String(humidity);
 
     switch (Sensor::getSensorType())
     {
@@ -186,10 +187,14 @@ void handleDisconnectedState()
 void enterDeepSleepMode()
 {
   uint64_t sleepDuration = StateManager::getSleepDuration();
-  // Calculate compensation and convert to seconds
-  unsigned long programRuntimeCompensation = (millis() - StateManager::getProgramRuntimeCompensation()) / 1000;
+  // Calculate compensation in milliseconds
+  unsigned long programRuntimeCompensationMs = millis() - StateManager::getProgramRuntimeCompensationStart();
 
-  // Compensation is capped to max 60 seconds
+  // Save compensation time in milliseconds for next run (survives deep sleep)
+  StateManager::setLastCompensationTime(programRuntimeCompensationMs);
+
+  // Convert to seconds for sleep duration adjustment, capped to max 60 seconds
+  unsigned long programRuntimeCompensation = programRuntimeCompensationMs / 1000;
   if (programRuntimeCompensation > 60)
     programRuntimeCompensation = 60;
 

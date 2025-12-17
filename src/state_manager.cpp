@@ -3,6 +3,7 @@
 // RTC persistent data (survives deep sleep)
 RTC_DATA_ATTR uint64_t rtc_timestamp = 0;
 RTC_DATA_ATTR uint8_t rtc_failureCount = 0;
+RTC_DATA_ATTR long rtc_lastCompensationTime = 0;
 
 namespace StateManager
 {
@@ -14,14 +15,18 @@ uint64_t getTimestamp() { return rtc_timestamp; }
 
 void setTimestamp(uint64_t ts) { rtc_timestamp = ts; }
 
-void setProgramRuntimeCompensation(unsigned long compensation)
+unsigned long getProgramRuntimeCompensationStart() { return programRuntimeCompensation; }
+
+void setProgramRuntimeCompensationStart(unsigned long compensation)
 {
   // Only set once if not already set
   if (programRuntimeCompensation == 0)
     programRuntimeCompensation = compensation;
 }
 
-unsigned long getProgramRuntimeCompensation() { return programRuntimeCompensation; }
+long getLastCompensationTime() { return rtc_lastCompensationTime; }
+
+void setLastCompensationTime(long time) { rtc_lastCompensationTime = time; }
 
 uint8_t getFailureCount() { return rtc_failureCount; }
 

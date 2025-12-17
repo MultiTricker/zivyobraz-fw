@@ -37,6 +37,12 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
   url += "&c=" + String(Display::getColorType());
   url += "&fw=" + String(firmware);
   url += "&ap_retries=" + String(StateManager::getFailureCount());
+  url += "&r=" + String(static_cast<uint8_t>(StateManager::getResetReason()));
+
+  // Add last compensation time if available from previous run
+  if (StateManager::getLastCompensationTime() > 0)
+    url += "&ct=" + String(StateManager::getLastCompensationTime());
+
   url += extraParams;
 
   Serial.print("Connecting to: ");
@@ -126,8 +132,8 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
         m_sleepDuration = line.substring(14).toInt();
 
         // Deal with program runtime compensation (if not already set) for more accurate sleep time in seconds
-        if (StateManager::getProgramRuntimeCompensation() == 0)
-          StateManager::setProgramRuntimeCompensation(millis());
+        if (StateManager::getProgramRuntimeCompensationStart() == 0)
+          StateManager::setProgramRuntimeCompensationStart(millis());
 
         Serial.print("Sleep in seconds: ");
         Serial.println(m_sleepDuration);
