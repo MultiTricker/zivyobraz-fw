@@ -120,7 +120,7 @@ void downloadAndDisplayImage(HttpClient &httpClient)
 
   // Get that lovely image and put it on your gorgeous grayscale ePaper screen!
   // If you can't use whole display at once, there will be multiple pages and therefore
-  // requests and downloads of one bitmap from server, since you have to always write whole image
+  // requests and downloads of one image from server
   Display::setToFirstPage();
 
   // Store number of pages needed to fill the buffer of the display to turn off the WiFi after last page is loaded

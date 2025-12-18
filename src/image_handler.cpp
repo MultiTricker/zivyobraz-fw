@@ -6,7 +6,6 @@
  * for maintainability and future extensibility.
  *
  * Supported Formats:
- * - BMP: Standard bitmap format (1, 4, 8, 24, 32-bit depths)
  * - PNG: Portable Network Graphics (using pngle - lightweight embedded decoder)
  * - Z1:  ZivyObraz RLE format (1 byte color + 1 byte count)
  * - Z2:  ZivyObraz RLE format (2-bit color + 6-bit count) - Most efficient
@@ -41,7 +40,6 @@ namespace ImageHandler
 ///////////////////////////////////////////////
 enum class ImageFormat : uint16_t
 {
-  BMP = 0x4D42, // "BM" signature (first 2 bytes: 'B' 'M')
   PNG = 0x5089, // PNG signature (first 2 bytes: 0x89 0x50)
   Z1 = 0x315A,  // Z1: 1 byte color + 1 byte count
   Z2 = 0x325A,  // Z2: 2-bit color + 6-bit count
@@ -56,8 +54,6 @@ static const char *formatToString(ImageFormat format)
 {
   switch (format)
   {
-    case ImageFormat::BMP:
-      return "BMP";
     case ImageFormat::PNG:
       return "PNG";
     case ImageFormat::Z1:
@@ -118,189 +114,6 @@ static uint16_t mapColorValue(uint8_t pixelColor, uint16_t color2, uint16_t colo
     default:
       return GxEPD_WHITE;
   }
-}
-
-///////////////////////////////////////////////
-// BMP Image Processing
-///////////////////////////////////////////////
-
-static bool processBMP(HttpClient &http, uint32_t startTime)
-{
-  // Read BMP header
-  uint32_t fileSize = http.read32();
-  uint32_t creatorBytes = http.read32();
-  (void)creatorBytes; // unused
-  uint32_t imageOffset = http.read32();
-  uint32_t headerSize = http.read32();
-  uint32_t width = http.read32();
-  int32_t height = (int32_t)http.read32();
-  uint16_t planes = http.read16();
-  uint16_t depth = http.read16();
-  uint32_t format = http.read32();
-
-  Serial.print("BMP format: ");
-  Serial.print(width);
-  Serial.print("x");
-  Serial.print(abs(height));
-  Serial.print(", depth=");
-  Serial.println(depth);
-
-  uint32_t bytes_read = 34; // BMP header: 2-byte signature + 32-byte info header (BITMAPINFOHEADER)
-
-  // Check if format is supported
-  if ((planes != 1) || ((format != 0) && (format != 3)))
-  {
-    Serial.println("Unsupported BMP format");
-    return false;
-  }
-
-  bool flip = height < 0;
-  if (flip)
-    height = -height;
-
-  uint16_t w = Display::getWidth();
-  uint16_t h = Display::getHeight();
-
-  // BMP rows are padded to 4-byte boundary
-  uint32_t rowSize = (width * depth / 8 + 3) & ~3;
-  if (depth < 8)
-    rowSize = ((width * depth + 8 - depth) / 8 + 3) & ~3;
-
-  if ((width > w) || (height > h))
-  {
-    Serial.println("BMP size exceeds display");
-    return false;
-  }
-
-  // Static buffer for one row - conservative size for embedded systems
-  // 800 bytes = 800px at 1-bit, 400px at 2-bit, 200px at 4-bit, or ~260px at 24-bit
-  // This handles most common e-paper displays without excessive stack usage
-  static const uint16_t MAX_ROW_BUFFER = 800;
-  uint8_t rowBuffer[MAX_ROW_BUFFER];
-
-  if (rowSize > MAX_ROW_BUFFER)
-  {
-    Serial.printf("ERROR: Row size %d exceeds buffer %d (reduce color depth or use smaller image)\n", rowSize,
-                  MAX_ROW_BUFFER);
-    return false;
-  }
-
-  // Skip to image data
-  bytes_read += http.skip((int32_t)(imageOffset - bytes_read));
-
-  // Process each row
-  for (uint16_t row = 0; row < height; row++)
-  {
-    if (!http.isConnected())
-    {
-      Serial.printf("Connection lost at row %d/%d\n", row, height);
-      return false;
-    }
-
-    // Read one row
-    uint32_t bytesRead = http.readBytes(rowBuffer, rowSize);
-    bytes_read += bytesRead;
-
-    if (bytesRead != rowSize)
-    {
-      Serial.printf("Row %d incomplete: got %d/%d bytes\n", row, bytesRead, rowSize);
-      return false;
-    }
-
-    // Determine display row (BMP is bottom-up unless negative height)
-    uint16_t displayRow = flip ? row : (height - 1 - row);
-
-    // Process pixels in this row
-    uint16_t bufIdx = 0;
-    for (uint16_t col = 0; col < width && col < w; col++)
-    {
-      uint16_t color = GxEPD_WHITE;
-
-      switch (depth)
-      {
-        case 1: // 1-bit BW
-        {
-          uint8_t bit = 7 - (col % 8);
-          if (col % 8 == 0 && col > 0)
-            bufIdx++;
-          color = (rowBuffer[bufIdx] & (1 << bit)) ? GxEPD_WHITE : GxEPD_BLACK;
-          break;
-        }
-
-        case 4: // 4-bit indexed
-        {
-          uint8_t nibble = (col & 1) ? (rowBuffer[bufIdx] & 0x0F) : (rowBuffer[bufIdx] >> 4);
-          if (col & 1)
-            bufIdx++;
-          // Simple grayscale mapping
-          color = (nibble < 4)    ? GxEPD_BLACK
-                  : (nibble < 8)  ? GxEPD_DARKGREY
-                  : (nibble < 12) ? GxEPD_LIGHTGREY
-                                  : GxEPD_WHITE;
-          break;
-        }
-
-        case 8: // 8-bit grayscale
-        {
-          uint8_t gray = rowBuffer[bufIdx++];
-          color = (gray < 64)    ? GxEPD_BLACK
-                  : (gray < 128) ? GxEPD_DARKGREY
-                  : (gray < 192) ? GxEPD_LIGHTGREY
-                                 : GxEPD_WHITE;
-          break;
-        }
-
-        case 24: // 24-bit RGB
-        {
-          uint8_t b = rowBuffer[bufIdx++];
-          uint8_t g = rowBuffer[bufIdx++];
-          uint8_t r = rowBuffer[bufIdx++];
-
-          // Convert to grayscale
-          uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-          color = (gray < 64)    ? GxEPD_BLACK
-                  : (gray < 128) ? GxEPD_DARKGREY
-                  : (gray < 192) ? GxEPD_LIGHTGREY
-                                 : GxEPD_WHITE;
-          break;
-        }
-
-        case 32: // 32-bit RGBA
-        {
-          uint8_t b = rowBuffer[bufIdx++];
-          uint8_t g = rowBuffer[bufIdx++];
-          uint8_t r = rowBuffer[bufIdx++];
-          bufIdx++; // skip alpha
-
-          uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-          color = (gray < 64)    ? GxEPD_BLACK
-                  : (gray < 128) ? GxEPD_DARKGREY
-                  : (gray < 192) ? GxEPD_LIGHTGREY
-                                 : GxEPD_WHITE;
-          break;
-        }
-
-        default:
-          break;
-      }
-
-      Display::drawPixel(col, displayRow, color);
-    }
-
-    // Yield periodically
-    if (row % 50 == 0)
-    {
-      yield();
-    }
-  }
-
-  Serial.print("bytes read ");
-  Serial.println(bytes_read);
-  Serial.print("loaded in ");
-  Serial.print(millis() - startTime);
-  Serial.println(" ms");
-
-  return true;
 }
 
 ///////////////////////////////////////////////
@@ -646,10 +459,6 @@ void readImageData(HttpClient &http)
   // Route to appropriate format handler
   switch (static_cast<ImageFormat>(header))
   {
-    case ImageFormat::BMP:
-      success = processBMP(http, startTime);
-      break;
-
     case ImageFormat::PNG:
       success = processPNG(http, startTime, buffer, STREAM_BUFFER_SIZE);
       break;
