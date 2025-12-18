@@ -124,7 +124,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define PIN_SPI_CLK 12
   #define PIN_SDA 42
   #define PIN_SCL 2
-  //  #define EXT_BUTTON 40 // not RTC capable, won't work for wakeup from deep sleep
+  #define EXT_BUTTON 40 // not RTC capable, but can be used as reset + button combo
   #define vBatPin 9
   #define dividerRatio (1.7693877551f)
   #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)

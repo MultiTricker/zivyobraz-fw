@@ -80,8 +80,8 @@ void enterDeepSleepMode(uint64_t sleepDuration)
   M5.shutdown(sleepDuration);
 #else
   esp_sleep_enable_timer_wakeup(sleepDuration * 1000000ULL);
-  #ifdef EXT_BUTTON
   // Configure button as additional wake source (wake on LOW level - active low button)
+  #if defined(EXT_BUTTON) && !defined(ESPink_V35)
   esp_sleep_enable_ext1_wakeup(BIT(EXT_BUTTON), ESP_EXT1_WAKEUP_ANY_LOW);
   #endif
   delay(100);
