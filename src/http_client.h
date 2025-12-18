@@ -40,7 +40,6 @@ public:
   uint8_t readByte();
   uint8_t readByteValid(bool *valid);
   uint16_t read16();
-  uint32_t read32();
 
 private:
   WiFiClient m_client;

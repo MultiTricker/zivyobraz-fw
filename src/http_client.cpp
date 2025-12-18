@@ -289,20 +289,8 @@ uint8_t HttpClient::readByteValid(bool *valid)
 
 uint16_t HttpClient::read16()
 {
-  // BMP data is little-endian
   uint16_t result;
   ((uint8_t *)&result)[0] = readByte(); // LSB
   ((uint8_t *)&result)[1] = readByte(); // MSB
-  return result;
-}
-
-uint32_t HttpClient::read32()
-{
-  // BMP data is little-endian
-  uint32_t result;
-  ((uint8_t *)&result)[0] = readByte(); // LSB
-  ((uint8_t *)&result)[1] = readByte();
-  ((uint8_t *)&result)[2] = readByte();
-  ((uint8_t *)&result)[3] = readByte(); // MSB
   return result;
 }
