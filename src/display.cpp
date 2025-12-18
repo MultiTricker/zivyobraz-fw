@@ -358,7 +358,7 @@ void init()
 
 void clear()
 {
-  Serial.println("[Display] Clearing...");
+  Serial.println("[DISPLAY] Clearing...");
 
   init();
 
@@ -377,7 +377,7 @@ void clear()
   // Disable power supply for ePaper
   Board::setEPaperPowerOn(false);
 
-  Serial.println("[Display] Clearing done");
+  Serial.println("[DISPLAY] Clearing done");
 }
 
 void setRotation(uint8_t rotation) { display.setRotation(rotation); }
@@ -497,7 +497,7 @@ void enableLightSleepDuringRefresh(bool enable)
 #ifndef M5StackCoreInk
   if (enable)
   {
-    Serial.println("[Sleep] Light sleep during display refresh");
+    Serial.println("[SLEEP] Light sleep during display refresh");
     display.epd2.setBusyCallback(busyCallbackLightSleep, nullptr);
   }
   else

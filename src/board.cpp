@@ -94,7 +94,7 @@ float getBatteryVoltage()
   float volt;
 
 #ifdef ESPink_V3
-  Serial.println("[Battery] Readingon ESPink V3 board");
+  Serial.println("[BATTERY] Readingon ESPink V3 board");
 
   setEPaperPowerOn(true);
   pinMode(PIN_ALERT, INPUT_PULLUP);
@@ -108,13 +108,13 @@ float getBatteryVoltage()
   // lipo.enableDebugging(); // Uncomment this line to enable helpful debug messages on Serial
 
   // Read and print the reset indicator
-  Serial.print(F("[Battery] Reset Indicator was: "));
+  Serial.print(F("[BATTERY] Reset Indicator was: "));
   bool RI = lipo.isReset(true); // Read the RI flag and clear it automatically if it is set
   Serial.println(RI);           // Print the RI
   // If RI was set, check it is now clear
   if (RI)
   {
-    Serial.print(F("[Battery] Reset Indicator is now: "));
+    Serial.print(F("[BATTERY] Reset Indicator is now: "));
     RI = lipo.isReset(); // Read the RI flag
     Serial.println(RI);  // Print the RI
   }
@@ -126,7 +126,7 @@ float getBatteryVoltage()
   volt = (float)lipo.getVoltage();
   // percentage could be read like this:
   // lipo.getSOC();
-  // Serial.println("[Battery] Percentage: " + String(lipo.getSOC(), 2) + " %");
+  // Serial.println("[BATTERY] Percentage: " + String(lipo.getSOC(), 2) + " %");
 
   lipo.clearAlert();
   lipo.enableHibernate();
@@ -138,7 +138,7 @@ float getBatteryVoltage()
   esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_WIDTH_BIT_12, 0, &adc_cal);
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_12);
 
-  Serial.println("[Battery] Reading on ES3ink board");
+  Serial.println("[BATTERY] Reading on ES3ink board");
 
   digitalWrite(enableBattery, LOW);
   uint32_t raw = adc1_get_raw(vBatPin);
@@ -151,7 +151,7 @@ float getBatteryVoltage()
   digitalWrite(enableBattery, HIGH);
 
 #elif defined ESP32S3Adapter
-  Serial.println("[Battery] Reading on ESP32-S3 DEVKIT board");
+  Serial.println("[BATTERY] Reading on ESP32-S3 DEVKIT board");
   // attach ADC input
   volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);
 
@@ -225,7 +225,7 @@ float getBatteryVoltage()
   pinMode(enableBattery, INPUT);
 
 #elif defined SEEEDSTUDIO_RETERMINAL
-  Serial.println("[Battery] Reading on SeeedStudio reTerminal board");
+  Serial.println("[BATTERY] Reading on SeeedStudio reTerminal board");
   // Enable battery voltage measurement circuit via GPIO21
   digitalWrite(enableBattery, HIGH);
   pinMode(enableBattery, OUTPUT);
@@ -238,7 +238,7 @@ float getBatteryVoltage()
   volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);
 #endif
 
-  Serial.println("[Battery] Voltage: " + String(volt) + " V");
+  Serial.println("[BATTERY] Voltage: " + String(volt) + " V");
   return volt;
 }
 
@@ -251,7 +251,7 @@ unsigned long checkButtonPressDuration()
   if (digitalRead(EXT_BUTTON) == HIGH)
     return 0; // Button not pressed
 
-  Serial.println("[Button] Press detected at boot, measuring duration...");
+  Serial.println("[BUTTON] Press detected at boot, measuring duration...");
 
   unsigned long pressStart = millis();
   const unsigned long maxWaitTime = 10000;
@@ -266,11 +266,81 @@ unsigned long checkButtonPressDuration()
   }
 
   unsigned long pressDuration = millis() - pressStart;
-  Serial.println("[Button] Press duration: " + String(pressDuration) + " ms");
+  Serial.println("[BUTTON] Press duration: " + String(pressDuration) + " ms");
   return pressDuration;
 #else
   // EXT_BUTTON not defined for this board
   return 0;
 #endif
+}
+
+float getCPUTemperature()
+{
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
+  return temperatureRead();
+#else
+  return 0.0f;
+#endif
+}
+
+ResetReason getResetReason()
+{
+  esp_reset_reason_t reason = esp_reset_reason();
+
+  switch (reason)
+  {
+    case ESP_RST_POWERON:
+      return ResetReason::POWERON;
+    case ESP_RST_EXT:
+      return ResetReason::EXT;
+    case ESP_RST_SW:
+      return ResetReason::SW;
+    case ESP_RST_PANIC:
+      return ResetReason::PANIC;
+    case ESP_RST_INT_WDT:
+      return ResetReason::INT_WDT;
+    case ESP_RST_TASK_WDT:
+      return ResetReason::TASK_WDT;
+    case ESP_RST_WDT:
+      return ResetReason::WDT;
+    case ESP_RST_DEEPSLEEP:
+      return ResetReason::DEEPSLEEP;
+    case ESP_RST_BROWNOUT:
+      return ResetReason::BROWNOUT;
+    case ESP_RST_SDIO:
+      return ResetReason::SDIO;
+    default:
+      return ResetReason::UNKNOWN;
+  }
+}
+
+const char *getResetReasonString()
+{
+  esp_reset_reason_t reason = esp_reset_reason();
+  switch (reason)
+  {
+    case ESP_RST_POWERON:
+      return "poweron";
+    case ESP_RST_EXT:
+      return "external";
+    case ESP_RST_SW:
+      return "software";
+    case ESP_RST_PANIC:
+      return "panic";
+    case ESP_RST_INT_WDT:
+      return "int_watchdog";
+    case ESP_RST_TASK_WDT:
+      return "task_watchdog";
+    case ESP_RST_WDT:
+      return "watchdog";
+    case ESP_RST_DEEPSLEEP:
+      return "deepsleep";
+    case ESP_RST_BROWNOUT:
+      return "brownout";
+    case ESP_RST_SDIO:
+      return "sdio";
+    default:
+      return "unknown";
+  }
 }
 } // namespace Board

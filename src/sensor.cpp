@@ -36,15 +36,15 @@ static bool readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres);
 
 void init()
 {
-  StateManager::ResetReason reason = StateManager::getResetReason();
+  ResetReason reason = Board::getResetReason();
 
   // Reset sensor detection on power-on or hardware reset
-  if (reason == StateManager::ResetReason::POWERON || reason == StateManager::ResetReason::EXT)
+  if (reason == ResetReason::POWERON || reason == ResetReason::EXT)
   {
     Serial.println("[SENSOR] Fresh boot - resetting detection");
     detectedSensor = SensorType::NONE;
   }
-  else if (reason == StateManager::ResetReason::DEEPSLEEP)
+  else if (reason == ResetReason::DEEPSLEEP)
   {
     Serial.print("[SENSOR] Wake from deep sleep - using cached sensor: ");
     Serial.println(getSensorTypeStr());
@@ -316,6 +316,49 @@ const char *getSensorTypeStr()
       return "UNKNOWN";
   }
 }
+
+SensorData getSensorData()
+{
+  SensorData data = {nullptr, 0.0f, 0, 0, false, false, false};
+
+  float temperature;
+  int humidity;
+  int pressure = 0;
+
+  if (readSensorsVal(temperature, humidity, pressure))
+  {
+    SensorType sensorType = getSensorType();
+    data.type = getSensorTypeStr();
+    data.temperature = temperature;
+    data.humidity = humidity;
+    data.pressureOrCO2 = pressure;
+    data.isPressure = (sensorType == SensorType::BME280);
+    // Only BME280, SCD4X, and STCC4 have a third measurement
+    data.hasThirdMeasurement =
+      (sensorType == SensorType::BME280 || sensorType == SensorType::SCD4X || sensorType == SensorType::STCC4);
+    data.isValid = true;
+  }
+
+  return data;
+}
+
+} // namespace Sensor
+
+#else
+
+// Stub implementations when SENSOR is not defined
+namespace Sensor
+{
+
+void init() {}
+
+bool readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres) { return false; }
+
+SensorType getSensorType() { return SensorType::NONE; }
+
+const char *getSensorTypeStr() { return "NONE"; }
+
+SensorData getSensorData() { return {nullptr, 0.0f, 0, 0, false, false, false}; }
 
 } // namespace Sensor
 

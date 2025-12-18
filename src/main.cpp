@@ -11,6 +11,7 @@
  * Libraries:
  * EPD library: https://github.com/ZinggJM/GxEPD2
  * EPD library for 4G "Grayscale": https://github.com/ZinggJM/GxEPD2_4G
+ * ArduinoJSON: https://github.com/bblanchon/ArduinoJson
  * PNG Decoder Library: https://github.com/kikuchan/pngle
  * WiFi manager by tzapu https://github.com/tzapu/WiFiManager
  * QRCode generator: https://github.com/ricmoo/QRCode
@@ -62,35 +63,6 @@ void configModeCallback()
 // Helper Functions
 ///////////////////////////////////////////////
 
-String getSensorData()
-{
-#ifdef SENSOR
-  float temperature;
-  int humidity;
-  int pressure;
-  if (Sensor::readSensorsVal(temperature, humidity, pressure))
-  {
-    String data = "&s=" + String(Sensor::getSensorTypeStr());
-    data += "&temp=" + String(temperature) + "&hum=" + String(humidity);
-
-    switch (Sensor::getSensorType())
-    {
-      case Sensor::SensorType::BME280:
-        data += "&pres=" + String(pressure);
-        break;
-      case Sensor::SensorType::SCD4X:
-      case Sensor::SensorType::STCC4:
-        data += "&co2=" + String(pressure);
-        break;
-      default:
-        break;
-    }
-    return data;
-  }
-#endif
-  return "";
-}
-
 void initializeWiFi()
 {
   String hostname = "INK_" + Wireless::getMacAddress();
@@ -126,6 +98,9 @@ void downloadAndDisplayImage(HttpClient &httpClient)
   // Store number of pages needed to fill the buffer of the display to turn off the WiFi after last page is loaded
   uint16_t pagesToLoad = Display::getNumberOfPages();
 
+  // Start tracking download duration
+  StateManager::startDownloadTimer();
+
   do
   {
     // For paged displays, download image once per page
@@ -137,10 +112,15 @@ void downloadAndDisplayImage(HttpClient &httpClient)
     if (--pagesToLoad == 0)
     {
       httpClient.stop();
+      // End download timing before WiFi turns off
+      StateManager::endDownloadTimer();
       Wireless::turnOff();
 
       // Enable light sleep during display refresh to save power
       Display::enableLightSleepDuringRefresh(true);
+
+      // Start refresh timing after WiFi is off
+      StateManager::startRefreshTimer();
     }
   } while (Display::setToNextPage());
 
@@ -150,6 +130,9 @@ void downloadAndDisplayImage(HttpClient &httpClient)
   // Disable ePaper power
   delay(100);
   Board::setEPaperPowerOn(false);
+
+  // End refresh timing
+  StateManager::endRefreshTimer();
 
 #ifdef ES3ink
   // Show success indicator
@@ -162,9 +145,8 @@ void handleConnectedState()
   StateManager::resetFailureCount();
 
   HttpClient httpClient;
-  String sensorData = getSensorData();
 
-  if (httpClient.checkForUpdate(sensorData))
+  if (httpClient.checkForUpdate())
   {
     Serial.println("[IMAGE] Update available, downloading...");
     downloadAndDisplayImage(httpClient);
@@ -177,7 +159,7 @@ void handleConnectedState()
 
 void handleDisconnectedState()
 {
-  Serial.println("[WiFi] No Wi-Fi connection, failure count: " + String(StateManager::getFailureCount()));
+  Serial.println("[WIFI] No Wi-Fi connection, failure count: " + String(StateManager::getFailureCount()));
 
   // Calculate and set sleep duration based on failure count
   uint64_t sleepDuration = StateManager::calculateSleepDuration();
@@ -193,24 +175,22 @@ void handleDisconnectedState()
 void enterDeepSleepMode()
 {
   uint64_t sleepDuration = StateManager::getSleepDuration();
-  // Calculate compensation in milliseconds
-  unsigned long programRuntimeCompensationMs = millis() - StateManager::getProgramRuntimeCompensationStart();
 
-  // Save compensation time in milliseconds for next run (survives deep sleep)
-  StateManager::setLastCompensationTime(programRuntimeCompensationMs);
+  // Get total compensation from download + refresh durations (in milliseconds)
+  unsigned long totalCompensation = StateManager::getTotalCompensation();
 
   // Convert to seconds for sleep duration adjustment, capped to max 60 seconds
-  unsigned long programRuntimeCompensation = programRuntimeCompensationMs / 1000;
-  if (programRuntimeCompensation > 60)
-    programRuntimeCompensation = 60;
+  unsigned long compensationSeconds = totalCompensation / 1000;
+  if (compensationSeconds > 60)
+    compensationSeconds = 60;
 
-  if (programRuntimeCompensation < sleepDuration)
-    sleepDuration -= programRuntimeCompensation;
+  if (compensationSeconds < sleepDuration)
+    sleepDuration -= compensationSeconds;
 
   Serial.print("[SLEEP] Going to sleep for (seconds): ");
   Serial.print(sleepDuration);
   Serial.print(" (compensated by ");
-  Serial.print(programRuntimeCompensation);
+  Serial.print(compensationSeconds);
   Serial.println(" seconds)");
 
   Board::enterDeepSleepMode(sleepDuration);

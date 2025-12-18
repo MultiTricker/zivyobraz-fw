@@ -316,6 +316,21 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define dividerRatio (1.769f)
 #endif
 
+enum class ResetReason : uint8_t
+{
+  UNKNOWN = 0,
+  POWERON = 1,   // Power-on reset or flash upload
+  EXT = 2,       // External reset (reset button)
+  SW = 3,        // Software reset
+  PANIC = 4,     // Software panic/exception
+  INT_WDT = 5,   // Interrupt watchdog
+  TASK_WDT = 6,  // Task watchdog
+  WDT = 7,       // Other watchdog
+  DEEPSLEEP = 8, // Wake from deep sleep
+  BROWNOUT = 9,  // Brownout reset
+  SDIO = 10      // Reset over SDIO
+};
+
 namespace Board
 {
 void setupHW();
@@ -323,6 +338,9 @@ void setEPaperPowerOn(bool on);
 void enterDeepSleepMode(uint64_t sleepDuration);
 
 float getBatteryVoltage();
+float getCPUTemperature();
+ResetReason getResetReason();
+const char *getResetReasonString();
 
 unsigned long checkButtonPressDuration();
 

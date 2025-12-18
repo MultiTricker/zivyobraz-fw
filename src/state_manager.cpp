@@ -3,30 +3,49 @@
 // RTC persistent data (survives deep sleep)
 RTC_DATA_ATTR uint64_t rtc_timestamp = 0;
 RTC_DATA_ATTR uint8_t rtc_failureCount = 0;
-RTC_DATA_ATTR long rtc_lastCompensationTime = 0;
+RTC_DATA_ATTR unsigned long rtc_lastDownloadDuration = 0;
+RTC_DATA_ATTR unsigned long rtc_lastRefreshDuration = 0;
 
 namespace StateManager
 {
 
 uint64_t sleepDuration = DEFAULT_SLEEP_SECONDS;
-unsigned long programRuntimeCompensation = 0; // in milliseconds
+unsigned long downloadDuration = 0;
+unsigned long refreshDuration = 0;
+unsigned long downloadStartTime = 0;
+unsigned long refreshStartTime = 0;
 
 uint64_t getTimestamp() { return rtc_timestamp; }
 
 void setTimestamp(uint64_t ts) { rtc_timestamp = ts; }
 
-unsigned long getProgramRuntimeCompensationStart() { return programRuntimeCompensation; }
+void startDownloadTimer() { downloadStartTime = millis(); }
 
-void setProgramRuntimeCompensationStart(unsigned long compensation)
+void endDownloadTimer()
 {
-  // Only set once if not already set
-  if (programRuntimeCompensation == 0)
-    programRuntimeCompensation = compensation;
+  if (downloadStartTime > 0)
+  {
+    downloadDuration = millis() - downloadStartTime;
+    rtc_lastDownloadDuration = downloadDuration;
+  }
 }
 
-long getLastCompensationTime() { return rtc_lastCompensationTime; }
+void startRefreshTimer() { refreshStartTime = millis(); }
 
-void setLastCompensationTime(long time) { rtc_lastCompensationTime = time; }
+void endRefreshTimer()
+{
+  if (refreshStartTime > 0)
+  {
+    refreshDuration = millis() - refreshStartTime;
+    rtc_lastRefreshDuration = refreshDuration;
+  }
+}
+
+unsigned long getTotalCompensation() { return downloadDuration + refreshDuration; }
+
+unsigned long getLastDownloadDuration() { return rtc_lastDownloadDuration; }
+
+unsigned long getLastRefreshDuration() { return rtc_lastRefreshDuration; }
 
 uint8_t getFailureCount() { return rtc_failureCount; }
 
@@ -58,34 +77,4 @@ uint64_t calculateSleepDuration()
   return sleepDuration;
 }
 
-ResetReason getResetReason()
-{
-  esp_reset_reason_t reason = esp_reset_reason();
-
-  switch (reason)
-  {
-    case ESP_RST_POWERON:
-      return ResetReason::POWERON;
-    case ESP_RST_EXT:
-      return ResetReason::EXT;
-    case ESP_RST_SW:
-      return ResetReason::SW;
-    case ESP_RST_PANIC:
-      return ResetReason::PANIC;
-    case ESP_RST_INT_WDT:
-      return ResetReason::INT_WDT;
-    case ESP_RST_TASK_WDT:
-      return ResetReason::TASK_WDT;
-    case ESP_RST_WDT:
-      return ResetReason::WDT;
-    case ESP_RST_DEEPSLEEP:
-      return ResetReason::DEEPSLEEP;
-    case ESP_RST_BROWNOUT:
-      return ResetReason::BROWNOUT;
-    case ESP_RST_SDIO:
-      return ResetReason::SDIO;
-    default:
-      return ResetReason::UNKNOWN;
-  }
-}
 } // namespace StateManager

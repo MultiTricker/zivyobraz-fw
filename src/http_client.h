@@ -25,7 +25,7 @@ public:
   HttpClient();
 
   // Check if server has new content
-  bool checkForUpdate(const String &sensorData = "");
+  bool checkForUpdate(bool timestampCheck = true);
 
   // Start downloading image (call after checkForUpdate returns true)
   bool startImageDownload();
@@ -68,9 +68,11 @@ private:
   uint8_t m_displayRotation;
   bool m_hasRotation;
   bool m_partialRefresh;
+  String m_jsonPayload;
 
   // Internal helpers
-  bool sendRequest(bool timestampCheckOnly, const String &extraParams);
+  void buildJsonPayload();
+  bool sendRequest(bool timestampCheck);
   bool parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp);
 };
 

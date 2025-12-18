@@ -22,19 +22,19 @@ bool RowStreamBuffer::init(size_t rowSizeBytes, size_t rowCount)
 {
   if (m_initialized)
   {
-    Serial.println("[Streaming] RowBuffer already initialized");
+    Serial.println("[STREAM] RowBuffer already initialized");
     return true;
   }
 
   if (rowSizeBytes == 0 || rowSizeBytes > MAX_ROW_SIZE)
   {
-    Serial.printf("[Streaming] Invalid row size: %zu (max: %zu)\n", rowSizeBytes, MAX_ROW_SIZE);
+    Serial.printf("[STREAM] Invalid row size: %zu (max: %zu)\n", rowSizeBytes, MAX_ROW_SIZE);
     return false;
   }
 
   if (rowCount == 0)
   {
-    Serial.println("[Streaming] Invalid row count: 0");
+    Serial.println("[STREAM] Invalid row count: 0");
     return false;
   }
 
@@ -44,7 +44,7 @@ bool RowStreamBuffer::init(size_t rowSizeBytes, size_t rowCount)
   size_t freeHeap = Utils::getFreeHeap();
   if (freeHeap < totalSize * 2)
   {
-    Serial.printf("[Streaming] Insufficient heap: %zu bytes free, need %zu for row buffer\n", freeHeap, totalSize * 2);
+    Serial.printf("[STREAM] Insufficient heap: %zu bytes free, need %zu for row buffer\n", freeHeap, totalSize * 2);
     return false;
   }
 
@@ -55,13 +55,13 @@ bool RowStreamBuffer::init(size_t rowSizeBytes, size_t rowCount)
     m_rowSize = rowSizeBytes;
     m_rowCount = rowCount;
     m_initialized = true;
-    Serial.printf("[Streaming] Row buffer initialized: %zu bytes/row × %zu rows = %zu bytes total\n", rowSizeBytes,
+    Serial.printf("[STREAM] Row buffer initialized: %zu bytes/row × %zu rows = %zu bytes total\n", rowSizeBytes,
                   rowCount, totalSize);
     return true;
   }
   catch (const std::bad_alloc &e)
   {
-    Serial.printf("[Streaming] Row buffer allocation failed: %s\n", e.what());
+    Serial.printf("[STREAM] Row buffer allocation failed: %s\n", e.what());
     return false;
   }
 }
@@ -73,7 +73,7 @@ size_t RowStreamBuffer::writeRow(size_t rowIndex, const uint8_t *data, size_t le
 
   if (rowIndex >= m_rowCount)
   {
-    Serial.printf("[Streaming] Invalid row index: %zu (max: %zu)\n", rowIndex, m_rowCount - 1);
+    Serial.printf("[STREAM] Invalid row index: %zu (max: %zu)\n", rowIndex, m_rowCount - 1);
     return 0;
   }
 
@@ -125,18 +125,18 @@ bool StreamingManager::init(size_t rowSizeBytes, size_t rowCount)
 {
   if (m_enabled)
   {
-    Serial.println("[Streaming] Manager already enabled");
+    Serial.println("[STREAM] Manager already enabled");
     return true;
   }
 
   if (!m_buffer.init(rowSizeBytes, rowCount))
   {
-    Serial.println("[Streaming] Failed to initialize row buffer");
+    Serial.println("[STREAM] Failed to initialize row buffer");
     return false;
   }
 
   m_enabled = true;
-  Serial.println("[Streaming] Manager initialized successfully");
+  Serial.println("[STREAM] Manager initialized successfully");
   return true;
 }
 
@@ -153,7 +153,7 @@ void StreamingManager::cleanup()
   {
     m_buffer.clear();
     m_enabled = false;
-    Serial.println("[Streaming] Manager cleanup complete");
+    Serial.println("[STREAM] Manager cleanup complete");
   }
 }
 
