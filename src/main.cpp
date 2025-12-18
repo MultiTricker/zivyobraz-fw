@@ -138,8 +138,14 @@ void downloadAndDisplayImage(HttpClient &httpClient)
     {
       httpClient.stop();
       Wireless::turnOff();
+
+      // Enable light sleep during display refresh to save power
+      Display::enableLightSleepDuringRefresh(true);
     }
   } while (Display::setToNextPage());
+
+  // Disable light sleep callback after refresh completes
+  Display::enableLightSleepDuringRefresh(false);
 
   // Disable ePaper power
   delay(100);

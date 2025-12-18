@@ -224,6 +224,7 @@ void setToPartialWindow(int16_t xCord, int16_t yCord, int16_t width, int16_t hei
 bool supportsPartialRefresh();
 void setToFirstPage();
 bool setToNextPage();
+void enableLightSleepDuringRefresh(bool enable);
 
 // Error screens
 void showNoWiFiError(uint64_t sleepMinutes, const String &wikiUrl);

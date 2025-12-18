@@ -2,6 +2,9 @@
 
 #include "board.h"
 
+// ESP32 sleep functions for light sleep during display refresh
+#include <esp_sleep.h>
+
 // Calculate optimal page height based on buffer size, display dimensions, and bits per pixel
 // Returns full height if it fits in buffer, otherwise the maximum height that fits
 #define CALC_PAGE_HEIGHT(height, width, bpp)                                                                           \
@@ -477,6 +480,32 @@ bool supportsPartialRefresh() { return display.epd2.hasPartialUpdate; }
 void setToFirstPage() { display.firstPage(); }
 
 bool setToNextPage() { return display.nextPage(); }
+
+// Busy callback for light sleep during display refresh
+void busyCallbackLightSleep(const void *)
+{
+#ifndef M5StackCoreInk
+  // Enter light sleep for short periods while display is refreshing
+  // Wake up after 100ms to check BUSY status again
+  esp_sleep_enable_timer_wakeup(100 * 1000);
+  esp_light_sleep_start();
+#endif
+}
+
+void enableLightSleepDuringRefresh(bool enable)
+{
+#ifndef M5StackCoreInk
+  if (enable)
+  {
+    Serial.println("[Sleep] Light sleep during display refresh");
+    display.epd2.setBusyCallback(busyCallbackLightSleep, nullptr);
+  }
+  else
+  {
+    display.epd2.setBusyCallback(nullptr, nullptr);
+  }
+#endif
+}
 
 void showNoWiFiError(uint64_t sleepMinutes, const String &wikiUrl)
 {
