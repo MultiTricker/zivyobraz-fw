@@ -456,9 +456,9 @@ void readImageData(HttpClient &http)
     size_t rowSize = Display::getWidth();
 
     if (streamMgr.init(rowSize))
-      Serial.println("[Image] Streaming enabled");
+      Serial.println("[IMAGE] Streaming enabled");
     else
-      Serial.println("[Image] Streaming init failed, falling back to direct mode");
+      Serial.println("[IMAGE] Streaming init failed, falling back to direct mode");
   }
 
   // Print memory stats
@@ -466,7 +466,7 @@ void readImageData(HttpClient &http)
   {
     size_t totalHeap, freeHeap, bufferUsed;
     streamMgr.getMemoryStats(totalHeap, freeHeap, bufferUsed);
-    Serial.printf("[Image] Memory - Total: %zu, Free: %zu, Buffer: %zu\n", totalHeap, freeHeap, bufferUsed);
+    Serial.printf("[IMAGE] Memory - Total: %zu, Free: %zu, Buffer: %zu\n", totalHeap, freeHeap, bufferUsed);
   }
 #endif
 

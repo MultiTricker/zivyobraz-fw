@@ -20,7 +20,7 @@ size_t getLargestFreeBlock() { return ESP.getMaxAllocHeap(); }
 
 void printMemoryStats()
 {
-  Serial.println("[Memory Stats]");
+  Serial.println("[MEMORY]");
   Serial.printf("  Total Heap:  %zu bytes\n", getTotalHeap());
   Serial.printf("  Free Heap:   %zu bytes\n", getFreeHeap());
   Serial.printf("  Largest Block: %zu bytes\n", getLargestFreeBlock());
@@ -36,13 +36,13 @@ void initializeAPIKey()
     // Generate 8-digit PIN without leading zeros (range: 10000000 - 99999999)
     rtc_cachedPIN = (esp_random() % 90000000) + 10000000;
     prefs.putULong("apikey", rtc_cachedPIN);
-    Serial.print("Generated new device API key: ");
+    Serial.print("[APIKEY] Generated new device API key: ");
     Serial.println(rtc_cachedPIN);
   }
   else
   {
     rtc_cachedPIN = prefs.getULong("apikey");
-    Serial.print("Device API key: ");
+    Serial.print("[APIKEY] Device API key: ");
     Serial.println(rtc_cachedPIN);
   }
 

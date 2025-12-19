@@ -12,6 +12,7 @@ String getMacAddress();
 
 String getSoftAPSSID();
 String getSoftAPIP();
+String getIPAddress();
 
 bool isConnected();
 void turnOff();

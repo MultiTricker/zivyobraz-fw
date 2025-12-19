@@ -9,6 +9,7 @@
 // #define SENSOR
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 
 namespace Sensor
 {
@@ -27,6 +28,42 @@ bool readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres);
 
 SensorType getSensorType();
 const char *getSensorTypeStr();
+
+// Sensor data structure for passing sensor readings
+struct SensorData
+{
+  const char *type;
+  float temperature;
+  int humidity;
+  int pressureOrCO2;
+  bool isPressure;          // true = pressure (BME280), false = CO2 (SCD4X, STCC4)
+  bool hasThirdMeasurement; // true if sensor provides pressure or CO2
+  bool isValid;
+
+  // Serialize sensor data to JSON object
+  template <typename JsonArrayT>
+  void toJson(JsonArrayT &sensors) const
+  {
+    if (!isValid || type == nullptr)
+      return;
+
+    auto sensor = sensors.template add<JsonObject>();
+    sensor["type"] = type;
+    sensor["temp"] = temperature;
+    sensor["hum"] = humidity;
+
+    // Only include pressure/CO2 if the sensor provides it
+    if (hasThirdMeasurement)
+    {
+      if (isPressure)
+        sensor["pres"] = pressureOrCO2;
+      else
+        sensor["co2"] = pressureOrCO2;
+    }
+  }
+};
+
+SensorData getSensorData();
 
 } // namespace Sensor
 

@@ -1,6 +1,9 @@
 #include "http_client.h"
 
+#include <ArduinoJson.h>
+
 #include "board.h"
+#include "sensor.h"
 #include "display.h"
 #include "state_manager.h"
 #include "utils.h"
@@ -15,35 +18,66 @@ HttpClient::HttpClient()
       m_serverTimestamp(0),
       m_displayRotation(0),
       m_hasRotation(false),
-      m_partialRefresh(false)
+      m_partialRefresh(false),
+      m_jsonPayload("")
 {
 }
 
-bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
+void HttpClient::buildJsonPayload()
 {
-  // Build URL
-  String url = "/index.php?mac=" + Wireless::getMacAddress();
+  // Only build once - if already built, skip
+  if (m_jsonPayload.length() > 0)
+    return;
 
-  if (timestampCheckOnly)
-    url += "&timestamp_check=1";
+  JsonDocument doc;
 
-  url += "&b=" + String(Board::getBoardType());
-  url += "&d=" + String(Display::getDisplayType());
-  url += "&rssi=" + String(Wireless::getStrength());
-  url += "&ssid=" + Wireless::getSSID();
-  url += "&v=" + String(Board::getBatteryVoltage());
-  url += "&x=" + String(Display::getResolutionX());
-  url += "&y=" + String(Display::getResolutionY());
-  url += "&c=" + String(Display::getColorType());
-  url += "&fw=" + String(firmware);
-  url += "&ap_retries=" + String(StateManager::getFailureCount());
-  url += "&r=" + String(static_cast<uint8_t>(StateManager::getResetReason()));
+  // API and firmware info
+  doc["fwVersion"] = firmware;
+  doc["apiVersion"] = firmware; // tells server what are firmware capabilities, same as fwVersion in our case
+  doc["board"] = Board::getBoardType();
 
-  // Add last compensation time if available from previous run
-  if (StateManager::getLastCompensationTime() > 0)
-    url += "&ct=" + String(StateManager::getLastCompensationTime());
+  // System info
+  JsonObject system = doc["system"].to<JsonObject>();
+  system["cpuTemp"] = Board::getCPUTemperature();
+  system["resetReason"] = Board::getResetReasonString();
+  system["vccVoltage"] = Board::getBatteryVoltage();
 
-  url += extraParams;
+  // Network info
+  JsonObject network = doc["network"].to<JsonObject>();
+  network["ssid"] = WiFi.SSID();
+  network["rssi"] = Wireless::getStrength();
+  network["mac"] = Wireless::getMacAddress();
+  network["apRetries"] = StateManager::getFailureCount();
+  network["ipAddress"] = Wireless::getIPAddress();
+  // Add last download duration if available from previous run (in milliseconds)
+  if (StateManager::getLastDownloadDuration() > 0)
+    network["lastDownloadDuration"] = StateManager::getLastDownloadDuration();
+
+  // Display info
+  JsonObject display = doc["display"].to<JsonObject>();
+  display["type"] = Display::getDisplayType();
+  display["width"] = Display::getResolutionX();
+  display["height"] = Display::getResolutionY();
+  display["colorType"] = Display::getColorType();
+  // Add last refresh duration if available from previous run (in milliseconds)
+  if (StateManager::getLastRefreshDuration() > 0)
+    display["lastRefreshDuration"] = StateManager::getLastRefreshDuration();
+
+  // Add sensor data if available
+  Sensor::SensorData sensorData = Sensor::getSensorData();
+  if (sensorData.isValid)
+  {
+    JsonArray sensors = doc["sensors"].to<JsonArray>();
+    sensorData.toJson(sensors);
+  }
+
+  serializeJson(doc, m_jsonPayload);
+}
+
+bool HttpClient::sendRequest(bool timestampCheck)
+{
+  // Build JSON payload (only built once, cached for subsequent requests)
+  buildJsonPayload();
 
   Serial.print("[HTTP] Connecting to: ");
   Serial.println(host);
@@ -64,22 +98,28 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
     if (attempt == 2)
     {
       m_sleepDuration = StateManager::DEFAULT_SLEEP_SECONDS;
-      if (!timestampCheckOnly)
+      if (!timestampCheck)
         return false; // For image download, fail immediately
       delay(500);
     }
-    if (!timestampCheckOnly)
+    if (!timestampCheck)
       delay(200);
   }
 
-  // Send HTTP/HTTPS request
-  Serial.print("[HTTP] Requesting URL: ");
+  // Send HTTP/HTTPS POST request with JSON body
+  Serial.print("[HTTP] Sending POST to: ");
   Serial.print(CONNECTION_URL_PREFIX);
   Serial.print(host);
-  Serial.println(url);
+  Serial.println("/index.php");
+  Serial.println("[HTTP] JSON payload: " + m_jsonPayload);
+  // Build URL with timestampCheck query parameter
+  String url = "/index.php?timestampCheck=";
+  url += timestampCheck ? "1" : "0";
 
-  m_client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" +
-                 "X-API-Key: " + String(Utils::getStoredAPIKey()) + "\r\n" + "Connection: close\r\n\r\n");
+  m_client.print(String("POST ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" +
+                 "X-API-Key: " + String(Utils::getStoredAPIKey()) + "\r\n" + "Content-Type: application/json\r\n" +
+                 "Content-Length: " + String(m_jsonPayload.length()) + "\r\n" + "Connection: close\r\n\r\n" +
+                 m_jsonPayload);
 
   Serial.println("[HTTP] Request sent");
 
@@ -91,7 +131,7 @@ bool HttpClient::sendRequest(bool timestampCheckOnly, const String &extraParams)
     {
       Serial.println("[HTTP] >>> Client Timeout!");
       m_client.stop();
-      if (timestampCheckOnly)
+      if (timestampCheck)
         m_sleepDuration = StateManager::DEFAULT_SLEEP_SECONDS;
       return false;
     }
@@ -137,11 +177,6 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
       if (line.startsWith("PreciseSleep"))
       {
         m_sleepDuration = line.substring(14).toInt();
-
-        // Deal with program runtime compensation (if not already set) for more accurate sleep time in seconds
-        if (StateManager::getProgramRuntimeCompensationStart() == 0)
-          StateManager::setProgramRuntimeCompensationStart(millis());
-
         Serial.print("[HEADER] Sleep in seconds: ");
         Serial.println(m_sleepDuration);
       }
@@ -216,9 +251,9 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
   return true;
 }
 
-bool HttpClient::checkForUpdate(const String &sensorData)
+bool HttpClient::checkForUpdate(bool timestampCheck)
 {
-  if (!sendRequest(true, sensorData))
+  if (!sendRequest(timestampCheck))
     return false;
 
   if (!parseHeaders(true, StateManager::getTimestamp()))
@@ -236,7 +271,7 @@ bool HttpClient::checkForUpdate(const String &sensorData)
 
 bool HttpClient::startImageDownload()
 {
-  if (!sendRequest(false, ""))
+  if (!sendRequest(false))
     return false;
 
   if (!parseHeaders(false, 0))
