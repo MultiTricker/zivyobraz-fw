@@ -358,7 +358,7 @@ void init()
 
 void clear()
 {
-  Serial.println("Clearing display...");
+  Serial.println("[Display] Clearing...");
 
   init();
 
@@ -377,7 +377,7 @@ void clear()
   // Disable power supply for ePaper
   Board::setEPaperPowerOn(false);
 
-  Serial.println("done");
+  Serial.println("[Display] Clearing done");
 }
 
 void setRotation(uint8_t rotation) { display.setRotation(rotation); }

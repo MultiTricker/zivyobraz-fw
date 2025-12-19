@@ -41,12 +41,12 @@ void init()
   // Reset sensor detection on power-on or hardware reset
   if (reason == StateManager::ResetReason::POWERON || reason == StateManager::ResetReason::EXT)
   {
-    Serial.println("Fresh boot - resetting sensor detection");
+    Serial.println("[SENSOR] Fresh boot - resetting detection");
     detectedSensor = SensorType::NONE;
   }
   else if (reason == StateManager::ResetReason::DEEPSLEEP)
   {
-    Serial.print("Wake from deep sleep - using cached sensor: ");
+    Serial.print("[SENSOR] Wake from deep sleep - using cached sensor: ");
     Serial.println(getSensorTypeStr());
   }
 
@@ -56,12 +56,12 @@ void init()
     detectedSensor = detectSensor();
     if (detectedSensor != SensorType::NONE)
     {
-      Serial.print("Sensor detected and cached: ");
+      Serial.print("[SENSOR] Detected and cached: ");
       Serial.println(getSensorTypeStr());
     }
     else
     {
-      Serial.println("No sensor found");
+      Serial.println("[SENSOR] No sensor found");
     }
   }
 }
@@ -83,19 +83,19 @@ static SensorType detectSensor()
   // Check for SHT40 OR SHT41 OR SHT45
   if (sht4.begin())
   {
-    Serial.println("SHT4x FOUND");
+    Serial.println("[SENSOR] SHT4x FOUND");
     found = SensorType::SHT4X;
   }
   // Check for BME280
   else if (bme.begin())
   {
-    Serial.println("BME280 FOUND");
+    Serial.println("[SENSOR] BME280 FOUND");
     found = SensorType::BME280;
   }
   // Check for SCD40 OR SCD41
   else if (SCD4.begin(false, true, false))
   {
-    Serial.println("SCD4x FOUND");
+    Serial.println("[SENSOR] SCD4x FOUND");
     found = SensorType::SCD4X;
   }
   // Check for STCC4
@@ -106,7 +106,7 @@ static SensorType detectSensor()
     uint64_t serialNumber;
     if (stcc4.getProductId(productId, serialNumber) == 0)
     {
-      Serial.println("STCC4 FOUND");
+      Serial.println("[SENSOR] STCC4 FOUND");
       found = SensorType::STCC4;
     }
   }
@@ -123,7 +123,7 @@ bool readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   if (detectedSensor == SensorType::NONE)
   {
-    Serial.println("ERROR: No sensor detected");
+    Serial.println("[SENSOR] No sensor detected");
     return false;
   }
 
@@ -158,12 +158,12 @@ bool readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
       break;
 
     default:
-      Serial.println("ERROR: Unknown sensor type");
+      Serial.println("[SENSOR] ERROR: Unknown sensor type");
       break;
   }
 
   if (!ret)
-    Serial.println("ERROR: Failed to read sensor data");
+    Serial.println("[SENSOR] ERROR: Failed to read sensor data");
 
   #if (defined ESPink_V2) || (defined ESPink_V3) || (defined ESPink_V35) || (defined ESP32S3Adapter)
   // Power down for now
@@ -177,7 +177,7 @@ static bool readSHT4X(float &sen_temp, int &sen_humi)
 {
   if (!sht4.begin())
   {
-    Serial.println("ERROR: SHT4x not responding");
+    Serial.println("[SENSOR] ERROR: SHT4x not responding");
     return false;
   }
 
@@ -196,7 +196,7 @@ static bool readBME280(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   if (!bme.begin())
   {
-    Serial.println("ERROR: BME280 not responding");
+    Serial.println("[SENSOR] ERROR: BME280 not responding");
     return false;
   }
 
@@ -210,7 +210,7 @@ static bool readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   if (!SCD4.begin(false, true, false))
   {
-    Serial.println("ERROR: SCD4x not responding");
+    Serial.println("[SENSOR] ERROR: SCD4x not responding");
     return false;
   }
 
@@ -218,7 +218,7 @@ static bool readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres)
 
   while (SCD4.readMeasurement() == false) // wait for a new data (approx 30s)
   {
-    Serial.println("Waiting for first measurement...");
+    Serial.println("[SENSOR] Waiting for first measurement...");
     delay(1000);
   }
 
@@ -238,7 +238,7 @@ static bool readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
 
   if (error != 0)
   {
-    Serial.println("ERROR: STCC4 not responding");
+    Serial.println("[SENSOR] ERROR: STCC4 not responding");
     return false;
   }
 
@@ -249,18 +249,18 @@ static bool readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
   error = stcc4.startContinuousMeasurement();
   if (error)
   {
-    Serial.println("ERROR: STCC4 failed to start continuous measurement");
+    Serial.println("[SENSOR] ERROR: STCC4 failed to start continuous measurement");
     return false;
   }
 
-  Serial.println("Waiting 30s to warmup STCC4");
+  Serial.println("[SENSOR] Waiting 30s to warmup STCC4");
   delay(30 * 1000);
-  Serial.println("STCC4 warmup complete");
+  Serial.println("[SENSOR] STCC4 warmup complete");
 
   error = stcc4.stopContinuousMeasurement();
   if (error)
   {
-    Serial.println("ERROR: STCC4 failed to stop continuous measurement");
+    Serial.println("[SENSOR] ERROR: STCC4 failed to stop continuous measurement");
     return false;
   }
 
@@ -268,7 +268,7 @@ static bool readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
   error = stcc4.measureSingleShot();
   if (error != 0)
   {
-    Serial.println("ERROR: STCC4 single shot measurement failed");
+    Serial.println("[SENSOR] ERROR: STCC4 single shot measurement failed");
     return false;
   }
 
@@ -285,7 +285,7 @@ static bool readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
   error = stcc4.readMeasurement(temp_cpo2, temp_temp, temp_humidity, sensorStatus);
   if (error != 0)
   {
-    Serial.println("ERROR: STCC4 read measurement failed");
+    Serial.println("[SENSOR] ERROR: STCC4 read measurement failed");
     return false;
   }
 
