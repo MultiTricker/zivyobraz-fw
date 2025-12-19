@@ -16,6 +16,7 @@
 
 #include "display.h"
 #include "state_manager.h"
+#include "streaming_handler.h"
 
 #ifdef TYPE_BW
   #include <GxEPD2_BW.h>
@@ -445,16 +446,46 @@ void readImageData(HttpClient &http)
   uint32_t startTime = millis();
   bool success = false;
 
+#ifdef STREAMING_ENABLED
+  // Initialize streaming if enabled
+  StreamingHandler::StreamingManager &streamMgr = StreamingHandler::StreamingManager::getInstance();
+  if (!streamMgr.isEnabled())
+  {
+    // Calculate row size: width * bytes_per_pixel (for most formats, 1 byte per pixel)
+    // For safety, use display width as row size estimate
+    size_t rowSize = Display::getWidth();
+
+    if (streamMgr.init(rowSize))
+      Serial.println("[Image] Streaming enabled");
+    else
+      Serial.println("[Image] Streaming init failed, falling back to direct mode");
+  }
+
+  // Print memory stats
+  if (streamMgr.isEnabled())
+  {
+    size_t totalHeap, freeHeap, bufferUsed;
+    streamMgr.getMemoryStats(totalHeap, freeHeap, bufferUsed);
+    Serial.printf("[Image] Memory - Total: %zu, Free: %zu, Buffer: %zu\n", totalHeap, freeHeap, bufferUsed);
+  }
+#endif
+
   // Read format header (2 bytes)
   uint16_t header = http.read16();
 
   Serial.print("[IMAGE] Header: 0x");
   Serial.println(header, HEX);
 
-  // Allocate buffer on stack for this function call only
-  // Released automatically when function returns
-  static const uint16_t STREAM_BUFFER_SIZE = 512;
-  uint8_t buffer[STREAM_BUFFER_SIZE];
+  // Dynamic buffer for PNG/RLE processing
+  // BMP handles its own buffer allocation
+  const uint16_t STREAM_BUFFER_SIZE = 512;
+  uint8_t *buffer = new (std::nothrow) uint8_t[STREAM_BUFFER_SIZE];
+
+  if (!buffer)
+  {
+    Serial.println("[Image] Failed to allocate processing buffer");
+    return;
+  }
 
   // Route to appropriate format handler
   switch (static_cast<ImageFormat>(header))
@@ -482,6 +513,10 @@ void readImageData(HttpClient &http)
       break;
   }
 
+  // Cleanup processing buffer
+  delete[] buffer;
+  buffer = nullptr;
+
   // Handle errors
   if (!success)
   {
@@ -489,6 +524,12 @@ void readImageData(HttpClient &http)
     StateManager::setSleepDuration(StateManager::DEFAULT_SLEEP_SECONDS);
     StateManager::setTimestamp(0);
   }
+
+#ifdef STREAMING_ENABLED
+  // Cleanup streaming resources after processing
+  if (streamMgr.isEnabled())
+    streamMgr.cleanup();
+#endif
 }
 
 } // namespace ImageHandler
