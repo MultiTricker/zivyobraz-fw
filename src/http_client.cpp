@@ -241,6 +241,9 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
     {
       Serial.print("[TIMESTAMP] No screen reload, still at current timestamp: ");
       Serial.println(storedTimestamp);
+
+      StateManager::setLastRefreshDuration(0);
+
       return false;
     }
 

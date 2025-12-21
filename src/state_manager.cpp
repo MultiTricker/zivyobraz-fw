@@ -47,6 +47,8 @@ unsigned long getLastDownloadDuration() { return rtc_lastDownloadDuration; }
 
 unsigned long getLastRefreshDuration() { return rtc_lastRefreshDuration; }
 
+void setLastRefreshDuration(unsigned long duration) { rtc_lastRefreshDuration = duration; }
+
 uint8_t getFailureCount() { return rtc_failureCount; }
 
 void incrementFailureCount()

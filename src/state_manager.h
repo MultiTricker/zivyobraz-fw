@@ -28,6 +28,7 @@ void endRefreshTimer();
 unsigned long getTotalCompensation();
 unsigned long getLastDownloadDuration();
 unsigned long getLastRefreshDuration();
+void setLastRefreshDuration(unsigned long duration);
 
 // Default sleep time
 static const uint64_t DEFAULT_SLEEP_SECONDS = 120;
