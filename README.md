@@ -65,3 +65,17 @@ https://wiki.zivyobraz.eu/doku.php?id=start#oziveni_vlastniho_epaperu
 **Simple diagram of how it works**
 
 ![](how_it_works_diagram.webp)
+
+----
+
+## License info 
+
+![CC BY-NC-SA 4.0](https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png)
+
+ZivyObraz FW itself is licensed under a [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-nc-sa/4.0/):
+
+Attribution—Noncommercial—Share Alike  
+✖ | Sharing without ATTRIBUTION  
+✖ | Commercial Use  
+✖ | Free Cultural Works  
+✖ | Meets Open Definition
