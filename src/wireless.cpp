@@ -29,6 +29,9 @@ void init(const String &hostname, const String &password, void (*callback)())
   wm.setConnectTimeout(5);
   wm.setSaveConnectTimeout(5);
 
+  // Redirect captive portal directly to WiFi setup page
+  wm.setCustomHeadElement("<script>if(location.pathname==='/'){location.replace('/wifi');}</script>");
+
   // reset settings - wipe stored credentials for testing
   // wm.resetSettings();
 
