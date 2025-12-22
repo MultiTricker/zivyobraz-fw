@@ -108,7 +108,12 @@ bool HttpClient::sendRequest(bool timestampCheck)
   Serial.print(CONNECTION_URL_PREFIX);
   Serial.print(host);
   Serial.println("/index.php");
-  Serial.println("[HTTP] JSON payload: " + m_jsonPayload);
+
+  // Pretty print JSON payload for debugging
+  Serial.println("[HTTP] JSON payload:");
+  serializeJsonPretty(m_jsonDoc, Serial);
+  Serial.println();
+
   // Build URL with timestampCheck query parameter
   String url = "/index.php?timestampCheck=";
   url += timestampCheck ? "1" : "0";
