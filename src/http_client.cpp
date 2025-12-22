@@ -1,7 +1,5 @@
 #include "http_client.h"
 
-#include <ArduinoJson.h>
-
 #include "board.h"
 #include "sensor.h"
 #include "display.h"
@@ -28,21 +26,19 @@ void HttpClient::buildJsonPayload()
   if (m_jsonPayload.length() > 0)
     return;
 
-  JsonDocument doc;
-
   // API and firmware info
-  doc["fwVersion"] = firmware;
-  doc["apiVersion"] = firmware; // tells server what are firmware capabilities, same as fwVersion in our case
-  doc["board"] = Board::getBoardType();
+  m_jsonDoc["fwVersion"] = firmware;
+  m_jsonDoc["apiVersion"] = firmware; // tells server what are firmware capabilities, same as fwVersion in our case
+  m_jsonDoc["board"] = Board::getBoardType();
 
   // System info
-  JsonObject system = doc["system"].to<JsonObject>();
+  JsonObject system = m_jsonDoc["system"].to<JsonObject>();
   system["cpuTemp"] = Board::getCPUTemperature();
   system["resetReason"] = Board::getResetReasonString();
   system["vccVoltage"] = Board::getBatteryVoltage();
 
   // Network info
-  JsonObject network = doc["network"].to<JsonObject>();
+  JsonObject network = m_jsonDoc["network"].to<JsonObject>();
   network["ssid"] = WiFi.SSID();
   network["rssi"] = Wireless::getStrength();
   network["mac"] = Wireless::getMacAddress();
@@ -53,7 +49,7 @@ void HttpClient::buildJsonPayload()
     network["lastDownloadDuration"] = StateManager::getLastDownloadDuration();
 
   // Display info
-  JsonObject display = doc["display"].to<JsonObject>();
+  JsonObject display = m_jsonDoc["display"].to<JsonObject>();
   display["type"] = Display::getDisplayType();
   display["width"] = Display::getResolutionX();
   display["height"] = Display::getResolutionY();
@@ -67,12 +63,12 @@ void HttpClient::buildJsonPayload()
   SensorData sensorData = Sensor::getInstance().getSensorData();
   if (sensorData.isValid)
   {
-    JsonArray sensors = doc["sensors"].to<JsonArray>();
+    JsonArray sensors = m_jsonDoc["sensors"].to<JsonArray>();
     sensorData.toJson(sensors);
   }
 #endif
 
-  serializeJson(doc, m_jsonPayload);
+  serializeJson(m_jsonDoc, m_jsonPayload);
 }
 
 bool HttpClient::sendRequest(bool timestampCheck)
