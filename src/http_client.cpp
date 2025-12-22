@@ -3,6 +3,7 @@
 #include "board.h"
 #include "sensor.h"
 #include "display.h"
+#include "logger.h"
 #include "state_manager.h"
 #include "wireless.h"
 
@@ -76,8 +77,7 @@ bool HttpClient::sendRequest(bool timestampCheck)
   // Build JSON payload (only built once, cached for subsequent requests)
   buildJsonPayload();
 
-  Serial.print("[HTTP] Connecting to: ");
-  Serial.println(host);
+  Logger::log(Logger::Topic::HTTP, "Connecting to: {}\n", host);
 
 #ifdef USE_CLIENT_HTTPS
   // Configure secure connection without certificate verification
@@ -91,7 +91,7 @@ bool HttpClient::sendRequest(bool timestampCheck)
     if (m_client.connect(host, CONNECTION_PORT))
       break;
 
-    Serial.println("[HTTP] Connection failed, retrying... " + String(attempt + 1) + "/3");
+    Logger::log(Logger::Topic::HTTP, "Connection failed, retrying... {}/3\n", attempt + 1);
     if (attempt == 2)
     {
       m_sleepDuration = StateManager::DEFAULT_SLEEP_SECONDS;
@@ -104,15 +104,12 @@ bool HttpClient::sendRequest(bool timestampCheck)
   }
 
   // Send HTTP/HTTPS POST request with JSON body
-  Serial.print("[HTTP] Sending POST to: ");
-  Serial.print(CONNECTION_URL_PREFIX);
-  Serial.print(host);
-  Serial.println("/index.php");
+  Logger::log(Logger::Topic::HTTP, "Sending POST to: {}{}/index.php\n", CONNECTION_URL_PREFIX, host);
 
   // Pretty print JSON payload for debugging
-  Serial.println("[HTTP] JSON payload:");
-  serializeJsonPretty(m_jsonDoc, Serial);
-  Serial.println();
+  String prettyJson;
+  serializeJsonPretty(m_jsonDoc, prettyJson);
+  Logger::log(Logger::Topic::HTTP, "JSON Payload:\n{}\n", prettyJson);
 
   // Build URL with timestampCheck query parameter
   String url = "/index.php?timestampCheck=";
@@ -123,7 +120,7 @@ bool HttpClient::sendRequest(bool timestampCheck)
                  "Content-Length: " + String(m_jsonPayload.length()) + "\r\n" + "Connection: close\r\n\r\n" +
                  m_jsonPayload);
 
-  Serial.println("[HTTP] Request sent");
+  Logger::log(Logger::Topic::HTTP, "Request sent\n");
 
   // Wait for response with timeout
   uint32_t timeout = millis();
@@ -131,7 +128,7 @@ bool HttpClient::sendRequest(bool timestampCheck)
   {
     if (millis() - timeout > 10000)
     {
-      Serial.println("[HTTP] >>> Client Timeout!");
+      Logger::log(Logger::Topic::HTTP, ">>> Client Timeout!\n");
       m_client.stop();
       if (timestampCheck)
         m_sleepDuration = StateManager::DEFAULT_SLEEP_SECONDS;
@@ -162,8 +159,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
         foundTimestamp = true;
         // Skipping also colon and space - also in following code for sleep, rotate, ...
         m_serverTimestamp = line.substring(11).toInt();
-        Serial.print("[HEADER] Timestamp now: ");
-        Serial.println(m_serverTimestamp);
+        Logger::log(Logger::Topic::HEADER, "Timestamp now: {}\n", m_serverTimestamp);
       }
 
       // Let's try to get info about how long to go to deep sleep
@@ -171,16 +167,14 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
       {
         uint64_t sleepMinutes = line.substring(7).toInt();
         m_sleepDuration = sleepMinutes * 60; // convert minutes to seconds
-        Serial.print("[HEADER] Sleep: ");
-        Serial.println(sleepMinutes);
+        Logger::log(Logger::Topic::HEADER, "Sleep: {}\n", sleepMinutes);
       }
 
       // Is there another header (after the Sleep one) with sleep in Seconds?
       if (line.startsWith("PreciseSleep"))
       {
         m_sleepDuration = line.substring(14).toInt();
-        Serial.print("[HEADER] Sleep in seconds: ");
-        Serial.println(m_sleepDuration);
+        Logger::log(Logger::Topic::HEADER, "Precise Sleep in seconds: {}\n", m_sleepDuration);
       }
 
       // Do we want to rotate display? (IE. upside down)
@@ -188,15 +182,14 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
       {
         m_displayRotation = line.substring(8).toInt();
         m_hasRotation = true;
-        Serial.print("[HEADER] Rotate: ");
-        Serial.println(m_displayRotation);
+        Logger::log(Logger::Topic::HEADER, "Rotation: {}\n", m_displayRotation);
       }
 
       // Partial refresh request from server (only if this line exists)
       if (line.startsWith("PartialRefresh"))
       {
         m_partialRefresh = true;
-        Serial.println("[HEADER] Partial refresh requested");
+        Logger::log(Logger::Topic::HEADER, "Partial refresh requested\n");
       }
     }
 
@@ -205,13 +198,13 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
     {
       // Support both HTTP/1.0 and HTTP/1.1
       connectionOk = line.startsWith("HTTP/1.1 200 OK") || line.startsWith("HTTP/1.0 200 OK");
-      Serial.println("[HTTP] response:" + line);
+      Logger::log(Logger::Topic::HTTP, "Response: {}\n", line);
     }
 
     // End of headers
     if (line == "\r")
     {
-      Serial.println("[HTTP] Headers received");
+      Logger::log(Logger::Topic::HTTP, "Headers received\n");
       break;
     }
   }
@@ -225,12 +218,12 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
 
   // For debug purposes - print out the whole response
   /*
-  Serial.println("[HTTP] Byte by byte:");
+  Logger::log(Logger::Topic::HTTP, "Byte by byte:");
 
   while (m_client.connected() || m_client.available()) {
     if (m_client.available()) {
       char c = m_client.read();  // Read one byte
-      Serial.print(c);         // Print the byte to the serial monitor
+      Logger::log(Logger::Topic::EMPTY, "{}", c); // Print the byte to the serial monitor
     }
   }
   m_client.stop();
@@ -241,8 +234,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
   {
     if (foundTimestamp && (m_serverTimestamp == storedTimestamp))
     {
-      Serial.print("[TIMESTAMP] No screen reload, still at current timestamp: ");
-      Serial.println(storedTimestamp);
+      Logger::log(Logger::Topic::HTTP, "No screen reload, still at current timestamp: {}\n", storedTimestamp);
 
       StateManager::setLastRefreshDuration(0);
 
