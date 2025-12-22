@@ -23,6 +23,7 @@
 // #define BOARD_TYPE SEEEDSTUDIO_RETERMINAL // SeeedStudio reTerminal E1001/E1002
 
 #include <Arduino.h>
+
 #include "utils.h"
 
 #ifdef BOARD_TYPE

@@ -29,9 +29,7 @@
 #include "display.h"
 #include "http_client.h"
 #include "image_handler.h"
-#include "sensor.h"
 #include "state_manager.h"
-#include "utils.h"
 #include "wireless.h"
 
 ///////////////////////////////////////////////

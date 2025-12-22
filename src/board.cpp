@@ -55,7 +55,7 @@ void setupHW()
 #endif
 
 #ifdef SENSOR
-  Sensor::init();
+  Sensor::getInstance().init();
 #endif
 
   // Initialize display

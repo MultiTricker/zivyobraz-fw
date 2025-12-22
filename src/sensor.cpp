@@ -22,19 +22,16 @@ static Adafruit_BME280 bme;
   #include <SensirionI2cStcc4.h>
 static SensirionI2cStcc4 stcc4;
 
-namespace Sensor
-{
-
 // Store detected sensor type in RTC memory (persists through deep sleep)
 RTC_DATA_ATTR SensorType detectedSensor = SensorType::NONE;
 
-static SensorType detectSensor();
-static bool readSHT4X(float &sen_temp, int &sen_humi);
-static bool readBME280(float &sen_temp, int &sen_humi, int &sen_pres);
-static bool readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres);
-static bool readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres);
+Sensor &Sensor::getInstance()
+{
+  static Sensor instance;
+  return instance;
+}
 
-void init()
+void Sensor::init()
 {
   ResetReason reason = Board::getResetReason();
 
@@ -43,18 +40,22 @@ void init()
   {
     Serial.println("[SENSOR] Fresh boot - resetting detection");
     detectedSensor = SensorType::NONE;
+    m_detectedSensor = SensorType::NONE;
   }
   else if (reason == ResetReason::DEEPSLEEP)
   {
+    m_detectedSensor = detectedSensor;
     Serial.print("[SENSOR] Wake from deep sleep - using cached sensor: ");
     Serial.println(getSensorTypeStr());
   }
 
   // Detect sensor if not already known
-  if (detectedSensor == SensorType::NONE)
+  if (m_detectedSensor == SensorType::NONE)
   {
-    detectedSensor = detectSensor();
-    if (detectedSensor != SensorType::NONE)
+    m_detectedSensor = detectSensor();
+    detectedSensor = m_detectedSensor;
+
+    if (m_detectedSensor != SensorType::NONE)
     {
       Serial.print("[SENSOR] Detected and cached: ");
       Serial.println(getSensorTypeStr());
@@ -66,7 +67,7 @@ void init()
   }
 }
 
-static SensorType detectSensor()
+SensorType Sensor::detectSensor()
 {
   #if (defined ESPink_V2) || (defined ESPink_V3) || (defined ESPink_V35) || (defined ESP32S3Adapter)
   // LaskaKit ESPink 2.5 needs to power up uSup
@@ -119,9 +120,9 @@ static SensorType detectSensor()
   return found;
 }
 
-bool readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
+bool Sensor::readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 {
-  if (detectedSensor == SensorType::NONE)
+  if (m_detectedSensor == SensorType::NONE)
   {
     Serial.println("[SENSOR] No sensor detected");
     return false;
@@ -139,7 +140,7 @@ bool readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 
   bool ret = false;
 
-  switch (detectedSensor)
+  switch (m_detectedSensor)
   {
     case SensorType::SHT4X:
       ret = readSHT4X(sen_temp, sen_humi);
@@ -173,7 +174,7 @@ bool readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
   return ret;
 }
 
-static bool readSHT4X(float &sen_temp, int &sen_humi)
+bool Sensor::readSHT4X(float &sen_temp, int &sen_humi)
 {
   if (!sht4.begin())
   {
@@ -192,7 +193,7 @@ static bool readSHT4X(float &sen_temp, int &sen_humi)
   return true;
 }
 
-static bool readBME280(float &sen_temp, int &sen_humi, int &sen_pres)
+bool Sensor::readBME280(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   if (!bme.begin())
   {
@@ -206,7 +207,7 @@ static bool readBME280(float &sen_temp, int &sen_humi, int &sen_pres)
   return true;
 }
 
-static bool readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres)
+bool Sensor::readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   if (!SCD4.begin(false, true, false))
   {
@@ -228,7 +229,7 @@ static bool readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres)
   return true;
 }
 
-static bool readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
+bool Sensor::readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   stcc4.begin(Wire, STCC4_I2C_ADDR_64);
 
@@ -296,11 +297,11 @@ static bool readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
   return true;
 }
 
-SensorType getSensorType() { return detectedSensor; }
+SensorType Sensor::getSensorType() const { return m_detectedSensor; }
 
-const char *getSensorTypeStr()
+const char *Sensor::getSensorTypeStr() const
 {
-  switch (detectedSensor)
+  switch (m_detectedSensor)
   {
     case SensorType::NONE:
       return "NONE";
@@ -317,7 +318,7 @@ const char *getSensorTypeStr()
   }
 }
 
-SensorData getSensorData()
+SensorData Sensor::getSensorData()
 {
   SensorData data = {nullptr, 0.0f, 0, 0, false, false, false};
 
@@ -327,39 +328,18 @@ SensorData getSensorData()
 
   if (readSensorsVal(temperature, humidity, pressure))
   {
-    SensorType sensorType = getSensorType();
     data.type = getSensorTypeStr();
     data.temperature = temperature;
     data.humidity = humidity;
     data.pressureOrCO2 = pressure;
-    data.isPressure = (sensorType == SensorType::BME280);
+    data.isPressure = (m_detectedSensor == SensorType::BME280);
     // Only BME280, SCD4X, and STCC4 have a third measurement
-    data.hasThirdMeasurement =
-      (sensorType == SensorType::BME280 || sensorType == SensorType::SCD4X || sensorType == SensorType::STCC4);
+    data.hasThirdMeasurement = (m_detectedSensor == SensorType::BME280 || m_detectedSensor == SensorType::SCD4X ||
+                                m_detectedSensor == SensorType::STCC4);
     data.isValid = true;
   }
 
   return data;
 }
 
-} // namespace Sensor
-
-#else
-
-// Stub implementations when SENSOR is not defined
-namespace Sensor
-{
-
-void init() {}
-
-bool readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres) { return false; }
-
-SensorType getSensorType() { return SensorType::NONE; }
-
-const char *getSensorTypeStr() { return "NONE"; }
-
-SensorData getSensorData() { return {nullptr, 0.0f, 0, 0, false, false, false}; }
-
-} // namespace Sensor
-
-#endif
+#endif // SENSOR

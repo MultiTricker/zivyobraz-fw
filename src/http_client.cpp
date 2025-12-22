@@ -6,7 +6,6 @@
 #include "sensor.h"
 #include "display.h"
 #include "state_manager.h"
-#include "utils.h"
 #include "wireless.h"
 
 // External configuration
@@ -63,13 +62,15 @@ void HttpClient::buildJsonPayload()
   if (StateManager::getLastRefreshDuration() > 0)
     display["lastRefreshDuration"] = StateManager::getLastRefreshDuration();
 
+#ifdef SENSOR
   // Add sensor data if available
-  Sensor::SensorData sensorData = Sensor::getSensorData();
+  SensorData sensorData = Sensor::getInstance().getSensorData();
   if (sensorData.isValid)
   {
     JsonArray sensors = doc["sensors"].to<JsonArray>();
     sensorData.toJson(sensors);
   }
+#endif
 
   serializeJson(doc, m_jsonPayload);
 }
