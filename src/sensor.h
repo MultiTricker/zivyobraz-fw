@@ -11,8 +11,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
-namespace Sensor
-{
+#ifdef SENSOR
 
 enum class SensorType : uint8_t
 {
@@ -22,12 +21,6 @@ enum class SensorType : uint8_t
   SCD4X = 3,
   STCC4 = 4
 };
-
-void init();
-bool readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres);
-
-SensorType getSensorType();
-const char *getSensorTypeStr();
 
 // Sensor data structure for passing sensor readings
 struct SensorData
@@ -63,8 +56,31 @@ struct SensorData
   }
 };
 
-SensorData getSensorData();
+class Sensor
+{
+public:
+  static Sensor &getInstance();
 
-} // namespace Sensor
+  void init();
+  bool readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres);
+  SensorType getSensorType() const;
+  const char *getSensorTypeStr() const;
+  SensorData getSensorData();
+
+private:
+  Sensor() = default;
+  Sensor(const Sensor &) = delete;
+  Sensor &operator=(const Sensor &) = delete;
+
+  SensorType detectSensor();
+  bool readSHT4X(float &sen_temp, int &sen_humi);
+  bool readBME280(float &sen_temp, int &sen_humi, int &sen_pres);
+  bool readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres);
+  bool readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres);
+
+  SensorType m_detectedSensor = SensorType::NONE;
+};
+
+#endif // SENSOR
 
 #endif // SENSOR_H
