@@ -6,7 +6,6 @@
 #include "sensor.h"
 #include "display.h"
 #include "state_manager.h"
-#include "utils.h"
 #include "wireless.h"
 
 // External configuration
