@@ -348,6 +348,9 @@ static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format,
       if (!http.isConnected() && !http.available())
       {
         Serial.print("[IMAGE-Z] Incomplete image received. Pixels processed: ");
+        Serial.print(pixelsProcessed);
+        Serial.print("/");
+        Serial.println(totalPixels);
 
         // If we're close to complete (95%+), consider it a success
         if (pixelsProcessed >= (totalPixels * 95 / 100))
