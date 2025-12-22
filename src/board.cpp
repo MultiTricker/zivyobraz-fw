@@ -95,7 +95,7 @@ float getBatteryVoltage()
   float volt;
 
 #ifdef ESPink_V3
-  Logger::log(Logger::Topic::BATTERY, "Readingon ESPink V3 board\n");
+  Logger::log<Logger::Topic::BATTERY>("Readingon ESPink V3 board\n");
 
   setEPaperPowerOn(true);
   pinMode(PIN_ALERT, INPUT_PULLUP);
@@ -110,11 +110,11 @@ float getBatteryVoltage()
 
   // Read and print the reset indicator
   bool RI = lipo.isReset(true); // Read the RI flag and clear it automatically if it is set
-  Logger::log(Logger::Topic::BATTERY, "Reset Indicator was: {}\n", RI);
+  Logger::log<Logger::Topic::BATTERY>("Reset Indicator was: {}\n", RI);
   // If RI was set, check it is now clear
   if (RI)
   {
-    Logger::log(Logger::Topic::BATTERY, "Reset Indicator is now: {}\n", lipo.isReset());
+    Logger::log<Logger::Topic::BATTERY>("Reset Indicator is now: {}\n", lipo.isReset());
   }
 
   lipo.setThreshold(1);         // Set alert threshold to just 1% - we don't want to trigger the alert
@@ -124,7 +124,7 @@ float getBatteryVoltage()
   volt = (float)lipo.getVoltage();
   // percentage could be read like this:
   // lipo.getSOC();
-  // Logger::log(Logger::Topic::BATTERY, "Percentage: {} %\n", lipo.getSOC());
+  // Logger::log<Logger::Topic::BATTERY>("Percentage: {} %\n", lipo.getSOC());
 
   lipo.clearAlert();
   lipo.enableHibernate();
@@ -136,20 +136,20 @@ float getBatteryVoltage()
   esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_WIDTH_BIT_12, 0, &adc_cal);
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_12);
 
-  Logger::log(Logger::Topic::BATTERY, "Reading on ES3ink board\n");
+  Logger::log<Logger::Topic::BATTERY>("Reading on ES3ink board\n");
 
   digitalWrite(enableBattery, LOW);
   uint32_t raw = adc1_get_raw(vBatPin);
-  // Logger::log(Logger::Topic::BATTERY, "Raw ADC value: {}\n", raw);
+  // Logger::log<Logger::Topic::BATTERY>("Raw ADC value: {}\n", raw);
   uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw, &adc_cal);
-  // Logger::log(Logger::Topic::BATTERY, "Measured battery voltage (mV): {}\n", millivolts);
+  // Logger::log<Logger::Topic::BATTERY>("Measured battery voltage (mV): {}\n", millivolts);
   const uint32_t upper_divider = 1000;
   const uint32_t lower_divider = 1000;
   volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
   digitalWrite(enableBattery, HIGH);
 
 #elif defined ESP32S3Adapter
-  Logger::log(Logger::Topic::BATTERY, "Reading on ESP32-S3 Adapter board\n");
+  Logger::log<Logger::Topic::BATTERY>("Reading on ESP32-S3 Adapter board\n");
   // attach ADC input
   volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);
 
@@ -223,7 +223,7 @@ float getBatteryVoltage()
   pinMode(enableBattery, INPUT);
 
 #elif defined SEEEDSTUDIO_RETERMINAL
-  Logger::log(Logger::Topic::BATTERY, "Reading on SeeedStudio reTerminal board\n");
+  Logger::log<Logger::Topic::BATTERY>("Reading on SeeedStudio reTerminal board\n");
   // Enable battery voltage measurement circuit via GPIO21
   digitalWrite(enableBattery, HIGH);
   pinMode(enableBattery, OUTPUT);
@@ -236,7 +236,7 @@ float getBatteryVoltage()
   volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);
 #endif
 
-  Logger::log(Logger::Topic::BATTERY, "Voltage: {} V\n", volt);
+  Logger::log<Logger::Topic::BATTERY>("Voltage: {} V\n", volt);
   return volt;
 }
 
@@ -249,7 +249,7 @@ unsigned long checkButtonPressDuration()
   if (digitalRead(EXT_BUTTON) == HIGH)
     return 0; // Button not pressed
 
-  Logger::log(Logger::Topic::BTN, "Press detected at boot, measuring duration...\n");
+  Logger::log<Logger::Topic::BTN>("Press detected at boot, measuring duration...\n");
 
   unsigned long pressStart = millis();
   const unsigned long maxWaitTime = 10000;
@@ -264,7 +264,7 @@ unsigned long checkButtonPressDuration()
   }
 
   unsigned long pressDuration = millis() - pressStart;
-  Logger::log(Logger::Topic::BTN, "Press duration: {} ms\n", pressDuration);
+  Logger::log<Logger::Topic::BTN>("Press duration: {} ms\n", pressDuration);
   return pressDuration;
 #else
   // EXT_BUTTON not defined for this board

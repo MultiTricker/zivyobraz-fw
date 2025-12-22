@@ -39,14 +39,14 @@ void Sensor::init()
   // Reset sensor detection on power-on or hardware reset
   if (reason == ResetReason::POWERON || reason == ResetReason::EXT)
   {
-    Logger::log(Logger::Topic::SENS, "Fresh boot - resetting detection\n");
+    Logger::log<Logger::Topic::SENS>("Fresh boot - resetting detection\n");
     detectedSensor = SensorType::NONE;
     m_detectedSensor = SensorType::NONE;
   }
   else if (reason == ResetReason::DEEPSLEEP)
   {
     m_detectedSensor = detectedSensor;
-    Logger::log(Logger::Topic::SENS, "Wake from deep sleep - using cached sensor: {}\n", getSensorTypeStr());
+    Logger::log<Logger::Topic::SENS>("Wake from deep sleep - using cached sensor: {}\n", getSensorTypeStr());
   }
 
   // Detect sensor if not already known
@@ -56,9 +56,9 @@ void Sensor::init()
     detectedSensor = m_detectedSensor;
 
     if (m_detectedSensor != SensorType::NONE)
-      LoLogger::log(Logger::Topic::SENS, "Detected and cached: {}\n", getSensorTypeStr());
+      Logger::log<Logger::Topic::SENS>("Detected and cached: {}\n", getSensorTypeStr());
     else
-      LoLogger::log(Logger::Topic::SENS, "No sensor found\n");
+      Logger::log<Logger::Topic::SENS>("No sensor found\n");
   }
 }
 
@@ -79,19 +79,19 @@ SensorType Sensor::detectSensor()
   // Check for SHT40 OR SHT41 OR SHT45
   if (sht4.begin())
   {
-    LoLogger::log(Logger::Topic::SENS, "SHT4x FOUND\n");
+    Logger::log<Logger::Topic::SENS>("SHT4x FOUND\n");
     found = SensorType::SHT4X;
   }
   // Check for BME280
   else if (bme.begin())
   {
-    LoLogger::log(Logger::Topic::SENS, "BME280 FOUND\n");
+    Logger::log<Logger::Topic::SENS>("BME280 FOUND\n");
     found = SensorType::BME280;
   }
   // Check for SCD40 OR SCD41
   else if (SCD4.begin(false, true, false))
   {
-    LoLogger::log(Logger::Topic::SENS, "SCD4x FOUND\n");
+    Logger::log<Logger::Topic::SENS>("SCD4x FOUND\n");
     found = SensorType::SCD4X;
   }
   // Check for STCC4
@@ -102,7 +102,7 @@ SensorType Sensor::detectSensor()
     uint64_t serialNumber;
     if (stcc4.getProductId(productId, serialNumber) == 0)
     {
-      LogLogger::log(Logger::Topic::SENS, "STCC4 FOUND\n");
+      Logger::log<Logger::Topic::SENS>("STCC4 FOUND\n");
       found = SensorType::STCC4;
     }
   }
@@ -119,7 +119,7 @@ bool Sensor::readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   if (m_detectedSensor == SensorType::NONE)
   {
-    LoLogger::log(Logger::Topic::SENS, "No sensor detected\n");
+    Logger::log<Logger::Topic::SENS>("No sensor detected\n");
     return false;
   }
 
@@ -154,12 +154,12 @@ bool Sensor::readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
       break;
 
     default:
-      LoLogger::log(Logger::Topic::SENS, "ERROR: Unknown sensor type\n");
+      Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("Unknown sensor type\n");
       break;
   }
 
   if (!ret)
-    LoLogger::log(Logger::Topic::SENS, "Failed to read sensor data\n");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("Failed to read sensor data\n");
 
   #if (defined ESPink_V2) || (defined ESPink_V3) || (defined ESPink_V35) || (defined ESP32S3Adapter)
   // Power down for now
@@ -173,7 +173,7 @@ bool Sensor::readSHT4X(float &sen_temp, int &sen_humi)
 {
   if (!sht4.begin())
   {
-    LLogger::log(Logger::Topic::SENS, "ERROR: SHT4x not responding\n");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("SHT4x not responding\n");
     return false;
   }
 
@@ -192,7 +192,7 @@ bool Sensor::readBME280(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   if (!bme.begin())
   {
-    LLogger::log(Logger::Topic::SENS, "ERROR: BME280 not responding\n");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("BME280 not responding\n");
     return false;
   }
 
@@ -206,7 +206,7 @@ bool Sensor::readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   if (!SCD4.begin(false, true, false))
   {
-    LLogger::log(Logger::Topic::SENS, "ERROR: SCD4x not responding\n");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("SCD4x not responding\n");
     return false;
   }
 
@@ -214,7 +214,7 @@ bool Sensor::readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres)
 
   while (SCD4.readMeasurement() == false) // wait for a new data (approx 30s)
   {
-    LoLogger::log(Logger::Topic::SENS, "Waiting for first measurement...\n");
+    Logger::log<Logger::Topic::SENS>("Waiting for first measurement...\n");
     delay(1000);
   }
 
@@ -234,7 +234,7 @@ bool Sensor::readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
 
   if (error != 0)
   {
-    LLogger::log(Logger::Topic::SENS, "ERROR: STCC4 not responding\n");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("STCC4 not responding\n");
     return false;
   }
 
@@ -245,18 +245,18 @@ bool Sensor::readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
   error = stcc4.startContinuousMeasurement();
   if (error)
   {
-    LoLogger::log(Logger::Topic::SENS, "ERROR: STCC4 failed to start continuous measurement\n");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("STCC4 failed to start continuous measurement\n");
     return false;
   }
 
-  LoLogger::log(Logger::Topic::SENS, "Waiting 30s to warmup STCC4\n");
+  Logger::log<Logger::Topic::SENS>("Waiting 30s to warmup STCC4\n");
   delay(30 * 1000);
-  LoLogger::log(Logger::Topic::SENS, "STCC4 warmup complete\n");
+  Logger::log<Logger::Topic::SENS>("STCC4 warmup complete\n");
 
   error = stcc4.stopContinuousMeasurement();
   if (error)
   {
-    LoLogger::log(Logger::Topic::SENS, "ERROR: STCC4 failed to stop continuous measurement\n");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("STCC4 failed to stop continuous measurement\n");
     return false;
   }
 
@@ -264,7 +264,7 @@ bool Sensor::readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
   error = stcc4.measureSingleShot();
   if (error != 0)
   {
-    LoLogger::log(Logger::Topic::SENS, "ERROR: STCC4 single shot measurement failed\n");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("STCC4 single shot measurement failed\n");
     return false;
   }
 
@@ -281,7 +281,7 @@ bool Sensor::readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
   error = stcc4.readMeasurement(temp_cpo2, temp_temp, temp_humidity, sensorStatus);
   if (error != 0)
   {
-    LoLogger::log(Logger::Topic::SENS, "ERROR: STCC4 readMeasurement error code: {}\n", error);
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("STCC4 readMeasurement error code: {}\n", error);
     return false;
   }
 

@@ -23,19 +23,20 @@ bool RowStreamBuffer::init(size_t rowSizeBytes, size_t rowCount)
 {
   if (m_initialized)
   {
-    Logger::log(Logger::Topic::STREAM, "RowBuffer already initialized\n");
+    Logger::log<Logger::Topic::STREAM>("RowBuffer already initialized\n");
     return true;
   }
 
   if (rowSizeBytes == 0 || rowSizeBytes > MAX_ROW_SIZE)
   {
-    Logger::log(Logger::Topic::STREAM, "ERROR: Invalid row size: {} (max: {})\n", rowSizeBytes, MAX_ROW_SIZE);
+    Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>("Invalid row size: {} (max: {})\n", rowSizeBytes,
+                                                             MAX_ROW_SIZE);
     return false;
   }
 
   if (rowCount == 0)
   {
-    Logger::log(Logger::Topic::STREAM, "ERROR: Invalid row count: 0\n");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>("Invalid row count: 0\n");
     return false;
   }
 
@@ -45,8 +46,8 @@ bool RowStreamBuffer::init(size_t rowSizeBytes, size_t rowCount)
   size_t freeHeap = Utils::getFreeHeap();
   if (freeHeap < totalSize * 2)
   {
-    Logger::log(Logger::Topic::STREAM, "ERROR: Insufficient heap: {} bytes free, need {} for row buffer\n", freeHeap,
-                totalSize * 2);
+    Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>(
+      "Insufficient heap: {} bytes free, need {} for row buffer\n", freeHeap, totalSize * 2);
     return false;
   }
 
@@ -57,13 +58,13 @@ bool RowStreamBuffer::init(size_t rowSizeBytes, size_t rowCount)
     m_rowSize = rowSizeBytes;
     m_rowCount = rowCount;
     m_initialized = true;
-    Logger::log(Logger::Topic::STREAM, "Row buffer initialized: {} bytes/row × {} rows = {} bytes total\n",
-                rowSizeBytes, rowCount, totalSize);
+    Logger::log<Logger::Topic::STREAM>("Row buffer initialized: {} bytes/row × {} rows = {} bytes total\n",
+                                       rowSizeBytes, rowCount, totalSize);
     return true;
   }
   catch (const std::bad_alloc &e)
   {
-    Logger::log(Logger::Topic::STREAM, "ERROR: Row buffer allocation failed: {}\n", e.what());
+    Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>("Row buffer allocation failed: {}\n", e.what());
     return false;
   }
 }
@@ -75,7 +76,8 @@ size_t RowStreamBuffer::writeRow(size_t rowIndex, const uint8_t *data, size_t le
 
   if (rowIndex >= m_rowCount)
   {
-    Logger::log(Logger::Topic::STREAM, "ERROR: Invalid row index: {} (max: {})\n", rowIndex, m_rowCount - 1);
+    Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>("Invalid row index: {} (max: {})\n", rowIndex,
+                                                             m_rowCount - 1);
     return 0;
   }
 
@@ -127,18 +129,18 @@ bool StreamingManager::init(size_t rowSizeBytes, size_t rowCount)
 {
   if (m_enabled)
   {
-    Logger::log(Logger::Topic::STREAM, "Manager already enabled\n");
+    Logger::log<Logger::Topic::STREAM>("Manager already enabled\n");
     return true;
   }
 
   if (!m_buffer.init(rowSizeBytes, rowCount))
   {
-    Logger::log(Logger::Topic::STREAM, "ERROR: Failed to initialize row buffer\n");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>("Failed to initialize row buffer\n");
     return false;
   }
 
   m_enabled = true;
-  Logger::log(Logger::Topic::STREAM, "Manager initialized successfully\n");
+  Logger::log<Logger::Topic::STREAM>("Manager initialized successfully\n");
   return true;
 }
 
@@ -155,7 +157,7 @@ void StreamingManager::cleanup()
   {
     m_buffer.clear();
     m_enabled = false;
-    Logger::log(Logger::Topic::STREAM, "Manager cleanup complete\n");
+    Logger::log<Logger::Topic::STREAM>("Manager cleanup complete\n");
   }
 }
 

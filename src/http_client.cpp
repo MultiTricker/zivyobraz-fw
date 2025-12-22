@@ -77,7 +77,7 @@ bool HttpClient::sendRequest(bool timestampCheck)
   // Build JSON payload (only built once, cached for subsequent requests)
   buildJsonPayload();
 
-  Logger::log(Logger::Topic::HTTP, "Connecting to: {}\n", host);
+  Logger::log<Logger::Topic::HTTP>("Connecting to: {}\n", host);
 
 #ifdef USE_CLIENT_HTTPS
   // Configure secure connection without certificate verification
@@ -91,7 +91,7 @@ bool HttpClient::sendRequest(bool timestampCheck)
     if (m_client.connect(host, CONNECTION_PORT))
       break;
 
-    Logger::log(Logger::Topic::HTTP, "Connection failed, retrying... {}/3\n", attempt + 1);
+    Logger::log<Logger::Topic::HTTP>("Connection failed, retrying... {}/3\n", attempt + 1);
     if (attempt == 2)
     {
       m_sleepDuration = StateManager::DEFAULT_SLEEP_SECONDS;
@@ -104,12 +104,12 @@ bool HttpClient::sendRequest(bool timestampCheck)
   }
 
   // Send HTTP/HTTPS POST request with JSON body
-  Logger::log(Logger::Topic::HTTP, "Sending POST to: {}{}/index.php\n", CONNECTION_URL_PREFIX, host);
+  Logger::log<Logger::Topic::HTTP>("Sending POST to: {}{}/index.php\n", CONNECTION_URL_PREFIX, host);
 
   // Pretty print JSON payload for debugging
   String prettyJson;
   serializeJsonPretty(m_jsonDoc, prettyJson);
-  Logger::log(Logger::Topic::HTTP, "JSON Payload:\n{}\n", prettyJson);
+  Logger::log<Logger::Topic::HTTP>("JSON Payload:\n{}\n", prettyJson);
 
   // Build URL with timestampCheck query parameter
   String url = "/index.php?timestampCheck=";
@@ -120,7 +120,7 @@ bool HttpClient::sendRequest(bool timestampCheck)
                  "Content-Length: " + String(m_jsonPayload.length()) + "\r\n" + "Connection: close\r\n\r\n" +
                  m_jsonPayload);
 
-  Logger::log(Logger::Topic::HTTP, "Request sent\n");
+  Logger::log<Logger::Topic::HTTP>("Request sent\n");
 
   // Wait for response with timeout
   uint32_t timeout = millis();
@@ -128,7 +128,7 @@ bool HttpClient::sendRequest(bool timestampCheck)
   {
     if (millis() - timeout > 10000)
     {
-      Logger::log(Logger::Topic::HTTP, ">>> Client Timeout!\n");
+      Logger::log<Logger::Topic::HTTP>(">>> Client Timeout!\n");
       m_client.stop();
       if (timestampCheck)
         m_sleepDuration = StateManager::DEFAULT_SLEEP_SECONDS;
@@ -159,7 +159,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
         foundTimestamp = true;
         // Skipping also colon and space - also in following code for sleep, rotate, ...
         m_serverTimestamp = line.substring(11).toInt();
-        Logger::log(Logger::Topic::HEADER, "Timestamp now: {}\n", m_serverTimestamp);
+        Logger::log<Logger::Topic::HEADER>("Timestamp now: {}\n", m_serverTimestamp);
       }
 
       // Let's try to get info about how long to go to deep sleep
@@ -167,14 +167,14 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
       {
         uint64_t sleepMinutes = line.substring(7).toInt();
         m_sleepDuration = sleepMinutes * 60; // convert minutes to seconds
-        Logger::log(Logger::Topic::HEADER, "Sleep: {}\n", sleepMinutes);
+        Logger::log<Logger::Topic::HEADER>("Sleep: {}\n", sleepMinutes);
       }
 
       // Is there another header (after the Sleep one) with sleep in Seconds?
       if (line.startsWith("PreciseSleep"))
       {
         m_sleepDuration = line.substring(14).toInt();
-        Logger::log(Logger::Topic::HEADER, "Precise Sleep in seconds: {}\n", m_sleepDuration);
+        Logger::log<Logger::Topic::HEADER>("Precise Sleep in seconds: {}\n", m_sleepDuration);
       }
 
       // Do we want to rotate display? (IE. upside down)
@@ -182,14 +182,14 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
       {
         m_displayRotation = line.substring(8).toInt();
         m_hasRotation = true;
-        Logger::log(Logger::Topic::HEADER, "Rotation: {}\n", m_displayRotation);
+        Logger::log<Logger::Topic::HEADER>("Rotation: {}\n", m_displayRotation);
       }
 
       // Partial refresh request from server (only if this line exists)
       if (line.startsWith("PartialRefresh"))
       {
         m_partialRefresh = true;
-        Logger::log(Logger::Topic::HEADER, "Partial refresh requested\n");
+        Logger::log<Logger::Topic::HEADER>("Partial refresh requested\n");
       }
     }
 
@@ -198,13 +198,13 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
     {
       // Support both HTTP/1.0 and HTTP/1.1
       connectionOk = line.startsWith("HTTP/1.1 200 OK") || line.startsWith("HTTP/1.0 200 OK");
-      Logger::log(Logger::Topic::HTTP, "Response: {}\n", line);
+      Logger::log<Logger::Topic::HTTP>("Response: {}\n", line);
     }
 
     // End of headers
     if (line == "\r")
     {
-      Logger::log(Logger::Topic::HTTP, "Headers received\n");
+      Logger::log<Logger::Topic::HTTP>("Headers received\n");
       break;
     }
   }
@@ -218,15 +218,14 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
 
   // For debug purposes - print out the whole response
   /*
-  Logger::log(Logger::Topic::HTTP, "Byte by byte:");
-
+  String data = "";
   while (m_client.connected() || m_client.available()) {
     if (m_client.available()) {
-      char c = m_client.read();  // Read one byte
-      Logger::log(Logger::Topic::EMPTY, "{}", c); // Print the byte to the serial monitor
+      data += m_client.read();  // Read one byte
     }
   }
   m_client.stop();
+  Logger::log<Logger::Topic::HTTP>("Byte by byte:{}\n", data);
   /* */
 
   // If checking timestamp, see if content changed
@@ -234,7 +233,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
   {
     if (foundTimestamp && (m_serverTimestamp == storedTimestamp))
     {
-      Logger::log(Logger::Topic::HTTP, "No screen reload, still at current timestamp: {}\n", storedTimestamp);
+      Logger::log<Logger::Topic::HTTP>("No screen reload, still at current timestamp: {}\n", storedTimestamp);
 
       StateManager::setLastRefreshDuration(0);
 

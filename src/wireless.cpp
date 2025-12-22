@@ -22,7 +22,7 @@ void APCallback(WiFiManager *wm)
 void init(const String &hostname, const String &password, void (*callback)())
 {
   // Connecting to WiFi
-  Logger::log(Logger::Topic::WIFI, "Connecting...\n");
+  Logger::log<Logger::Topic::WIFI>("Connecting...\n");
   WiFi.mode(WIFI_STA);
   wm.setWiFiAutoReconnect(true);
   wm.setConnectRetries(5);
@@ -46,7 +46,7 @@ void init(const String &hostname, const String &password, void (*callback)())
 String getSSID()
 {
   String in = WiFi.SSID();
-  Logger::log(Logger::Topic::WIFI, "SSID: {}\n", in);
+  Logger::log<Logger::Topic::WIFI>("SSID: {}\n", in);
   if (in.length() == 0)
     return in;
 
@@ -78,7 +78,7 @@ String getSSID()
 int8_t getStrength()
 {
   int8_t rssi = WiFi.RSSI();
-  Logger::log(Logger::Topic::WIFI, "Strength: {} dB\n", rssi);
+  Logger::log<Logger::Topic::WIFI>("Strength: {} dB\n", rssi);
   return rssi;
 }
 
@@ -97,7 +97,7 @@ void turnOff()
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
   delay(20);
-  Logger::log(Logger::Topic::WIFI, "WiFi turned off\n");
+  Logger::log<Logger::Topic::WIFI>("WiFi turned off\n");
 }
 
 void resetCredentialsAndReboot()
@@ -106,11 +106,11 @@ void resetCredentialsAndReboot()
   turnOff();
 
   // Reset WiFi settings (erase stored credentials)
-  Logger::log(Logger::Topic::WIFI, "Erasing stored credentials...\n");
+  Logger::log<Logger::Topic::WIFI>("Erasing stored credentials...\n");
   wm.resetSettings();
 
   // Restart ESP to start configuration portal
-  Logger::log(Logger::Topic::SYSTEM, "Rebooting ESP...\n");
+  Logger::log<Logger::Topic::SYSTEM>("Rebooting ESP...\n");
   ESP.restart();
 }
 } // namespace Wireless

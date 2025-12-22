@@ -147,18 +147,18 @@ void handleConnectedState()
 
   if (httpClient.checkForUpdate())
   {
-    Logger::log(Logger::Topic::IMAGE, "Update available, downloading...\n");
+    Logger::log<Logger::Topic::IMAGE>("Update available, downloading...\n");
     downloadAndDisplayImage(httpClient);
   }
   else
   {
-    Logger::log(Logger::Topic::IMAGE, "No update needed\n");
+    Logger::log<Logger::Topic::IMAGE>("No update needed\n");
   }
 }
 
 void handleDisconnectedState()
 {
-  Logger::log(Logger::Topic::WIFI, "No Wi-Fi connection, failure count: {}\n", StateManager::getFailureCount());
+  Logger::log<Logger::Topic::WIFI>("No Wi-Fi connection, failure count: {}\n", StateManager::getFailureCount());
 
   // Calculate and set sleep duration based on failure count
   uint64_t sleepDuration = StateManager::calculateSleepDuration();
@@ -186,8 +186,8 @@ void enterDeepSleepMode()
   if (compensationSeconds < sleepDuration)
     sleepDuration -= compensationSeconds;
 
-  Logger::log(Logger::Topic::SLEEP, "Going to sleep for (seconds): {} (compensated by {} seconds)\n", sleepDuration,
-              compensationSeconds);
+  Logger::log<Logger::Topic::SLEEP>("Going to sleep for (seconds): {} (compensated by {} seconds)\n", sleepDuration,
+                                    compensationSeconds);
 
   Board::enterDeepSleepMode(sleepDuration);
 }
@@ -204,15 +204,15 @@ void handleButtonActions()
   // >6 seconds: Reset WiFi credentials and reboot
   if (pressDuration > 6000)
   {
-    Logger::log(Logger::Topic::BTN, "Long press detected (>6s): Clearing display and resetting WiFi...\n");
+    Logger::log<Logger::Topic::BTN>("Long press detected (>6s): Clearing display and resetting WiFi...\n");
     Wireless::resetCredentialsAndReboot();
   }
   // >2 seconds: Clear display only
   else if (pressDuration > 2000)
   {
-    Logger::log(Logger::Topic::BTN, "Medium press detected (>2s): Clearing display for storage...\n");
+    Logger::log<Logger::Topic::BTN>("Medium press detected (>2s): Clearing display for storage...\n");
     Display::clear();
-    Logger::log(Logger::Topic::BTN, "Display cleared. Entering deep sleep...\n");
+    Logger::log<Logger::Topic::BTN>("Display cleared. Entering deep sleep...\n");
 
     // Enter deep sleep indefinitely (until next reset)
     Board::enterDeepSleepMode(StateManager::DEFAULT_SLEEP_SECONDS);
@@ -220,7 +220,7 @@ void handleButtonActions()
   // <2 seconds: Perform normal restart
   else
   {
-    Logger::log(Logger::Topic::BTN, "Short press detected (<2s): Restarting ESP...\n");
+    Logger::log<Logger::Topic::BTN>("Short press detected (<2s): Restarting ESP...\n");
     delay(100);
     ESP.restart();
   }
@@ -233,7 +233,7 @@ void handleButtonActions()
 void setup()
 {
   Serial.begin(115200);
-  Logger::log(Logger::Topic::SYSTEM, "Starting firmware for Zivy Obraz service\n");
+  Logger::log<Logger::Topic::SYSTEM>("Starting firmware for Zivy Obraz service\n");
 
   Board::setupHW();
 

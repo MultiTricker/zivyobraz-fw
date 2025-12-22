@@ -359,7 +359,7 @@ void init()
 
 void clear()
 {
-  Logger::log(Logger::Topic::DISP, "Clearing display...\n");
+  Logger::log<Logger::Topic::DISP>("Clearing display...\n");
 
   init();
 
@@ -378,7 +378,7 @@ void clear()
   // Disable power supply for ePaper
   Board::setEPaperPowerOn(false);
 
-  Logger::log(Logger::Topic::DISP, "Display cleared.\n");
+  Logger::log<Logger::Topic::DISP>("Display cleared.\n");
 }
 
 void setRotation(uint8_t rotation) { display.setRotation(rotation); }
@@ -498,7 +498,7 @@ void enableLightSleepDuringRefresh(bool enable)
 #ifndef M5StackCoreInk
   if (enable)
   {
-    Logger::log(Logger::Topic::DISP, "Enabling light sleep during display refresh\n");
+    Logger::log<Logger::Topic::DISP>("Enabling light sleep during display refresh\n");
     display.epd2.setBusyCallback(busyCallbackLightSleep, nullptr);
   }
   else
@@ -544,7 +544,7 @@ void showWiFiError(const String &hostname, const String &password, const String 
     Sample: WIFI:S:MySSID;T:WPA;P:MyPassW0rd;;
   */
   const String qrString = "WIFI:S:" + hostname + ";T:WPA;P:" + password + ";;";
-  // Logger::log(Logger::Topic::WIFI, "Generated string: {}\n", qrString);
+  // Logger::log<Logger::Topic::WIFI>("Generated string: {}\n", qrString);
 
   init();
 

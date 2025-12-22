@@ -22,12 +22,12 @@ size_t getLargestFreeBlock() { return ESP.getMaxAllocHeap(); }
 
 void printMemoryStats()
 {
-  Logger::log(Logger::Topic::SYSTEM, "[MEMORY]\n");
-  Logger::log(Logger::Topic::NOTOPIC, "  Total Heap:  {} bytes\n", getTotalHeap());
-  Logger::log(Logger::Topic::NOTOPIC, "  Free Heap:   {} bytes\n", getFreeHeap());
-  Logger::log(Logger::Topic::NOTOPIC, "  Largest Block: {} bytes\n", getLargestFreeBlock());
-  Logger::log(Logger::Topic::NOTOPIC, "  Usage:       {:.1f}%\n",
-              100.0 * (1.0 - (float)getFreeHeap() / (float)getTotalHeap()));
+  Logger::log<Logger::Topic::SYSTEM>("  Total Heap:  {} bytes\n"
+                                     "  Free Heap:   {} bytes\n"
+                                     "  Largest Block: {} bytes\n"
+                                     "  Usage:       {:.1f}%\n",
+                                     getTotalHeap(), getFreeHeap(), getLargestFreeBlock(),
+                                     100.0 * (1.0 - (float)getFreeHeap() / (float)getTotalHeap()));
 }
 
 void initializeAPIKey()
@@ -39,12 +39,12 @@ void initializeAPIKey()
     // Generate 8-digit PIN without leading zeros (range: 10000000 - 99999999)
     rtc_cachedPIN = (esp_random() % 90000000) + 10000000;
     prefs.putULong("apikey", rtc_cachedPIN);
-    Logger::log(Logger::Topic::APIKEY, "Generated new device API key: {}\n", rtc_cachedPIN);
+    Logger::log<Logger::Topic::APIKEY>("Generated new device API key: {}\n", rtc_cachedPIN);
   }
   else
   {
     rtc_cachedPIN = prefs.getULong("apikey");
-    Logger::log(Logger::Topic::APIKEY, "Loaded stored device API key: {}\n", rtc_cachedPIN);
+    Logger::log<Logger::Topic::APIKEY>("Loaded stored device API key: {}\n", rtc_cachedPIN);
   }
 
   prefs.end();
