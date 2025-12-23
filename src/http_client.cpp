@@ -19,6 +19,11 @@ HttpClient::HttpClient()
       m_partialRefresh(false),
       m_jsonPayload("")
 {
+#ifdef USE_CLIENT_HTTPS
+  // Configure secure connection - only once in constructor
+  m_client.setInsecure();
+  m_client.setTimeout(15); // Timeout for TLS handshake and read operations
+#endif
 }
 
 void HttpClient::buildJsonPayload()
@@ -78,12 +83,6 @@ bool HttpClient::sendRequest(bool timestampCheck)
   buildJsonPayload();
 
   Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("Connecting to: {}\n", host);
-
-#ifdef USE_CLIENT_HTTPS
-  // Configure secure connection without certificate verification
-  m_client.setInsecure();
-  m_client.setTimeout(15); // Increased timeout for TLS handshake
-#endif
 
   // Try to connect with retries
   for (uint8_t attempt = 0; attempt < 3; attempt++)
