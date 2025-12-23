@@ -1,6 +1,7 @@
 #include "sensor.h"
 
 #include "board.h"
+#include "logger.h"
 #include "state_manager.h"
 
 #ifdef SENSOR
@@ -38,15 +39,14 @@ void Sensor::init()
   // Reset sensor detection on power-on or hardware reset
   if (reason == ResetReason::POWERON || reason == ResetReason::EXT)
   {
-    Serial.println("[SENSOR] Fresh boot - resetting detection");
+    Logger::log<Logger::Topic::SENS>("Fresh boot - resetting detection\n");
     detectedSensor = SensorType::NONE;
     m_detectedSensor = SensorType::NONE;
   }
   else if (reason == ResetReason::DEEPSLEEP)
   {
     m_detectedSensor = detectedSensor;
-    Serial.print("[SENSOR] Wake from deep sleep - using cached sensor: ");
-    Serial.println(getSensorTypeStr());
+    Logger::log<Logger::Topic::SENS>("Wake from deep sleep - using cached sensor: {}\n", getSensorTypeStr());
   }
 
   // Detect sensor if not already known
@@ -56,14 +56,9 @@ void Sensor::init()
     detectedSensor = m_detectedSensor;
 
     if (m_detectedSensor != SensorType::NONE)
-    {
-      Serial.print("[SENSOR] Detected and cached: ");
-      Serial.println(getSensorTypeStr());
-    }
+      Logger::log<Logger::Topic::SENS>("Detected and cached: {}\n", getSensorTypeStr());
     else
-    {
-      Serial.println("[SENSOR] No sensor found");
-    }
+      Logger::log<Logger::Topic::SENS>("No sensor found\n");
   }
 }
 
@@ -84,19 +79,19 @@ SensorType Sensor::detectSensor()
   // Check for SHT40 OR SHT41 OR SHT45
   if (sht4.begin())
   {
-    Serial.println("[SENSOR] SHT4x FOUND");
+    Logger::log<Logger::Topic::SENS>("SHT4x FOUND\n");
     found = SensorType::SHT4X;
   }
   // Check for BME280
   else if (bme.begin())
   {
-    Serial.println("[SENSOR] BME280 FOUND");
+    Logger::log<Logger::Topic::SENS>("BME280 FOUND\n");
     found = SensorType::BME280;
   }
   // Check for SCD40 OR SCD41
   else if (SCD4.begin(false, true, false))
   {
-    Serial.println("[SENSOR] SCD4x FOUND");
+    Logger::log<Logger::Topic::SENS>("SCD4x FOUND\n");
     found = SensorType::SCD4X;
   }
   // Check for STCC4
@@ -107,7 +102,7 @@ SensorType Sensor::detectSensor()
     uint64_t serialNumber;
     if (stcc4.getProductId(productId, serialNumber) == 0)
     {
-      Serial.println("[SENSOR] STCC4 FOUND");
+      Logger::log<Logger::Topic::SENS>("STCC4 FOUND\n");
       found = SensorType::STCC4;
     }
   }
@@ -124,7 +119,7 @@ bool Sensor::readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   if (m_detectedSensor == SensorType::NONE)
   {
-    Serial.println("[SENSOR] No sensor detected");
+    Logger::log<Logger::Topic::SENS>("No sensor detected\n");
     return false;
   }
 
@@ -159,12 +154,12 @@ bool Sensor::readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
       break;
 
     default:
-      Serial.println("[SENSOR] ERROR: Unknown sensor type");
+      Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("Unknown sensor type\n");
       break;
   }
 
   if (!ret)
-    Serial.println("[SENSOR] ERROR: Failed to read sensor data");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("Failed to read sensor data\n");
 
   #if (defined ESPink_V2) || (defined ESPink_V3) || (defined ESPink_V35) || (defined ESP32S3Adapter)
   // Power down for now
@@ -178,7 +173,7 @@ bool Sensor::readSHT4X(float &sen_temp, int &sen_humi)
 {
   if (!sht4.begin())
   {
-    Serial.println("[SENSOR] ERROR: SHT4x not responding");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("SHT4x not responding\n");
     return false;
   }
 
@@ -197,7 +192,7 @@ bool Sensor::readBME280(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   if (!bme.begin())
   {
-    Serial.println("[SENSOR] ERROR: BME280 not responding");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("BME280 not responding\n");
     return false;
   }
 
@@ -211,7 +206,7 @@ bool Sensor::readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres)
 {
   if (!SCD4.begin(false, true, false))
   {
-    Serial.println("[SENSOR] ERROR: SCD4x not responding");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("SCD4x not responding\n");
     return false;
   }
 
@@ -219,7 +214,7 @@ bool Sensor::readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres)
 
   while (SCD4.readMeasurement() == false) // wait for a new data (approx 30s)
   {
-    Serial.println("[SENSOR] Waiting for first measurement...");
+    Logger::log<Logger::Topic::SENS>("Waiting for first measurement...\n");
     delay(1000);
   }
 
@@ -239,7 +234,7 @@ bool Sensor::readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
 
   if (error != 0)
   {
-    Serial.println("[SENSOR] ERROR: STCC4 not responding");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("STCC4 not responding\n");
     return false;
   }
 
@@ -250,18 +245,18 @@ bool Sensor::readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
   error = stcc4.startContinuousMeasurement();
   if (error)
   {
-    Serial.println("[SENSOR] ERROR: STCC4 failed to start continuous measurement");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("STCC4 failed to start continuous measurement\n");
     return false;
   }
 
-  Serial.println("[SENSOR] Waiting 30s to warmup STCC4");
+  Logger::log<Logger::Topic::SENS>("Waiting 30s to warmup STCC4\n");
   delay(30 * 1000);
-  Serial.println("[SENSOR] STCC4 warmup complete");
+  Logger::log<Logger::Topic::SENS>("STCC4 warmup complete\n");
 
   error = stcc4.stopContinuousMeasurement();
   if (error)
   {
-    Serial.println("[SENSOR] ERROR: STCC4 failed to stop continuous measurement");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("STCC4 failed to stop continuous measurement\n");
     return false;
   }
 
@@ -269,7 +264,7 @@ bool Sensor::readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
   error = stcc4.measureSingleShot();
   if (error != 0)
   {
-    Serial.println("[SENSOR] ERROR: STCC4 single shot measurement failed");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("STCC4 single shot measurement failed\n");
     return false;
   }
 
@@ -286,7 +281,7 @@ bool Sensor::readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
   error = stcc4.readMeasurement(temp_cpo2, temp_temp, temp_humidity, sensorStatus);
   if (error != 0)
   {
-    Serial.println("[SENSOR] ERROR: STCC4 read measurement failed");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("STCC4 readMeasurement error code: {}\n", error);
     return false;
   }
 

@@ -15,6 +15,7 @@
 #include "image_handler.h"
 
 #include "display.h"
+#include "logger.h"
 #include "state_manager.h"
 #include "streaming_handler.h"
 
@@ -70,8 +71,7 @@ static const char *formatToString(ImageFormat format)
 
 static void printReadError(uint32_t bytesRead)
 {
-  Serial.print("[HTTP] Client got disconnected after bytes: ");
-  Serial.println(bytesRead);
+  Logger::log<Logger::Level::ERROR, Logger::Topic::HTTP>("Client got disconnected after bytes: {}\n", bytesRead);
 }
 
 static uint16_t getSecondColor()
@@ -126,7 +126,7 @@ static void pngleOnDraw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint
 {
   if ((x >= Display::getWidth()) || (y >= Display::getHeight()))
   {
-    Serial.println("[IMAGE-PNG] Size exceeds display");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("PNG pixel out of bounds: ({}, {})\n", x, y);
     return;
   }
 
@@ -139,7 +139,7 @@ static void pngleOnDraw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint
   // Skip fully transparent pixels
   if (a == 0)
   {
-    Serial.println("[IMAGE-PNG] Skipping transparent pixel");
+    Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("PNG Skipping transparent pixel\n");
     return;
   }
 
@@ -235,13 +235,13 @@ static void pngleOnDraw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint
 
 static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, uint16_t bufferSize)
 {
-  Serial.println("[IMAGE-PNG] Processing");
+  Logger::log<Logger::Topic::IMAGE>("Got format PNG, processing\n");
 
   // Create pngle decoder
   pngle_t *pngle = pngle_new();
   if (!pngle)
   {
-    Serial.println("[IMAGE-PNG] Failed to create decoder");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Failed to create PNG decoder\n");
     return false;
   }
 
@@ -267,8 +267,7 @@ static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, ui
   int fed = pngle_feed(pngle, pngSignature, 8);
   if (fed < 0)
   {
-    Serial.print("[IMAGE-PNG] Signature error: ");
-    Serial.println(pngle_error(pngle));
+    Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("PNG Signature error: {}\n", pngle_error(pngle));
     pngle_destroy(pngle);
     return false;
   }
@@ -289,8 +288,7 @@ static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, ui
     fed = pngle_feed(pngle, buffer, chunkSize);
     if (fed < 0)
     {
-      Serial.print("[IMAGE-PNG] Decode error: ");
-      Serial.println(pngle_error(pngle));
+      Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("PNG Decode error: {}\n", pngle_error(pngle));
       success = false;
       break;
     }
@@ -303,11 +301,8 @@ static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, ui
 
   if (success)
   {
-    Serial.print("[HTTP] Bytes read ");
-    Serial.println(bytes_read);
-    Serial.print("[HTTP] Loaded in ");
-    Serial.print(millis() - startTime);
-    Serial.println(" ms");
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("Bytes read {}\n", bytes_read);
+    Logger::log<Logger::Topic::HTTP>("Loaded in {} ms\n", millis() - startTime);
   }
 
   return success;
@@ -319,9 +314,7 @@ static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, ui
 
 static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format, uint8_t *buffer, uint16_t bufferSize)
 {
-  Serial.print("[IMAGE-Z] Got format ");
-  Serial.print(formatToString(format));
-  Serial.println(", processing");
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Z Got format {}, processing\n", formatToString(format));
 
   uint32_t bytes_read = 2; // Already read header
   uint16_t w = Display::getResolutionX();
@@ -347,15 +340,13 @@ static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format,
     {
       if (!http.isConnected() && !http.available())
       {
-        Serial.print("[IMAGE-Z] Incomplete image received. Pixels processed: ");
-        Serial.print(pixelsProcessed);
-        Serial.print("/");
-        Serial.println(totalPixels);
+        Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>(
+          "Z Incomplete image received. Pixels processed: {}/{}\n", pixelsProcessed, totalPixels);
 
         // If we're close to complete (95%+), consider it a success
         if (pixelsProcessed >= (totalPixels * 95 / 100))
         {
-          Serial.println("[IMAGE-Z] Image is 95%+ complete, accepting as valid");
+          Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("Z Image is 95%+ complete, accepting as valid\n");
           return true;
         }
         return false;
@@ -364,10 +355,8 @@ static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format,
       uint32_t bytesRead = http.readBytes(buffer, bufferSize);
       if (bytesRead == 0)
       {
-        Serial.print("[IMAGE-Z] No more data available. Pixels processed: ");
-        Serial.print(pixelsProcessed);
-        Serial.print("/");
-        Serial.println(totalPixels);
+        Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Z No more data available. Pixels processed: {}/{}\n",
+                                                                pixelsProcessed, totalPixels);
         break;
       }
 
@@ -431,11 +420,8 @@ static bool processRLE(HttpClient &http, uint32_t startTime, ImageFormat format,
       yield();
   }
 
-  Serial.print("[HTTP] Bytes read ");
-  Serial.println(bytes_read);
-  Serial.print("[HTTP] Loaded in ");
-  Serial.print(millis() - startTime);
-  Serial.println(" ms");
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("Bytes read {}\n", bytes_read);
+  Logger::log<Logger::Topic::HTTP>("Loaded in {} ms\n", millis() - startTime);
 
   return (pixelsProcessed == totalPixels);
 }
@@ -459,9 +445,9 @@ void readImageData(HttpClient &http)
     size_t rowSize = Display::getWidth();
 
     if (streamMgr.init(rowSize))
-      Serial.println("[IMAGE] Streaming enabled");
+      Logger::log<Logger::Topic::IMAGE>("Streaming enabled\n");
     else
-      Serial.println("[IMAGE] Streaming init failed, falling back to direct mode");
+      Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("Streaming init failed, falling back to direct mode\n");
   }
 
   // Print memory stats
@@ -469,15 +455,15 @@ void readImageData(HttpClient &http)
   {
     size_t totalHeap, freeHeap, bufferUsed;
     streamMgr.getMemoryStats(totalHeap, freeHeap, bufferUsed);
-    Serial.printf("[IMAGE] Memory - Total: %zu, Free: %zu, Buffer: %zu\n", totalHeap, freeHeap, bufferUsed);
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Memory - Total: {}, Free: {}, Buffer: {}\n", totalHeap,
+                                                            freeHeap, bufferUsed);
   }
 #endif
 
   // Read format header (2 bytes)
   uint16_t header = http.read16();
 
-  Serial.print("[IMAGE] Header: 0x");
-  Serial.println(header, HEX);
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Image format header: 0x{:04X}\n", header);
 
   // Dynamic buffer for PNG/RLE processing
   // BMP handles its own buffer allocation
@@ -486,7 +472,7 @@ void readImageData(HttpClient &http)
 
   if (!buffer)
   {
-    Serial.println("[Image] Failed to allocate processing buffer");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Failed to allocate processing buffer\n");
     return;
   }
 
@@ -510,8 +496,7 @@ void readImageData(HttpClient &http)
       break;
 
     default:
-      Serial.print("[IMAGE] Unknown format header: 0x");
-      Serial.println(header, HEX);
+      Logger::log<Logger::Topic::IMAGE>("Unknown image format header: 0x{:04X}\n", header);
       success = false;
       break;
   }
@@ -523,7 +508,7 @@ void readImageData(HttpClient &http)
   // Handle errors
   if (!success)
   {
-    Serial.println("[IMAGE] ERROR: Processing failed");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Image processing failed\n");
     StateManager::setSleepDuration(StateManager::DEFAULT_SLEEP_SECONDS);
     StateManager::setTimestamp(0);
   }

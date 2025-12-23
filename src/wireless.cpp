@@ -1,5 +1,7 @@
 #include "wireless.h"
 
+#include "logger.h"
+
 #include <WiFi.h>
 #include <WiFiManager.h>
 
@@ -20,8 +22,7 @@ void APCallback(WiFiManager *wm)
 void init(const String &hostname, const String &password, void (*callback)())
 {
   // Connecting to WiFi
-  Serial.println();
-  Serial.print("[WIFI] Connecting... ");
+  Logger::log<Logger::Topic::WIFI>("Connecting...\n");
   WiFi.mode(WIFI_STA);
   wm.setWiFiAutoReconnect(true);
   wm.setConnectRetries(5);
@@ -45,7 +46,7 @@ void init(const String &hostname, const String &password, void (*callback)())
 String getSSID()
 {
   String in = WiFi.SSID();
-  Serial.println("[WIFI] SSID: " + in);
+  Logger::log<Logger::Topic::WIFI>("SSID: {}\n", in);
   if (in.length() == 0)
     return in;
 
@@ -77,7 +78,7 @@ String getSSID()
 int8_t getStrength()
 {
   int8_t rssi = WiFi.RSSI();
-  Serial.println("[WIFI] Strength: " + String(rssi) + " dB");
+  Logger::log<Logger::Topic::WIFI>("Strength: {} dB\n", rssi);
   return rssi;
 }
 
@@ -96,7 +97,7 @@ void turnOff()
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
   delay(20);
-  Serial.println("[WIFI] Turned off");
+  Logger::log<Logger::Topic::WIFI>("WiFi turned off\n");
 }
 
 void resetCredentialsAndReboot()
@@ -105,11 +106,11 @@ void resetCredentialsAndReboot()
   turnOff();
 
   // Reset WiFi settings (erase stored credentials)
-  Serial.println("[WIFI] Erasing stored credentials...");
+  Logger::log<Logger::Topic::WIFI>("Erasing stored credentials...\n");
   wm.resetSettings();
 
   // Restart ESP to start configuration portal
-  Serial.println("[SYSTEM] Rebooting ESP...");
+  Logger::log<Logger::Topic::SYSTEM>("Rebooting ESP...\n");
   ESP.restart();
 }
 } // namespace Wireless

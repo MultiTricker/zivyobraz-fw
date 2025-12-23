@@ -29,6 +29,7 @@
 #include "display.h"
 #include "http_client.h"
 #include "image_handler.h"
+#include "logger.h"
 #include "state_manager.h"
 #include "wireless.h"
 
@@ -146,18 +147,19 @@ void handleConnectedState()
 
   if (httpClient.checkForUpdate())
   {
-    Serial.println("[IMAGE] Update available, downloading...");
+    Logger::log<Logger::Topic::IMAGE>("Update available, downloading...\n");
     downloadAndDisplayImage(httpClient);
   }
   else
   {
-    Serial.println("[IMAGE] No update needed");
+    Logger::log<Logger::Topic::IMAGE>("No update needed\n");
   }
 }
 
 void handleDisconnectedState()
 {
-  Serial.println("[WIFI] No Wi-Fi connection, failure count: " + String(StateManager::getFailureCount()));
+  Logger::log<Logger::Level::ERROR, Logger::Topic::WIFI>("No Wi-Fi connection, failure count: {}\n",
+                                                         StateManager::getFailureCount());
 
   // Calculate and set sleep duration based on failure count
   uint64_t sleepDuration = StateManager::calculateSleepDuration();
@@ -185,11 +187,8 @@ void enterDeepSleepMode()
   if (compensationSeconds < sleepDuration)
     sleepDuration -= compensationSeconds;
 
-  Serial.print("[SLEEP] Going to sleep for (seconds): ");
-  Serial.print(sleepDuration);
-  Serial.print(" (compensated by ");
-  Serial.print(compensationSeconds);
-  Serial.println(" seconds)");
+  Logger::log<Logger::Topic::SLEEP>("Going to sleep for (seconds): {} (compensated by {} seconds)\n", sleepDuration,
+                                    compensationSeconds);
 
   Board::enterDeepSleepMode(sleepDuration);
 }
@@ -206,15 +205,15 @@ void handleButtonActions()
   // >6 seconds: Reset WiFi credentials and reboot
   if (pressDuration > 6000)
   {
-    Serial.println("[BUTTON] Long press detected (>6s): Clearing display and resetting WiFi...");
+    Logger::log<Logger::Topic::BTN>("Long press detected (>6s): Clearing display and resetting WiFi...\n");
     Wireless::resetCredentialsAndReboot();
   }
   // >2 seconds: Clear display only
   else if (pressDuration > 2000)
   {
-    Serial.println("[BUTTON] Medium press detected (>2s): Clearing display for storage...");
+    Logger::log<Logger::Topic::BTN>("Medium press detected (>2s): Clearing display for storage...\n");
     Display::clear();
-    Serial.println("[BUTTON] Display cleared. Entering deep sleep...");
+    Logger::log<Logger::Topic::BTN>("Display cleared. Entering deep sleep...\n");
 
     // Enter deep sleep indefinitely (until next reset)
     Board::enterDeepSleepMode(StateManager::DEFAULT_SLEEP_SECONDS);
@@ -222,7 +221,7 @@ void handleButtonActions()
   // <2 seconds: Perform normal restart
   else
   {
-    Serial.println("[BUTTON] Short press detected (<2s): Restarting ESP...");
+    Logger::log<Logger::Topic::BTN>("Short press detected (<2s): Restarting ESP...\n");
     delay(100);
     ESP.restart();
   }
@@ -235,7 +234,7 @@ void handleButtonActions()
 void setup()
 {
   Serial.begin(115200);
-  Serial.println("[SYSTEM] Starting firmware for Zivy Obraz service");
+  Logger::log<Logger::Topic::SYSTEM>("Starting firmware for Zivy Obraz service\n");
 
   Board::setupHW();
 

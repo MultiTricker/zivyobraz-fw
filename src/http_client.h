@@ -17,6 +17,7 @@
 #endif
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <WiFi.h>
 
 class HttpClient
@@ -69,6 +70,7 @@ private:
   bool m_hasRotation;
   bool m_partialRefresh;
   String m_jsonPayload;
+  JsonDocument m_jsonDoc;
 
   // Internal helpers
   void buildJsonPayload();
