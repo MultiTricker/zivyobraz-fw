@@ -158,7 +158,8 @@ void handleConnectedState()
 
 void handleDisconnectedState()
 {
-  Logger::log<Logger::Topic::WIFI>("No Wi-Fi connection, failure count: {}\n", StateManager::getFailureCount());
+  Logger::log<Logger::Level::ERROR, Logger::Topic::WIFI>("No Wi-Fi connection, failure count: {}\n",
+                                                         StateManager::getFailureCount());
 
   // Calculate and set sleep duration based on failure count
   uint64_t sleepDuration = StateManager::calculateSleepDuration();

@@ -23,7 +23,7 @@ bool RowStreamBuffer::init(size_t rowSizeBytes, size_t rowCount)
 {
   if (m_initialized)
   {
-    Logger::log<Logger::Topic::STREAM>("RowBuffer already initialized\n");
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>("RowBuffer already initialized\n");
     return true;
   }
 

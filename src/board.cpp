@@ -95,7 +95,7 @@ float getBatteryVoltage()
   float volt;
 
 #ifdef ESPink_V3
-  Logger::log<Logger::Topic::BATTERY>("Readingon ESPink V3 board\n");
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::BATTERY>("Readingon ESPink V3 board\n");
 
   setEPaperPowerOn(true);
   pinMode(PIN_ALERT, INPUT_PULLUP);
@@ -136,7 +136,7 @@ float getBatteryVoltage()
   esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_WIDTH_BIT_12, 0, &adc_cal);
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_12);
 
-  Logger::log<Logger::Topic::BATTERY>("Reading on ES3ink board\n");
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::BATTERY>("Reading on ES3ink board\n");
 
   digitalWrite(enableBattery, LOW);
   uint32_t raw = adc1_get_raw(vBatPin);
@@ -149,7 +149,7 @@ float getBatteryVoltage()
   digitalWrite(enableBattery, HIGH);
 
 #elif defined ESP32S3Adapter
-  Logger::log<Logger::Topic::BATTERY>("Reading on ESP32-S3 Adapter board\n");
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::BATTERY>("Reading on ESP32-S3 Adapter board\n");
   // attach ADC input
   volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);
 
@@ -223,7 +223,7 @@ float getBatteryVoltage()
   pinMode(enableBattery, INPUT);
 
 #elif defined SEEEDSTUDIO_RETERMINAL
-  Logger::log<Logger::Topic::BATTERY>("Reading on SeeedStudio reTerminal board\n");
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::BATTERY>("Reading on SeeedStudio reTerminal board\n");
   // Enable battery voltage measurement circuit via GPIO21
   digitalWrite(enableBattery, HIGH);
   pinMode(enableBattery, OUTPUT);

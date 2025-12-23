@@ -77,7 +77,7 @@ bool HttpClient::sendRequest(bool timestampCheck)
   // Build JSON payload (only built once, cached for subsequent requests)
   buildJsonPayload();
 
-  Logger::log<Logger::Topic::HTTP>("Connecting to: {}\n", host);
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("Connecting to: {}\n", host);
 
 #ifdef USE_CLIENT_HTTPS
   // Configure secure connection without certificate verification
@@ -91,7 +91,7 @@ bool HttpClient::sendRequest(bool timestampCheck)
     if (m_client.connect(host, CONNECTION_PORT))
       break;
 
-    Logger::log<Logger::Topic::HTTP>("Connection failed, retrying... {}/3\n", attempt + 1);
+    Logger::log<Logger::Level::ERROR, Logger::Topic::HTTP>("Connection failed, retrying... {}/3\n", attempt + 1);
     if (attempt == 2)
     {
       m_sleepDuration = StateManager::DEFAULT_SLEEP_SECONDS;
@@ -104,12 +104,13 @@ bool HttpClient::sendRequest(bool timestampCheck)
   }
 
   // Send HTTP/HTTPS POST request with JSON body
-  Logger::log<Logger::Topic::HTTP>("Sending POST to: {}{}/index.php\n", CONNECTION_URL_PREFIX, host);
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("Sending POST to: {}{}/index.php\n", CONNECTION_URL_PREFIX,
+                                                         host);
 
   // Pretty print JSON payload for debugging
   String prettyJson;
   serializeJsonPretty(m_jsonDoc, prettyJson);
-  Logger::log<Logger::Topic::HTTP>("JSON Payload:\n{}\n", prettyJson);
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("JSON Payload:\n{}\n", prettyJson);
 
   // Build URL with timestampCheck query parameter
   String url = "/index.php?timestampCheck=";
@@ -128,7 +129,7 @@ bool HttpClient::sendRequest(bool timestampCheck)
   {
     if (millis() - timeout > 10000)
     {
-      Logger::log<Logger::Topic::HTTP>(">>> Client Timeout!\n");
+      Logger::log<Logger::Level::WARNING, Logger::Topic::HTTP>(">>> Client Timeout!\n");
       m_client.stop();
       if (timestampCheck)
         m_sleepDuration = StateManager::DEFAULT_SLEEP_SECONDS;
@@ -198,7 +199,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
     {
       // Support both HTTP/1.0 and HTTP/1.1
       connectionOk = line.startsWith("HTTP/1.1 200 OK") || line.startsWith("HTTP/1.0 200 OK");
-      Logger::log<Logger::Topic::HTTP>("Response: {}\n", line);
+      Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("Response: {}\n", line);
     }
 
     // End of headers
@@ -225,7 +226,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
     }
   }
   m_client.stop();
-  Logger::log<Logger::Topic::HTTP>("Byte by byte:{}\n", data);
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("Byte by byte:{}\n", data);
   /* */
 
   // If checking timestamp, see if content changed
