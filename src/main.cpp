@@ -187,8 +187,8 @@ void enterDeepSleepMode()
   if (compensationSeconds < sleepDuration)
     sleepDuration -= compensationSeconds;
 
-  Logger::log<Logger::Topic::SLEEP>("Going to sleep for (seconds): {} (compensated by {} seconds)\n", sleepDuration,
-                                    compensationSeconds);
+  Logger::log<Logger::Topic::SYSTEM>("Going to sleep for (seconds): {} (compensated by {} seconds)\n", sleepDuration,
+                                     compensationSeconds);
 
   Board::enterDeepSleepMode(sleepDuration);
 }

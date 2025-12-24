@@ -1,5 +1,6 @@
 #include "streaming_handler.h"
 
+#include "board.h"
 #include "logger.h"
 #include "utils.h"
 
@@ -40,33 +41,76 @@ bool RowStreamBuffer::init(size_t rowSizeBytes, size_t rowCount)
     return false;
   }
 
-  size_t totalSize = rowSizeBytes * rowCount;
+  // Respect board's maximum page buffer size limit
+  size_t maxAllowedSize = BOARD_MAX_PAGE_BUFFER_SIZE;
+  size_t maxRowCount = maxAllowedSize / rowSizeBytes;
 
-  // Check available heap
+  if (maxRowCount == 0)
+  {
+    Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>("Row size {} exceeds board buffer limit {}\n",
+                                                             rowSizeBytes, maxAllowedSize);
+    return false;
+  }
+
+  // Cap requested row count to what the board can handle
+  if (rowCount > maxRowCount)
+  {
+    Logger::log<Logger::Level::WARNING, Logger::Topic::STREAM>(
+      "Requested {} rows exceeds board limit, capping to {} rows\n", rowCount, maxRowCount);
+    rowCount = maxRowCount;
+  }
+
+  // Try to allocate with requested rowCount, fall back to smaller counts if needed
+  size_t tryRowCount = rowCount;
   size_t freeHeap = Utils::getFreeHeap();
-  if (freeHeap < totalSize * 2)
+
+  while (tryRowCount > 0)
   {
-    Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>(
-      "Insufficient heap: {} bytes free, need {} for row buffer\n", freeHeap, totalSize * 2);
-    return false;
+    size_t totalSize = rowSizeBytes * tryRowCount;
+
+    // Check if we have enough heap (need 2x for safety margin)
+    if (freeHeap >= totalSize * 2)
+    {
+      try
+      {
+        m_buffer.resize(totalSize);
+        m_rowWritePos.resize(tryRowCount, 0);
+        m_rowSize = rowSizeBytes;
+        m_rowCount = tryRowCount;
+        m_initialized = true;
+
+        if (tryRowCount < rowCount)
+        {
+          Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>(
+            "Row buffer initialized with fallback: {} bytes/row x {} rows = {} bytes total (requested {} rows)\n",
+            rowSizeBytes, tryRowCount, totalSize, rowCount);
+        }
+        else
+        {
+          Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>(
+            "Row buffer initialized: {} bytes/row x {} rows = {} bytes total\n", rowSizeBytes, tryRowCount, totalSize);
+        }
+        return true;
+      }
+      catch (const std::bad_alloc &e)
+      {
+        Logger::log<Logger::Level::WARNING, Logger::Topic::STREAM>(
+          "Allocation failed for {} rows: {}, trying smaller buffer...\n", tryRowCount, e.what());
+        // Fall through to try with fewer rows
+      }
+    }
+    else
+    {
+      Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>(
+        "Insufficient heap for {} rows: {} bytes free, need {}\n", tryRowCount, freeHeap, totalSize * 2);
+    }
+
+    // Try with half the rows (or 1 if already at 2)
+    tryRowCount = (tryRowCount > 2) ? (tryRowCount / 2) : (tryRowCount - 1);
   }
 
-  try
-  {
-    m_buffer.resize(totalSize);
-    m_rowWritePos.resize(rowCount, 0);
-    m_rowSize = rowSizeBytes;
-    m_rowCount = rowCount;
-    m_initialized = true;
-    Logger::log<Logger::Topic::STREAM>("Row buffer initialized: {} bytes/row × {} rows = {} bytes total\n",
-                                       rowSizeBytes, rowCount, totalSize);
-    return true;
-  }
-  catch (const std::bad_alloc &e)
-  {
-    Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>("Row buffer allocation failed: {}\n", e.what());
-    return false;
-  }
+  Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>("Failed to allocate row buffer with any row count\n");
+  return false;
 }
 
 size_t RowStreamBuffer::writeRow(size_t rowIndex, const uint8_t *data, size_t length)
@@ -140,7 +184,7 @@ bool StreamingManager::init(size_t rowSizeBytes, size_t rowCount)
   }
 
   m_enabled = true;
-  Logger::log<Logger::Topic::STREAM>("Manager initialized successfully\n");
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>("Manager initialized successfully\n");
   return true;
 }
 
@@ -157,7 +201,7 @@ void StreamingManager::cleanup()
   {
     m_buffer.clear();
     m_enabled = false;
-    Logger::log<Logger::Topic::STREAM>("Manager cleanup complete\n");
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>("Manager cleanup complete\n");
   }
 }
 
