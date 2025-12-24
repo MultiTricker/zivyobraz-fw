@@ -463,7 +463,7 @@ void readImageData(HttpClient &http)
   // Read format header (2 bytes)
   uint16_t header = http.read16();
 
-  Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Image format header: 0x{:04X}\n", header);
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Image format header: 0x{}\n", String(header, HEX).c_str());
 
   // Dynamic buffer for PNG/RLE processing
   // BMP handles its own buffer allocation
@@ -496,7 +496,7 @@ void readImageData(HttpClient &http)
       break;
 
     default:
-      Logger::log<Logger::Topic::IMAGE>("Unknown image format header: 0x{:04X}\n", header);
+      Logger::log<Logger::Topic::IMAGE>("Unknown image format header: 0x{}\n", String(header, HEX).c_str());
       success = false;
       break;
   }
