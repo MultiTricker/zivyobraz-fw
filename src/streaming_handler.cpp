@@ -81,14 +81,14 @@ bool RowStreamBuffer::init(size_t rowSizeBytes, size_t rowCount)
 
         if (tryRowCount < rowCount)
         {
-          Logger::log<Logger::Topic::STREAM>(
+          Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>(
             "Row buffer initialized with fallback: {} bytes/row x {} rows = {} bytes total (requested {} rows)\n",
             rowSizeBytes, tryRowCount, totalSize, rowCount);
         }
         else
         {
-          Logger::log<Logger::Topic::STREAM>("Row buffer initialized: {} bytes/row x {} rows = {} bytes total\n",
-                                             rowSizeBytes, tryRowCount, totalSize);
+          Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>(
+            "Row buffer initialized: {} bytes/row x {} rows = {} bytes total\n", rowSizeBytes, tryRowCount, totalSize);
         }
         return true;
       }
@@ -184,7 +184,7 @@ bool StreamingManager::init(size_t rowSizeBytes, size_t rowCount)
   }
 
   m_enabled = true;
-  Logger::log<Logger::Topic::STREAM>("Manager initialized successfully\n");
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>("Manager initialized successfully\n");
   return true;
 }
 
@@ -201,7 +201,7 @@ void StreamingManager::cleanup()
   {
     m_buffer.clear();
     m_enabled = false;
-    Logger::log<Logger::Topic::STREAM>("Manager cleanup complete\n");
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>("Manager cleanup complete\n");
   }
 }
 
