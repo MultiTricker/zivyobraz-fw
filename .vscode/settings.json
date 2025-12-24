@@ -1,0 +1,5 @@
+{
+  "platformio-ide.useBuiltinPIOCore": true,
+  "platformio-ide.useDevelopmentPIOCore": false,
+  "C_Cpp.intelliSenseEngine": "disabled"
+}
