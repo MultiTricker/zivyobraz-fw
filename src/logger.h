@@ -31,8 +31,6 @@ public:
     HTTP,
     IMAGE,
     SENS,
-    SLEEP,
-    STATE,
     STREAM,
     SYSTEM,
     WIFI
@@ -106,11 +104,9 @@ private:
            : topic == Topic::HTTP    ? "HTTP   "
            : topic == Topic::IMAGE   ? "IMAGE  "
            : topic == Topic::SENS    ? "SENSOR "
-           : topic == Topic::SLEEP   ? "SLEEP  "
-           : topic == Topic::STATE   ? "STATE  "
            : topic == Topic::STREAM  ? "STREAM "
-           : topic == Topic::WIFI    ? "WIFI   "
            : topic == Topic::SYSTEM  ? "SYSTEM "
+           : topic == Topic::WIFI    ? "WIFI   "
                                      : "";
   }
 
