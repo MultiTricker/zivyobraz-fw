@@ -34,7 +34,8 @@ void HttpClient::buildJsonPayload()
 
   // API and firmware info
   m_jsonDoc["fwVersion"] = firmware;
-  m_jsonDoc["apiVersion"] = firmware; // tells server what are firmware capabilities, same as fwVersion in our case
+  m_jsonDoc["apiVersion"] = firmware;  // tells server what are firmware capabilities, same as fwVersion in our case
+  m_jsonDoc["buildDate"] = BUILD_DATE; // got from scripts/set_build_date.py before build
   m_jsonDoc["board"] = Board::getBoardType();
 
   // System info
