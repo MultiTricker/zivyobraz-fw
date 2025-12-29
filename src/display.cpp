@@ -1,6 +1,7 @@
 #include "display.h"
 
 #include "board.h"
+#include "pixel_packer.h"
 #include "logger.h"
 
 // ESP32 sleep functions for light sleep during display refresh
@@ -330,6 +331,39 @@ GxEPD2_7C<GxEPD2_730c_GDEP073E01, CALC_PAGE_HEIGHT(GxEPD2_730c_GDEP073E01::HEIGH
 namespace Display
 {
 
+// Track whether partial refresh is requested for direct streaming mode
+static bool directStreamingPartialRefresh = false;
+
+#if defined(TYPE_GRAYSCALE)
+// Buffer manager for grayscale-to-BW conversion
+static struct
+{
+  uint8_t *data = nullptr;
+  size_t size = 0;
+
+  bool allocate(size_t bytes)
+  {
+    release();
+    data = (uint8_t *)malloc(bytes);
+    if (data)
+      size = bytes;
+    return data != nullptr;
+  }
+
+  void release()
+  {
+    if (data)
+    {
+      free(data);
+      data = nullptr;
+      size = 0;
+    }
+  }
+
+  bool canFit(size_t bytes) const { return data && size >= bytes; }
+} bwConversionBuffer;
+#endif
+
 void init()
 {
 #ifdef REMAP_SPI
@@ -469,14 +503,23 @@ void centeredText(const String &text, int xCord, int yCord)
   display.println(text);
 }
 
-void setToFullWindow() { display.setFullWindow(); }
+void setToFullWindow()
+{
+  display.setFullWindow();
+  directStreamingPartialRefresh = false;
+}
 
 void setToPartialWindow(int16_t xCord, int16_t yCord, int16_t width, int16_t height)
 {
   display.setPartialWindow(xCord, yCord, width, height);
+  directStreamingPartialRefresh = true;
 }
 
-bool supportsPartialRefresh() { return display.epd2.hasPartialUpdate; }
+bool supportsPartialRefresh()
+{
+  // Note: For grayscale displays, partial refresh will use BW mode (reduced quality but no flash)
+  return display.epd2.hasPartialUpdate;
+}
 
 void setToFirstPage() { display.firstPage(); }
 
@@ -507,6 +550,134 @@ void enableLightSleepDuringRefresh(bool enable)
   }
 #endif
 }
+
+///////////////////////////////////////////////
+// Direct Streaming Functions
+///////////////////////////////////////////////
+
+bool supportsDirectStreaming()
+{
+  // All display types now support direct streaming including 4C
+  return true;
+}
+
+void initDirectStreaming(bool partialRefresh, uint16_t maxRowCount)
+{
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Initializing direct streaming mode\n");
+  if (partialRefresh)
+  {
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Partial refresh mode requested\n");
+  }
+
+#if defined(TYPE_GRAYSCALE)
+  // Pre-allocate BW conversion buffer for partial refresh on grayscale displays
+  if (partialRefresh && maxRowCount > 0)
+  {
+    size_t bufferSize = ((DISPLAY_RESOLUTION_X + 7) / 8) * maxRowCount;
+    if (bwConversionBuffer.allocate(bufferSize))
+      Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Pre-allocated BW conversion buffer: {} bytes\n",
+                                                             bufferSize);
+    else
+      Logger::log<Logger::Level::WARNING, Logger::Topic::DISP>("Failed to pre-allocate BW conversion buffer\n");
+  }
+#endif
+
+  // Initialize display
+  // When partialRefresh is true, we pass initial=false to the library
+  // This sets _initial_refresh=false, allowing partial refresh to work
+  // (otherwise the library forces a full refresh on first update)
+#ifdef REMAP_SPI
+  hspi.begin(PIN_SPI_CLK, PIN_SPI_MISO, PIN_SPI_MOSI, PIN_SPI_SS);
+  display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
+#endif
+
+#if (defined ESPink_V2) || (defined MakerBadge_revB) || (defined MakerBadge_revD) || (defined TTGO_T5_v23) ||          \
+  (defined WS_EPAPER_ESP32_BOARD) || (defined SEEEDSTUDIO_XIAO_ESP32C3)
+  // Second parameter 'initial': false for partial refresh, true for full refresh
+  display.init(0, !partialRefresh, 10, false);
+#else
+  display.init(115200, !partialRefresh, 2, false);
+#endif
+
+#if (defined CROWPANEL_ESP32S3_213) || (DISPLAY_ID == DT_WS27RBW264176)
+  display.setRotation(3);
+#else
+  display.setRotation(0);
+#endif
+
+  // Set partial refresh flag based on parameter
+  directStreamingPartialRefresh = partialRefresh;
+
+  // Set full window for direct writes
+  display.setFullWindow();
+}
+
+void writeRowsDirect(uint16_t yStart, uint16_t rowCount, const uint8_t *blackData, const uint8_t *colorData)
+{
+  if (!blackData || rowCount == 0
+#if defined(TYPE_3C)
+      || !colorData
+#endif
+  )
+    return;
+
+#if defined(TYPE_BW)
+  // BW: Single buffer, 1bpp
+  display.epd2.writeImage(blackData, 0, yStart, DISPLAY_RESOLUTION_X, rowCount, false, false, false);
+
+#elif defined(TYPE_GRAYSCALE)
+  if (directStreamingPartialRefresh)
+  {
+    // For partial refresh: convert 2bpp grayscale to 1bpp BW for fast refresh
+    size_t requiredSize = ((DISPLAY_RESOLUTION_X + 7) / 8) * rowCount;
+
+    if (bwConversionBuffer.canFit(requiredSize))
+    {
+      PixelPacker::convertGrayscaleToBW(blackData, bwConversionBuffer.data, DISPLAY_RESOLUTION_X, rowCount);
+      display.epd2.writeImage(bwConversionBuffer.data, 0, yStart, DISPLAY_RESOLUTION_X, rowCount, false, false, false);
+    }
+    else
+    {
+      Logger::log<Logger::Level::ERROR, Logger::Topic::DISP>("BW conversion buffer not available or too small\n");
+      display.epd2.writeImage_4G(blackData, 2, 0, yStart, DISPLAY_RESOLUTION_X, rowCount, false, false, false);
+    }
+  }
+  else
+  {
+    display.epd2.writeImage_4G(blackData, 2, 0, yStart, DISPLAY_RESOLUTION_X, rowCount, false, false, false);
+  }
+
+#elif defined(TYPE_3C)
+  // 3C: Dual buffers (black + color)
+  display.epd2.writeImage(blackData, colorData, 0, yStart, DISPLAY_RESOLUTION_X, rowCount, false, false, false);
+
+#elif (defined(TYPE_4C)) || (defined(TYPE_7C))
+  // 4C: Single buffer, 2bpp native format (4 pixels per byte), 0=black, 1=white, 2=yellow, 3=red
+  // 7C: Single buffer, 4bpp native format
+  display.epd2.writeNative(blackData, nullptr, 0, yStart, DISPLAY_RESOLUTION_X, rowCount, false, false, false);
+
+#endif
+}
+
+void finishDirectStreaming()
+{
+  if (directStreamingPartialRefresh)
+  {
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Finishing direct streaming with PARTIAL refresh\n");
+    display.epd2.refresh(true);
+  }
+  else
+  {
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Finishing direct streaming with FULL refresh\n");
+    display.epd2.refresh(false);
+  }
+
+#if defined(TYPE_GRAYSCALE)
+  bwConversionBuffer.release();
+#endif
+}
+
+void refreshDisplay() { display.epd2.refresh(false); }
 
 void showNoWiFiError(uint64_t sleepMinutes, const String &wikiUrl)
 {

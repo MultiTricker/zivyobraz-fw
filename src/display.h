@@ -86,12 +86,12 @@
 ///////////////////////
 
 #ifdef COLOR_TYPE
-  // Define color type constants for comparison
-  #define CT_BW 1
+  // Define color type constants for comparison (matches PixelPacker::DisplayFormat)
+  #define CT_BW 0
+  #define CT_GRAYSCALE 1
   #define CT_3C 2
   #define CT_4C 3
-  #define CT_GRAYSCALE 4
-  #define CT_7C 5
+  #define CT_7C 4
 
 // Create COLOR_TYPE_STRING constant
 static constexpr const char COLOR_TYPE_STRING[] = XSTR(COLOR_TYPE);
@@ -226,6 +226,13 @@ bool supportsPartialRefresh();
 void setToFirstPage();
 bool setToNextPage();
 void enableLightSleepDuringRefresh(bool enable);
+
+// Direct streaming functions (for row-by-row streaming mode)
+bool supportsDirectStreaming();
+void initDirectStreaming(bool partialRefresh = false, uint16_t maxRowCount = 0);
+void writeRowsDirect(uint16_t yStart, uint16_t rowCount, const uint8_t *blackData, const uint8_t *colorData);
+void finishDirectStreaming();
+void refreshDisplay();
 
 // Error screens
 void showNoWiFiError(uint64_t sleepMinutes, const String &wikiUrl);

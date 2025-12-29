@@ -26,9 +26,14 @@ public:
   HttpClient();
 
   // Check if server has new content
-  bool checkForUpdate(bool timestampCheck = true);
+  // If keepConnectionOpen is true and update is available, connection stays open for immediate image reading
+  bool checkForUpdate(bool timestampCheck = true, bool keepConnectionOpen = false);
+
+  // Check if image data is ready to be read (connection kept open after checkForUpdate)
+  bool hasImageDataReady() const { return m_imageDataReady; }
 
   // Start downloading image (call after checkForUpdate returns true)
+  // Not needed if checkForUpdate was called with keepConnectionOpen=true
   bool startImageDownload();
 
   // Connection status
@@ -69,6 +74,7 @@ private:
   uint8_t m_displayRotation;
   bool m_hasRotation;
   bool m_partialRefresh;
+  bool m_imageDataReady;
   String m_jsonPayload;
   JsonDocument m_jsonDoc;
 
