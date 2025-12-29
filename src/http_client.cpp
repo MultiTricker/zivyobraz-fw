@@ -11,6 +11,10 @@
 extern const char *host;
 extern const char *firmware;
 
+// Timeouts for HTTP operations
+static constexpr uint32_t TOTAL_TIMEOUT_MS = 30000;
+static constexpr uint32_t IDLE_TIMEOUT_MS = 5000;
+
 HttpClient::HttpClient()
     : m_sleepDuration(StateManager::DEFAULT_SLEEP_SECONDS),
       m_serverTimestamp(0),
@@ -283,6 +287,7 @@ uint32_t HttpClient::readBytes(uint8_t *buf, int32_t bytes)
 {
   int32_t remaining = bytes;
   uint32_t startTime = millis();
+  uint32_t lastDataTime = startTime;
 
   while ((m_client.connected() || m_client.available()) && remaining > 0)
   {
@@ -292,13 +297,27 @@ uint32_t HttpClient::readBytes(uint8_t *buf, int32_t bytes)
       if (buf)
         *buf++ = (uint8_t)val;
       remaining--;
+      lastDataTime = millis(); // Reset idle timeout on data received
     }
     else
     {
       delay(1);
     }
-    if (millis() - startTime > 2000)
-      break; // Timeout
+
+    uint32_t now = millis();
+    // Check idle timeout (no data for too long)
+    if (now - lastDataTime > IDLE_TIMEOUT_MS)
+    {
+      Logger::log<Logger::Level::WARNING, Logger::Topic::HTTP>("Idle timeout after {} ms without data\n",
+                                                               now - lastDataTime);
+      break;
+    }
+    // Check total timeout
+    if (now - startTime > TOTAL_TIMEOUT_MS)
+    {
+      Logger::log<Logger::Level::WARNING, Logger::Topic::HTTP>("Total timeout after {} ms\n", now - startTime);
+      break;
+    }
   }
 
   return bytes - remaining;
