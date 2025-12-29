@@ -245,7 +245,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define enableBattery 2
   #define vBatPin ADC1_GPIO1_CHANNEL
   #define dividerRatio (2.7507665f)
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (200 * 1024)
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
 #elif defined SEEEDSTUDIO_XIAO_ESP32C3
   #define PIN_SS 3
