@@ -341,7 +341,7 @@ void init()
 #if (defined ES3ink) || (defined ESP32S3Adapter) || (defined ESPink_V3) || (defined ESPink_V35) ||                     \
   (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42) || (defined CROWPANEL_ESP32S3_213) ||              \
   (defined SVERIO_PAPERBOARD_SPI)
-  display.init(115200, true, 2, false); // S3 boards with special reset circuits
+  display.init(115200, false, 2, false); // S3 boards with special reset circuits
 #else
   display.init();
 #endif
