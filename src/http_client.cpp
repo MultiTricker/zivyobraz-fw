@@ -228,6 +228,9 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
   // If checking timestamp, see if content changed
   if (checkTimestampOnly)
   {
+    // Always save sleep duration from server, even if no update is needed
+    StateManager::setSleepDuration(m_sleepDuration);
+
     if (foundTimestamp && (m_serverTimestamp == storedTimestamp))
     {
       Logger::log<Logger::Topic::HTTP>("No screen reload, still at current timestamp: {}\n", storedTimestamp);
@@ -254,9 +257,6 @@ bool HttpClient::checkForUpdate(bool timestampCheck)
     m_client.stop();
     return false;
   }
-
-  // Update sleep duration from headers
-  StateManager::setSleepDuration(m_sleepDuration);
 
   m_client.stop();
   return true; // Update available
