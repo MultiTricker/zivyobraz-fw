@@ -163,14 +163,6 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
         Logger::log<Logger::Topic::HEADER>("Timestamp now: {}\n", m_serverTimestamp);
       }
 
-      // Let's try to get info about how long to go to deep sleep
-      if (line.startsWith("Sleep"))
-      {
-        uint64_t sleepMinutes = line.substring(7).toInt();
-        m_sleepDuration = sleepMinutes * 60; // convert minutes to seconds
-        Logger::log<Logger::Topic::HEADER>("Sleep: {}\n", sleepMinutes);
-      }
-
       // Is there another header (after the Sleep one) with sleep in Seconds?
       if (line.startsWith("PreciseSleep"))
       {
