@@ -10,6 +10,13 @@ import re
 import sys
 from pathlib import Path
 
+# Try to detect PlatformIO
+try:
+    Import("env")
+    IS_PLATFORMIO = True
+except:
+    IS_PLATFORMIO = False
+
 
 def remove_json_comments(text):
     """Remove C-style comments from JSON text"""
@@ -36,17 +43,18 @@ def generate_clangd_config():
     """Generate .clangd configuration from c_cpp_properties.json"""
 
     # Paths - workspace root is parent of scripts directory
-    workspace_root = Path(__file__).parent.parent
+    workspace_root = Path().cwd() if IS_PLATFORMIO else Path(__file__).parent.parent
+
     cpp_properties_path = workspace_root / ".vscode" / "c_cpp_properties.json"
     clangd_config_path = workspace_root / ".clangd"
 
     if not cpp_properties_path.exists():
-        print(f"Error: {cpp_properties_path} not found")
-        sys.exit(1)
+        msg = f"{cpp_properties_path} not found"
+        print(f"Warning: {msg} (skipping .clangd generation)")
+        return
 
     # Check if regeneration is needed
     if not needs_regeneration(cpp_properties_path, clangd_config_path):
-        print(f"✓ {clangd_config_path.name} is up to date (skipping regeneration)")
         return
 
     # Load c_cpp_properties.json (with comment support)
@@ -149,14 +157,10 @@ def generate_clangd_config():
     with open(clangd_config_path, 'w') as f:
         f.write('\n'.join(clangd_config))
 
-
-if __name__ == '__main__':
+if __name__ == '__main__' or IS_PLATFORMIO:
     try:
         generate_clangd_config()
     except Exception as e:
-        # If called from PlatformIO, don't fail the build
-        print(f"Warning: Failed to generate .clangd: {e}")
-        import os
-        if not os.environ.get('PLATFORMIO_BUILD_FLAGS'):
-            # If not in PlatformIO context, re-raise the error
-            raise
+        print(f"Error: Failed to generate .clangd: {e}")
+        if not IS_PLATFORMIO:
+            sys.exit(1)
