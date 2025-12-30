@@ -157,7 +157,7 @@ GxEPD2_4G_4G<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> display(GxEPD
 GxEPD2_4G_4G<GxEPD2_426_GDEQ0426T82, CALC_PAGE_HEIGHT(GxEPD2_426_GDEQ0426T82::HEIGHT, GxEPD2_426_GDEQ0426T82::WIDTH, 2)>
   display(GxEPD2_426_GDEQ0426T82(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
-// GDEY075T7 - Grayscale, 800x480px, 7.5"
+// GDEW075T7 - Grayscale, 800x480px, 7.5"
 #elif DISPLAY_ID == DT_GDEW075T7
 GxEPD2_4G_4G<GxEPD2_750_T7, CALC_PAGE_HEIGHT(GxEPD2_750_T7::HEIGHT, GxEPD2_750_T7::WIDTH, 2)> display(
   GxEPD2_750_T7(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
@@ -341,7 +341,7 @@ void init()
 #if (defined ES3ink) || (defined ESP32S3Adapter) || (defined ESPink_V3) || (defined ESPink_V35) ||                     \
   (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42) || (defined CROWPANEL_ESP32S3_213) ||              \
   (defined SVERIO_PAPERBOARD_SPI)
-  display.init(115200, true, 2, false); // S3 boards with special reset circuits
+  display.init(115200, false, 2, false); // S3 boards with special reset circuits
 #else
   display.init();
 #endif

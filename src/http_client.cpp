@@ -11,6 +11,10 @@
 extern const char *host;
 extern const char *firmware;
 
+// Timeouts for HTTP operations
+static constexpr uint32_t TOTAL_TIMEOUT_MS = 30000;
+static constexpr uint32_t IDLE_TIMEOUT_MS = 5000;
+
 HttpClient::HttpClient()
     : m_sleepDuration(StateManager::DEFAULT_SLEEP_SECONDS),
       m_serverTimestamp(0),
@@ -34,7 +38,8 @@ void HttpClient::buildJsonPayload()
 
   // API and firmware info
   m_jsonDoc["fwVersion"] = firmware;
-  m_jsonDoc["apiVersion"] = firmware; // tells server what are firmware capabilities, same as fwVersion in our case
+  m_jsonDoc["apiVersion"] = firmware;  // tells server what are firmware capabilities, same as fwVersion in our case
+  m_jsonDoc["buildDate"] = BUILD_DATE; // got from scripts/set_build_date.py before build
   m_jsonDoc["board"] = Board::getBoardType();
 
   // System info
@@ -162,14 +167,6 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
         Logger::log<Logger::Topic::HEADER>("Timestamp now: {}\n", m_serverTimestamp);
       }
 
-      // Let's try to get info about how long to go to deep sleep
-      if (line.startsWith("Sleep"))
-      {
-        uint64_t sleepMinutes = line.substring(7).toInt();
-        m_sleepDuration = sleepMinutes * 60; // convert minutes to seconds
-        Logger::log<Logger::Topic::HEADER>("Sleep: {}\n", sleepMinutes);
-      }
-
       // Is there another header (after the Sleep one) with sleep in Seconds?
       if (line.startsWith("PreciseSleep"))
       {
@@ -231,6 +228,9 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
   // If checking timestamp, see if content changed
   if (checkTimestampOnly)
   {
+    // Always save sleep duration from server, even if no update is needed
+    StateManager::setSleepDuration(m_sleepDuration);
+
     if (foundTimestamp && (m_serverTimestamp == storedTimestamp))
     {
       Logger::log<Logger::Topic::HTTP>("No screen reload, still at current timestamp: {}\n", storedTimestamp);
@@ -257,9 +257,6 @@ bool HttpClient::checkForUpdate(bool timestampCheck)
     m_client.stop();
     return false;
   }
-
-  // Update sleep duration from headers
-  StateManager::setSleepDuration(m_sleepDuration);
 
   m_client.stop();
   return true; // Update available
@@ -290,6 +287,7 @@ uint32_t HttpClient::readBytes(uint8_t *buf, int32_t bytes)
 {
   int32_t remaining = bytes;
   uint32_t startTime = millis();
+  uint32_t lastDataTime = startTime;
 
   while ((m_client.connected() || m_client.available()) && remaining > 0)
   {
@@ -299,13 +297,27 @@ uint32_t HttpClient::readBytes(uint8_t *buf, int32_t bytes)
       if (buf)
         *buf++ = (uint8_t)val;
       remaining--;
+      lastDataTime = millis(); // Reset idle timeout on data received
     }
     else
     {
       delay(1);
     }
-    if (millis() - startTime > 2000)
-      break; // Timeout
+
+    uint32_t now = millis();
+    // Check idle timeout (no data for too long)
+    if (now - lastDataTime > IDLE_TIMEOUT_MS)
+    {
+      Logger::log<Logger::Level::WARNING, Logger::Topic::HTTP>("Idle timeout after {} ms without data\n",
+                                                               now - lastDataTime);
+      break;
+    }
+    // Check total timeout
+    if (now - startTime > TOTAL_TIMEOUT_MS)
+    {
+      Logger::log<Logger::Level::WARNING, Logger::Topic::HTTP>("Total timeout after {} ms\n", now - startTime);
+      break;
+    }
   }
 
   return bytes - remaining;

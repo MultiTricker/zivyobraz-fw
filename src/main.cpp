@@ -38,7 +38,7 @@
 ///////////////////////////////////////////////
 
 const char *host = "cdn.zivyobraz.eu";
-const char *firmware = "2.4";
+const char *firmware = "3.0";
 const String wifiPassword = "zivyobraz";
 const String urlWiki = "https://wiki.zivyobraz.eu";
 
