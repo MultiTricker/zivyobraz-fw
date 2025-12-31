@@ -21,6 +21,7 @@ HttpClient::HttpClient()
       m_displayRotation(0),
       m_hasRotation(false),
       m_partialRefresh(false),
+      m_imageDataReady(false),
       m_jsonPayload("")
 {
 #ifdef USE_CLIENT_HTTPS
@@ -195,7 +196,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
     {
       // Support both HTTP/1.0 and HTTP/1.1
       connectionOk = line.startsWith("HTTP/1.1 200 OK") || line.startsWith("HTTP/1.0 200 OK");
-      Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("Response: {}\n", line);
+      Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("{}\n", line);
     }
 
     // End of headers
@@ -247,8 +248,10 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
   return true;
 }
 
-bool HttpClient::checkForUpdate(bool timestampCheck)
+bool HttpClient::checkForUpdate(bool timestampCheck, bool keepConnectionOpen)
 {
+  m_imageDataReady = false;
+
   if (!sendRequest(timestampCheck))
     return false;
 
@@ -256,6 +259,17 @@ bool HttpClient::checkForUpdate(bool timestampCheck)
   {
     m_client.stop();
     return false;
+  }
+
+  // Update sleep duration from headers
+  StateManager::setSleepDuration(m_sleepDuration);
+
+  // If keepConnectionOpen is requested, don't close - image data is ready to read
+  if (keepConnectionOpen)
+  {
+    m_imageDataReady = true;
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("Connection kept open, image data ready\n");
+    return true; // Update available, connection open
   }
 
   m_client.stop();

@@ -31,6 +31,7 @@
 #include "image_handler.h"
 #include "logger.h"
 #include "state_manager.h"
+#include "streaming_handler.h"
 #include "wireless.h"
 
 ///////////////////////////////////////////////
@@ -75,56 +76,122 @@ void downloadAndDisplayImage(HttpClient &httpClient)
   Board::setEPaperPowerOn(true);
   delay(500);
 
-  // Partial (fast) refresh if supported, driven by server request
-  if (httpClient.hasPartialRefresh() && Display::supportsPartialRefresh())
-  {
-    Display::setToPartialWindow(0, 0, Display::getResolutionX(), Display::getResolutionY());
-  }
-  else
-  {
-    Display::setToFullWindow();
-  }
-
-  // Display rotation?
-  if (httpClient.hasRotation())
-    Display::setRotation(2); // 2 = 180 degrees
-
-  // Get that lovely image and put it on your gorgeous grayscale ePaper screen!
-  // If you can't use whole display at once, there will be multiple pages and therefore
-  // requests and downloads of one image from server
-  Display::setToFirstPage();
-
-  // Store number of pages needed to fill the buffer of the display to turn off the WiFi after last page is loaded
-  uint16_t pagesToLoad = Display::getNumberOfPages();
-
   // Start tracking download duration
   StateManager::startDownloadTimer();
 
-  do
-  {
-    // For paged displays, download image once per page
-    if (!httpClient.startImageDownload())
-      break;
-    ImageHandler::readImageData(httpClient);
+  // Check if direct streaming mode is available and should be used
+  bool useDirectStreaming = ImageHandler::isDirectStreamingAvailable();
 
-    // turn of WiFi if no more pages left
-    if (--pagesToLoad == 0)
+  if (useDirectStreaming)
+  {
+    Logger::log<Logger::Level::INFO, Logger::Topic::IMAGE>("Using direct streaming mode\n");
+
+    // Determine if partial refresh should be used BEFORE initializing display
+    bool usePartialRefresh = httpClient.hasPartialRefresh() && Display::supportsPartialRefresh();
+
+    // Initialize display for direct streaming with partial refresh flag and max row count
+    // This must be done BEFORE writing any image data
+#ifdef STREAMING_ENABLED
+    Display::initDirectStreaming(usePartialRefresh, STREAMING_BUFFER_ROWS_COUNT);
+#else
+    Display::initDirectStreaming(usePartialRefresh);
+#endif
+
+    // Display rotation?
+    if (httpClient.hasRotation())
+      Display::setRotation(2);
+
+    // Check if image data is already available (from checkForUpdate with keepConnectionOpen)
+    // If not, try to start a new download (shouldn't happen in normal flow)
+    bool connectionReady = httpClient.hasImageDataReady();
+    if (connectionReady)
     {
-      httpClient.stop();
-      // End download timing before WiFi turns off
+      Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Using existing connection from timestamp check\n");
+    }
+    else
+    {
+      Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("Starting separate image download\n");
+      connectionReady = httpClient.startImageDownload();
+    }
+
+    // Stream image data directly to display buffer
+    bool success = connectionReady && ImageHandler::readImageDataDirect(httpClient);
+
+    // Always close connection before proceeding
+    httpClient.stop();
+
+    if (success)
+    {
       StateManager::endDownloadTimer();
       Wireless::turnOff();
 
-      // Enable light sleep during display refresh to save power
+      // Enable light sleep during refresh
       Display::enableLightSleepDuringRefresh(true);
-
-      // Start refresh timing after WiFi is off
       StateManager::startRefreshTimer();
-    }
-  } while (Display::setToNextPage());
 
-  // Disable light sleep callback after refresh completes
-  Display::enableLightSleepDuringRefresh(false);
+      // Finish streaming (triggers display refresh)
+      Display::finishDirectStreaming();
+
+      Display::enableLightSleepDuringRefresh(false);
+      StateManager::endRefreshTimer();
+    }
+    else
+    {
+      Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>(
+        "Direct streaming failed, falling back to paged mode\n");
+      useDirectStreaming = false; // Fall through to paged mode below
+    }
+  }
+
+  if (!useDirectStreaming)
+  {
+    // Fall back to paged mode (original behavior)
+    Logger::log<Logger::Level::INFO, Logger::Topic::IMAGE>("Using paged mode (multiple downloads)\n");
+
+    // Partial (fast) refresh if supported, driven by server request
+    if (httpClient.hasPartialRefresh() && Display::supportsPartialRefresh())
+      Display::setToPartialWindow(0, 0, Display::getResolutionX(), Display::getResolutionY());
+    else
+      Display::setToFullWindow();
+
+    // Display rotation?
+    if (httpClient.hasRotation())
+      Display::setRotation(2);
+
+    // Get that lovely image and put it on your gorgeous grayscale ePaper screen!
+    // If you can't use whole display at once, there will be multiple pages and therefore
+    // requests and downloads of one image from server
+    Display::setToFirstPage();
+
+    // Store number of pages needed to fill the buffer of the display to turn off the WiFi after last page is loaded
+    uint16_t pagesToLoad = Display::getNumberOfPages();
+
+    do
+    {
+      // For paged displays, download image once per page
+      if (!httpClient.startImageDownload())
+        break;
+      ImageHandler::readImageData(httpClient);
+
+      // turn of WiFi if no more pages left
+      if (--pagesToLoad == 0)
+      {
+        httpClient.stop();
+        // End download timing before WiFi turns off
+        StateManager::endDownloadTimer();
+        Wireless::turnOff();
+
+        // Enable light sleep during display refresh to save power
+        Display::enableLightSleepDuringRefresh(true);
+
+        // Start refresh timing after WiFi is off
+        StateManager::startRefreshTimer();
+      }
+    } while (Display::setToNextPage());
+
+    // Disable light sleep callback after refresh completes
+    Display::enableLightSleepDuringRefresh(false);
+  }
 
   // Disable ePaper power
   delay(100);
@@ -145,7 +212,11 @@ void handleConnectedState()
 
   HttpClient httpClient;
 
-  if (httpClient.checkForUpdate())
+  // For direct streaming mode, keep connection open to avoid second request
+  // For paged mode, close connection (will reopen for each page)
+  bool useDirectStreaming = ImageHandler::isDirectStreamingAvailable();
+
+  if (httpClient.checkForUpdate(true, useDirectStreaming))
   {
     Logger::log<Logger::Topic::IMAGE>("Update available, downloading...\n");
     downloadAndDisplayImage(httpClient);
