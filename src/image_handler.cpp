@@ -270,7 +270,7 @@ static uint16_t rgbaToDisplayColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
   return (gray <= 160) ? GxEPD_BLACK : GxEPD_WHITE;
 
 #elif defined(TYPE_3C)
-  if (r > 128 && r > (g + 80) && r > (b + 80))
+  if (r >= 128 && r > (g + 80) && r > (b + 80))
     return GxEPD_RED;
   uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
   return (gray <= 160) ? GxEPD_BLACK : GxEPD_WHITE;
@@ -298,8 +298,14 @@ static uint16_t rgbaToDisplayColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
   return (gray <= 160) ? GxEPD_BLACK : GxEPD_WHITE;
 
 #elif defined(TYPE_GRAYSCALE)
-  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-  return (gray < 33) ? GxEPD_BLACK : (gray <= 102) ? GxEPD_DARKGREY : (gray < 161) ? GxEPD_LIGHTGREY : GxEPD_WHITE;
+  uint8_t gray = (r + g + b) / 3;
+  if (gray > 160)
+    return GxEPD_WHITE;
+  if (gray > 101)
+    return GxEPD_LIGHTGREY;
+  if (gray > 32)
+    return GxEPD_DARKGREY;
+  return GxEPD_BLACK;
 
 #else
   uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
