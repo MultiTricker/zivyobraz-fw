@@ -610,6 +610,13 @@ void initDirectStreaming(bool partialRefresh, uint16_t maxRowCount)
 
   // Set full window for direct writes
   display.setFullWindow();
+
+#if defined(TYPE_7C) || defined(TYPE_4C)
+  // Enable paged mode for 7C/4C displays - required for incremental row writes
+  // Without this, each writeNative call restarts the display buffer from scratch
+  display.epd2.setPaged();
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Enabled paged mode for 7C/4C display\n");
+#endif
 }
 
 void writeRowsDirect(uint16_t yStart, uint16_t rowCount, const uint8_t *blackData, const uint8_t *colorData)
