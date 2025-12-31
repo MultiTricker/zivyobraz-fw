@@ -189,50 +189,83 @@ bool RowStreamBuffer::initDirect(uint16_t displayWidth, size_t rowCount, PixelPa
                                                                rowCount, actualRowCount);
   }
 
-  rowCount = actualRowCount;
-  size_t totalSize = m_rowSize * rowCount;
+  // Try to allocate with actualRowCount, fall back to smaller counts if allocation fails
+  size_t tryRowCount = actualRowCount;
 
-  try
+  while (tryRowCount >= MIN_ROW_COUNT)
   {
-    // Reserve first to ensure single allocation, then resize
-    m_buffer.reserve(totalSize);
-    m_buffer.resize(totalSize);
-    m_rowWritePos.reserve(rowCount);
-    m_rowWritePos.resize(rowCount, 0);
-    m_rowPixelCount.reserve(rowCount);
-    m_rowPixelCount.resize(rowCount, 0);
-    m_rowCount = rowCount;
+    size_t totalSize = m_rowSize * tryRowCount;
 
-    // Allocate color buffer for 3C displays
-    if (needs3CColorBuffer)
+    try
     {
-      m_colorBuffer.reserve(totalSize);
-      m_colorBuffer.resize(totalSize);
-    }
+      // Clear any previous failed allocation attempts
+      m_buffer.clear();
+      m_buffer.shrink_to_fit();
+      m_rowWritePos.clear();
+      m_rowWritePos.shrink_to_fit();
+      m_rowPixelCount.clear();
+      m_rowPixelCount.shrink_to_fit();
+      if (needs3CColorBuffer)
+      {
+        m_colorBuffer.clear();
+        m_colorBuffer.shrink_to_fit();
+      }
 
-    // Initialize buffers to white
-    for (size_t i = 0; i < rowCount; i++)
+      // Reserve first to ensure single allocation, then resize
+      m_buffer.reserve(totalSize);
+      m_buffer.resize(totalSize);
+      m_rowWritePos.reserve(tryRowCount);
+      m_rowWritePos.resize(tryRowCount, 0);
+      m_rowPixelCount.reserve(tryRowCount);
+      m_rowPixelCount.resize(tryRowCount, 0);
+      m_rowCount = tryRowCount;
+
+      // Allocate color buffer for 3C displays
+      if (needs3CColorBuffer)
+      {
+        m_colorBuffer.reserve(totalSize);
+        m_colorBuffer.resize(totalSize);
+      }
+
+      // Initialize buffers to white
+      for (size_t i = 0; i < tryRowCount; i++)
+      {
+        clearRow(i);
+      }
+
+      m_directMode = true;
+      m_initialized = true;
+
+      if (tryRowCount < actualRowCount)
+      {
+        Logger::log<Logger::Level::WARNING, Logger::Topic::STREAM>(
+          "Direct mode initialized with fallback: {} bytes/row × {} rows (requested {})\n", m_rowSize, tryRowCount,
+          rowCount);
+      }
+      else
+      {
+        Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>(
+          "Direct mode initialized: {}x{} format={}, {} bytes/row × {} rows\n", displayWidth, tryRowCount,
+          static_cast<int>(format), m_rowSize, tryRowCount);
+      }
+      if (needs3CColorBuffer)
+      {
+        Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>("3C mode: dual buffers allocated (black + color)\n");
+      }
+      return true;
+    }
+    catch (const std::bad_alloc &e)
     {
-      clearRow(i);
+      Logger::log<Logger::Level::WARNING, Logger::Topic::STREAM>(
+        "Allocation failed for {} rows: {}, trying smaller buffer...\n", tryRowCount, e.what());
+      // Try with half the rows
+      tryRowCount = tryRowCount / 2;
     }
-
-    m_directMode = true;
-    m_initialized = true;
-
-    Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>(
-      "Direct mode initialized: {}x{} format={}, {} bytes/row × {} rows\n", displayWidth, rowCount,
-      static_cast<int>(format), m_rowSize, rowCount);
-    if (needs3CColorBuffer)
-    {
-      Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>("3C mode: dual buffers allocated (black + color)\n");
-    }
-    return true;
   }
-  catch (const std::bad_alloc &e)
-  {
-    Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>("Direct buffer allocation failed: {}\n", e.what());
-    return false;
-  }
+
+  Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>(
+    "Direct buffer allocation failed after all attempts (min rows: {})\n", MIN_ROW_COUNT);
+  return false;
 }
 
 size_t RowStreamBuffer::writeRow(size_t rowIndex, const uint8_t *data, size_t length)

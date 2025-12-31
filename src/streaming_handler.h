@@ -14,7 +14,7 @@
 
 #ifdef STREAMING_ENABLED
   #ifndef STREAMING_BUFFER_ROWS_COUNT
-    #define STREAMING_BUFFER_ROWS_COUNT 48 // Default row buffer size (will be reduced if heap is limited)
+    #define STREAMING_BUFFER_ROWS_COUNT 240 // Default row buffer size (will be reduced if heap is limited)
   #endif
 
   #include <Arduino.h>
