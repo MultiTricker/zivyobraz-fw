@@ -158,20 +158,41 @@ bool RowStreamBuffer::initDirect(uint16_t displayWidth, size_t rowCount, PixelPa
   size_t buffersNeeded = needs3CColorBuffer ? 2 : 1;
 
   // Check available heap and dynamically adjust row count if needed
+  // IMPORTANT: Use largest contiguous block, not total free heap, to avoid fragmentation issues
+  // After buffer allocation, the PNG decoder needs a contiguous block for its internal buffers
   size_t freeHeap = Utils::getFreeHeap();
-  // Reserve some heap for other operations (vectors, overhead, etc.)
-  // Use 70% of free heap for buffers to leave room for fragmentation and other allocations
-  size_t usableHeap = (freeHeap * 70) / 100;
+  size_t largestBlock = Utils::getLargestFreeBlock();
+
+  // Reserve memory for PNG decoder (needs contiguous block)
+  // PNG decoder (pngle) needs: ~1KB base + width*4 for RGBA scanline + zlib state (~32KB)
+  // For 800px wide display: ~1KB + 3.2KB + 32KB ≈ 36KB, add margin for safety
+  constexpr size_t PNG_DECODER_CONTIGUOUS = 50 * 1024; // 50KB contiguous block for PNG decoder
+  constexpr size_t MIN_FREE_HEAP = 10 * 1024;          // 10KB minimum free heap after allocation
+
+  // For buffer allocation, we need to ensure PNG decoder can still get a contiguous block AFTER we allocate
+  // Strategy: limit our allocation so that the remaining largest block is sufficient for PNG decoder
+  // This is tricky because allocation can fragment memory - be conservative
+
   size_t bytesPerRow = m_rowSize * buffersNeeded;
   // Also account for rowWritePos (size_t) and rowPixelCount (uint16_t) vectors
   size_t overheadPerRow = sizeof(size_t) + sizeof(uint16_t);
   size_t totalBytesPerRow = bytesPerRow + overheadPerRow;
 
-  // Calculate maximum rows that can fit in available memory
-  size_t maxAffordableRows = usableHeap / totalBytesPerRow;
+  // Calculate how much we can safely allocate
+  // If we allocate from the largest block, we need to leave PNG_DECODER_CONTIGUOUS remaining
+  size_t maxBufferAllocation = (largestBlock > PNG_DECODER_CONTIGUOUS + MIN_FREE_HEAP)
+                                 ? (largestBlock - PNG_DECODER_CONTIGUOUS - MIN_FREE_HEAP)
+                                 : 0;
+
+  // Calculate maximum rows that can fit
+  size_t maxAffordableRows = maxBufferAllocation / totalBytesPerRow;
 
   // Minimum of 8 rows required for reasonable operation
   constexpr size_t MIN_ROW_COUNT = 8;
+
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>(
+    "Memory: heap={}, largest={}, reserve={}, max_alloc={}, bytes/row={} ({}x buf)\n", freeHeap, largestBlock,
+    PNG_DECODER_CONTIGUOUS, maxBufferAllocation, totalBytesPerRow, buffersNeeded);
 
   if (maxAffordableRows < MIN_ROW_COUNT)
   {
@@ -250,7 +271,9 @@ bool RowStreamBuffer::initDirect(uint16_t displayWidth, size_t rowCount, PixelPa
       }
       if (needs3CColorBuffer)
       {
-        Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>("3C mode: dual buffers allocated (black + color)\n");
+        size_t dualBufferTotal = totalSize * 2;
+        Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>(
+          "3C mode: dual buffers allocated (black + color), total {} bytes\n", dualBufferTotal);
       }
       return true;
     }

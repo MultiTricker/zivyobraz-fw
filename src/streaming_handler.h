@@ -51,7 +51,14 @@ public:
   const uint8_t *getRowData(size_t rowIndex) const;
   size_t getRowSize() const { return m_rowSize; }
   size_t getRowCount() const { return m_rowCount; }
-  size_t getTotalSize() const { return m_rowSize * m_rowCount; }
+  // Check if color buffer is allocated (for 3C displays)
+  bool hasColorBuffer() const { return !m_colorBuffer.empty(); }
+  // Returns total memory used by all buffers (main + color for 3C)
+  size_t getTotalSize() const
+  {
+    size_t mainSize = m_rowSize * m_rowCount;
+    return hasColorBuffer() ? (mainSize * 2) : mainSize;
+  }
 
   // Get secondary buffer for 3C color plane
   const uint8_t *getColorRowData(size_t rowIndex) const;
