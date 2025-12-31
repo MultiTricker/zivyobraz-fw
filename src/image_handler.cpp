@@ -259,6 +259,54 @@ static void finalizeDirectStream()
 // PNG Image Processing
 ///////////////////////////////////////////////
 
+// Convert RGBA to display color (unified color mapping for all image formats)
+static uint16_t rgbaToDisplayColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+  if (a == 0)
+    return GxEPD_WHITE; // Transparent = white
+
+#if defined(TYPE_BW)
+  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+  return (gray <= 160) ? GxEPD_BLACK : GxEPD_WHITE;
+
+#elif defined(TYPE_3C)
+  if (r > 128 && r > (g + 80) && r > (b + 80))
+    return GxEPD_RED;
+  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+  return (gray <= 160) ? GxEPD_BLACK : GxEPD_WHITE;
+
+#elif defined(TYPE_4C)
+  if (r > 128 && g > 128 && b < 80)
+    return GxEPD_YELLOW;
+  if (r > 128 && r > (g + 80) && r > (b + 80))
+    return GxEPD_RED;
+  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+  return (gray <= 160) ? GxEPD_BLACK : GxEPD_WHITE;
+
+#elif defined(TYPE_7C)
+  if (r > 200 && g > 80 && g < 180 && b < 80)
+    return GxEPD_ORANGE;
+  if (r > 128 && r > (g + 80) && r > (b + 80))
+    return GxEPD_RED;
+  if (r > 128 && g > 128 && b < 80)
+    return GxEPD_YELLOW;
+  if (g > 128 && g > (r + 80) && g > (b + 80))
+    return GxEPD_GREEN;
+  if (b > 128 && b > (r + 80) && b > (g + 80))
+    return GxEPD_BLUE;
+  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+  return (gray <= 160) ? GxEPD_BLACK : GxEPD_WHITE;
+
+#elif defined(TYPE_GRAYSCALE)
+  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+  return (gray < 33) ? GxEPD_BLACK : (gray <= 102) ? GxEPD_DARKGREY : (gray < 161) ? GxEPD_LIGHTGREY : GxEPD_WHITE;
+
+#else
+  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+  return (gray <= 160) ? GxEPD_BLACK : GxEPD_WHITE;
+#endif
+}
+
 // Callback: Draw pixel from PNG decoder
 static void pngleOnDraw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint8_t rgba[4])
 {
@@ -268,101 +316,7 @@ static void pngleOnDraw(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint
     return;
   }
 
-  // Convert RGBA to grayscale
-  uint8_t r = rgba[0];
-  uint8_t g = rgba[1];
-  uint8_t b = rgba[2];
-  uint8_t a = rgba[3];
-
-  // Skip fully transparent pixels
-  if (a == 0)
-  {
-    Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("PNG Skipping transparent pixel\n");
-    return;
-  }
-
-  uint16_t color;
-
-#if defined(TYPE_BW)
-  // BW displays: Black & White only
-  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-  color = (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
-
-#elif defined(TYPE_3C)
-  // 3-color displays: Black, White, Red
-  // Detect red hue (high red, low green/blue)
-  if (r > 128 && r > (g + 80) && r > (b + 80))
-  {
-    color = GxEPD_RED;
-  }
-  else
-  {
-    uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-    color = (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
-  }
-
-#elif defined(TYPE_4C)
-  // 4-color displays: Black, White, Red, Yellow
-  // Detect yellow (high red & green, low blue)
-  if (r > 128 && g > 128 && b < 80)
-  {
-    color = GxEPD_YELLOW;
-  }
-  // Detect red hue
-  else if (r > 128 && r > (g + 80) && r > (b + 80))
-  {
-    color = GxEPD_RED;
-  }
-  else
-  {
-    uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-    color = (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
-  }
-
-#elif defined(TYPE_7C)
-  // 7-color displays: Black, White, Red, Yellow, Green, Blue, Orange
-  // Detect orange (red-yellow mix)
-  if (r > 200 && g > 80 && g < 180 && b < 80)
-  {
-    color = GxEPD_ORANGE;
-  }
-  // Detect red
-  else if (r > 128 && r > (g + 80) && r > (b + 80))
-  {
-    color = GxEPD_RED;
-  }
-  // Detect yellow
-  else if (r > 128 && g > 128 && b < 80)
-  {
-    color = GxEPD_YELLOW;
-  }
-  // Detect green
-  else if (g > 128 && g > (r + 80) && g > (b + 80))
-  {
-    color = GxEPD_GREEN;
-  }
-  // Detect blue
-  else if (b > 128 && b > (r + 80) && b > (g + 80))
-  {
-    color = GxEPD_BLUE;
-  }
-  else
-  {
-    uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-    color = (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
-  }
-
-#elif defined(TYPE_GRAYSCALE)
-  // Grayscale displays: 4-level grayscale
-  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-  color = (gray < 64) ? GxEPD_BLACK : (gray < 128) ? GxEPD_DARKGREY : (gray < 192) ? GxEPD_LIGHTGREY : GxEPD_WHITE;
-
-#else
-  // Fallback: grayscale
-  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-  color = (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
-#endif
-
+  uint16_t color = rgbaToDisplayColor(rgba[0], rgba[1], rgba[2], rgba[3]);
   Display::drawPixel(x, y, color);
 
   // Yield periodically to prevent watchdog timeout
@@ -451,54 +405,6 @@ static bool processPNG(HttpClient &http, uint32_t startTime, uint8_t *buffer, ui
 ///////////////////////////////////////////////
 
 #if defined(STREAMING_ENABLED) && defined(STREAMING_DIRECT_MODE)
-
-// Convert RGBA to display color for direct streaming (same logic as pngleOnDraw)
-static uint16_t rgbaToDisplayColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
-{
-  if (a == 0)
-    return GxEPD_WHITE; // Transparent = white
-
-  #if defined(TYPE_BW)
-  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-  return (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
-
-  #elif defined(TYPE_3C)
-  if (r > 128 && r > (g + 80) && r > (b + 80))
-    return GxEPD_RED;
-  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-  return (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
-
-  #elif defined(TYPE_4C)
-  if (r > 128 && g > 128 && b < 80)
-    return GxEPD_YELLOW;
-  if (r > 128 && r > (g + 80) && r > (b + 80))
-    return GxEPD_RED;
-  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-  return (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
-
-  #elif defined(TYPE_7C)
-  if (r > 200 && g > 80 && g < 180 && b < 80)
-    return GxEPD_ORANGE;
-  if (r > 128 && r > (g + 80) && r > (b + 80))
-    return GxEPD_RED;
-  if (r > 128 && g > 128 && b < 80)
-    return GxEPD_YELLOW;
-  if (g > 128 && g > (r + 80) && g > (b + 80))
-    return GxEPD_GREEN;
-  if (b > 128 && b > (r + 80) && b > (g + 80))
-    return GxEPD_BLUE;
-  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-  return (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
-
-  #elif defined(TYPE_GRAYSCALE)
-  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-  return (gray < 64) ? GxEPD_BLACK : (gray < 128) ? GxEPD_DARKGREY : (gray < 192) ? GxEPD_LIGHTGREY : GxEPD_WHITE;
-
-  #else
-  uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
-  return (gray < 128) ? GxEPD_BLACK : GxEPD_WHITE;
-  #endif
-}
 
 // Direct streaming PNG callback
 static void pngleOnDrawDirect(pngle_t *pngle, uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint8_t rgba[4])
