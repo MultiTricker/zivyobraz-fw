@@ -41,8 +41,16 @@ constexpr uint8_t WHITE_BYTE_4C = 0x55;
 
 inline constexpr DisplayFormat getDisplayFormat() { return static_cast<DisplayFormat>(COLOR_ID); }
 
-// All display types now support direct streaming including 4C, but leave this here until I test more displays
-inline constexpr bool supportsDirectStreaming() { return true; }
+// Check if direct streaming is supported for the current display format
+// 4C displays with hasPartialUpdate=true don't support paged streaming mode
+inline constexpr bool supportsDirectStreaming()
+{
+#if defined(TYPE_4C)
+  return false;
+#else
+  return true;
+#endif
+}
 
 size_t getRowBufferSize(uint16_t width, DisplayFormat format);
 uint8_t getBitsPerPixel(DisplayFormat format);

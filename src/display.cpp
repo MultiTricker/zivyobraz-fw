@@ -557,8 +557,15 @@ void enableLightSleepDuringRefresh(bool enable)
 
 bool supportsDirectStreaming()
 {
-  // All display types now support direct streaming including 4C
+#if defined(TYPE_4C)
+  // 4C displays with hasPartialUpdate=true do not support paged streaming mode
+  // The library's setPaged() is a no-op and writeNative() resets the RAM area for each call
+  // This causes only the last batch of rows to be visible, resulting in a mostly white screen
+  return false;
+#else
+  // BW, Grayscale, 3C and 7C displays support direct streaming
   return true;
+#endif
 }
 
 void initDirectStreaming(bool partialRefresh, uint16_t maxRowCount)
