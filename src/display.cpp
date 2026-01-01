@@ -693,7 +693,7 @@ void finishDirectStreaming()
 
 void refreshDisplay() { display.epd2.refresh(false); }
 
-void showNoWiFiError(uint64_t sleepMinutes, const String &wikiUrl)
+void showNoWiFiError(uint64_t sleepSeconds, const String &wikiUrl)
 {
   init();
 
@@ -710,7 +710,7 @@ void showNoWiFiError(uint64_t sleepMinutes, const String &wikiUrl)
     display.setFont(&OpenSansSB_20px);
     centeredText("Cannot connect to Wi-Fi", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y / 2 - 15);
     display.setFont(&OpenSansSB_16px);
-    centeredText("Retries in " + String(sleepMinutes) + " minutes.", DISPLAY_RESOLUTION_X / 2,
+    centeredText("Retries in " + String((sleepSeconds + 30) / 60) + " minutes.", DISPLAY_RESOLUTION_X / 2,
                  DISPLAY_RESOLUTION_Y / 2 + 15);
     display.setFont(&OpenSansSB_14px);
     centeredText("Docs: " + wikiUrl, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
