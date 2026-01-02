@@ -235,6 +235,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define PIN_DC 13
   #define PIN_RST 14
   #define PIN_BUSY 21
+  #define PIN_CS2 35
   #define PIN_SPI_MOSI 10
   #define PIN_SPI_CLK 11
   #define PIN_SPI_MISO -1
