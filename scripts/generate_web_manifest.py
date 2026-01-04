@@ -59,24 +59,15 @@ def generate_manifest(source, target, env):
 
     # POUŽITÍ NAČTENÉHO NÁZVU (fw_name)
     manifest_full = {
-        "name": fw_name + " (Čistá instalace)",
+        "name": fw_name,
         "version": fw_version,
+        "new_install_prompt_erase": True,
         "builds": [{"chipFamily": chip_family, "parts": parts_full}]
     }
 
-    manifest_update = {
-        "name": fw_name + " (Aktualizace)",
-        "version": fw_version,
-        "builds": [{"chipFamily": chip_family, "parts": [{"path": prog_name, "offset": 0x10000}]}]
-    }
-
-    # Uložení s podporou češtiny
     try:
         with open(os.path.join(build_dir, "manifest_full.json"), "w", encoding="utf-8") as f:
             json.dump(manifest_full, f, indent=2, ensure_ascii=False)
-
-        with open(os.path.join(build_dir, "manifest_update.json"), "w", encoding="utf-8") as f:
-            json.dump(manifest_update, f, indent=2, ensure_ascii=False)
 
         print(f"Manifesty pro '{fw_name}' vygenerovány.")
     except Exception as e:

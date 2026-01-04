@@ -235,7 +235,7 @@ void finishDirectStreaming();
 void refreshDisplay();
 
 // Error screens
-void showNoWiFiError(uint64_t sleepMinutes, const String &wikiUrl);
+void showNoWiFiError(uint64_t sleepSeconds, const String &wikiUrl);
 void showWiFiError(const String &hostname, const String &password, const String &urlWeb, const String &wikiUrl);
 } // namespace Display
 
