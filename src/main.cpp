@@ -34,8 +34,6 @@
 #include "streaming_handler.h"
 #include "wireless.h"
 
-#include <HTTPUpdate.h>
-
 ///////////////////////////////////////////////
 // Configuration
 ///////////////////////////////////////////////
@@ -64,46 +62,6 @@ void configModeCallback()
 ///////////////////////////////////////////////
 // Helper Functions
 ///////////////////////////////////////////////
-
-/**
- * @brief Perform OTA firmware update from the given URL
- * @param url The URL to download the firmware binary from
- * @return true if OTA was successful (device will restart), false on failure
- */
-bool performOTAUpdate(const String &url)
-{
-  Logger::log<Logger::Level::INFO, Logger::Topic::SYSTEM>("Starting OTA update from: {}\n", url);
-
-  WiFiClientSecure otaClient;
-  otaClient.setInsecure(); // Skip certificate validation
-
-  // Configure HTTPUpdate
-  httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-  httpUpdate.rebootOnUpdate(true); // Automatically restart on success
-
-  t_httpUpdate_return result = httpUpdate.update(otaClient, url);
-
-  switch (result)
-  {
-    case HTTP_UPDATE_OK:
-      Logger::log<Logger::Level::INFO, Logger::Topic::SYSTEM>("OTA update successful, restarting...\n");
-      // Device will restart automatically due to rebootOnUpdate(true)
-      return true;
-
-    case HTTP_UPDATE_FAILED:
-      Logger::log<Logger::Level::ERROR, Logger::Topic::SYSTEM>(
-        "OTA update failed: {} ({})\n", httpUpdate.getLastErrorString(), httpUpdate.getLastError());
-      return false;
-
-    case HTTP_UPDATE_NO_UPDATES:
-      Logger::log<Logger::Level::WARNING, Logger::Topic::SYSTEM>("OTA: No updates available\n");
-      return false;
-
-    default:
-      Logger::log<Logger::Level::ERROR, Logger::Topic::SYSTEM>("OTA: Unknown result\n");
-      return false;
-  }
-}
 
 void initializeWiFi()
 {
@@ -263,13 +221,9 @@ void handleConnectedState()
     // Check if OTA update is requested by server
     if (httpClient.hasOTAUpdate())
     {
-      Logger::log<Logger::Level::INFO, Logger::Topic::SYSTEM>("OTA update requested by server\n");
-      httpClient.stop(); // Close connection before OTA
-
-      if (!performOTAUpdate(httpClient.getOTAUrl()))
+      if (!httpClient.performOTAUpdate())
       {
         // OTA failed - go to sleep for default duration to retry later
-        Logger::log<Logger::Level::ERROR, Logger::Topic::SYSTEM>("OTA failed, will retry after sleep\n");
         StateManager::setSleepDuration(StateManager::DEFAULT_SLEEP_SECONDS);
       }
       // If OTA succeeded, device restarts automatically and we never reach here

@@ -7,6 +7,8 @@
 #include "state_manager.h"
 #include "wireless.h"
 
+#include <HTTPUpdate.h>
+
 // External configuration
 extern const char *host;
 extern const char *firmware;
@@ -378,4 +380,48 @@ uint16_t HttpClient::read16()
   ((uint8_t *)&result)[0] = readByte(); // LSB
   ((uint8_t *)&result)[1] = readByte(); // MSB
   return result;
+}
+
+bool HttpClient::performOTAUpdate()
+{
+  if (!m_otaRequired || m_otaUrl.length() == 0)
+  {
+    Logger::log<Logger::Level::WARNING, Logger::Topic::SYSTEM>("No OTA update URL available\n");
+    return false;
+  }
+
+  Logger::log<Logger::Level::INFO, Logger::Topic::SYSTEM>("Starting OTA update from: {}\n", m_otaUrl);
+
+  // Close any existing connection before OTA
+  stop();
+
+  WiFiClientSecure otaClient;
+  otaClient.setInsecure(); // Skip certificate validation
+
+  // Configure HTTPUpdate
+  httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  httpUpdate.rebootOnUpdate(true); // Automatically restart on success
+
+  t_httpUpdate_return result = httpUpdate.update(otaClient, m_otaUrl);
+
+  switch (result)
+  {
+    case HTTP_UPDATE_OK:
+      Logger::log<Logger::Level::INFO, Logger::Topic::SYSTEM>("OTA update successful, restarting...\n");
+      // Device will restart automatically due to rebootOnUpdate(true)
+      return true;
+
+    case HTTP_UPDATE_FAILED:
+      Logger::log<Logger::Level::ERROR, Logger::Topic::SYSTEM>(
+        "OTA update failed: {} ({})\n", httpUpdate.getLastErrorString(), httpUpdate.getLastError());
+      return false;
+
+    case HTTP_UPDATE_NO_UPDATES:
+      Logger::log<Logger::Level::WARNING, Logger::Topic::SYSTEM>("OTA: No updates available\n");
+      return false;
+
+    default:
+      Logger::log<Logger::Level::ERROR, Logger::Topic::SYSTEM>("OTA: Unknown result\n");
+      return false;
+  }
 }

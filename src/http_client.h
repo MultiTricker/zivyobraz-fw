@@ -56,6 +56,10 @@ public:
 
   String getOTAUrl() const { return m_otaUrl; }
 
+  // Perform OTA firmware update if requested by server
+  // Returns true if OTA was successful (device will restart), false on failure
+  bool performOTAUpdate();
+
   // Data reading methods - no WiFiClient exposure!
   uint32_t readBytes(uint8_t *buf, int32_t bytes);
 
