@@ -20,6 +20,10 @@ uint64_t getSleepDuration();
 void setSleepDuration(uint64_t seconds);
 uint64_t calculateSleepDuration();
 
+// ShowNoWifiError setting
+uint8_t getShowNoWifiError();
+void setShowNoWifiError(uint8_t value);
+
 // Download/display refresh duration tracking
 void startDownloadTimer();
 void endDownloadTimer();

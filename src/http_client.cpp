@@ -202,6 +202,14 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
         m_partialRefresh = true;
         Logger::log<Logger::Topic::HEADER>("Partial refresh requested\n");
       }
+
+      // ShowNoWifiError setting (1 = show error on display, 0 = keep existing content)
+      if (line.startsWith("ShowNoWifiError"))
+      {
+        uint8_t showNoWifiError = line.substring(17).toInt(); // Skip "ShowNoWifiError: "
+        StateManager::setShowNoWifiError(showNoWifiError);
+        Logger::log<Logger::Topic::HEADER>("ShowNoWifiError: {}\n", showNoWifiError);
+      }
     }
 
     // Check for successful HTTP response (always check)

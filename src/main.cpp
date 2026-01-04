@@ -297,8 +297,16 @@ void handleDisconnectedState()
   // Reset timestamp to force update on next successful connection
   StateManager::setTimestamp(0);
 
-  // Show error message on display
-  Display::showNoWiFiError(sleepDuration, urlWiki);
+  // Show error message on display only if ShowNoWifiError is enabled (default: 1)
+  if (StateManager::getShowNoWifiError() == 1)
+  {
+    Display::showNoWiFiError(sleepDuration, urlWiki);
+  }
+  else
+  {
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>(
+      "ShowNoWifiError disabled, keeping existing display content\n");
+  }
 }
 
 void enterDeepSleepMode()

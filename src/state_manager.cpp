@@ -5,6 +5,7 @@ RTC_DATA_ATTR uint64_t rtc_timestamp = 0;
 RTC_DATA_ATTR uint8_t rtc_failureCount = 0;
 RTC_DATA_ATTR unsigned long rtc_lastDownloadDuration = 0;
 RTC_DATA_ATTR unsigned long rtc_lastRefreshDuration = 0;
+RTC_DATA_ATTR uint8_t rtc_showNoWifiError = 1;
 
 namespace StateManager
 {
@@ -78,5 +79,9 @@ uint64_t calculateSleepDuration()
     sleepDuration = 43200; // 12 hours
   return sleepDuration;
 }
+
+uint8_t getShowNoWifiError() { return rtc_showNoWifiError; }
+
+void setShowNoWifiError(uint8_t value) { rtc_showNoWifiError = value; }
 
 } // namespace StateManager
