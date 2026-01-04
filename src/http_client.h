@@ -52,6 +52,10 @@ public:
 
   bool hasPartialRefresh() const { return m_partialRefresh; }
 
+  bool hasOTAUpdate() const { return m_otaRequired; }
+
+  String getOTAUrl() const { return m_otaUrl; }
+
   // Data reading methods - no WiFiClient exposure!
   uint32_t readBytes(uint8_t *buf, int32_t bytes);
 
@@ -74,6 +78,8 @@ private:
   uint8_t m_displayRotation;
   bool m_hasRotation;
   bool m_partialRefresh;
+  bool m_otaRequired;
+  String m_otaUrl;
   bool m_imageDataReady;
   String m_jsonPayload;
   JsonDocument m_jsonDoc;

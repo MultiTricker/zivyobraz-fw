@@ -21,6 +21,8 @@ HttpClient::HttpClient()
       m_displayRotation(0),
       m_hasRotation(false),
       m_partialRefresh(false),
+      m_otaRequired(false),
+      m_otaUrl(""),
       m_imageDataReady(false),
       m_jsonPayload("")
 {
@@ -151,6 +153,8 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
   bool foundTimestamp = false;
   m_hasRotation = false;
   m_partialRefresh = false;
+  m_otaRequired = false;
+  m_otaUrl = "";
 
   while (m_client.connected())
   {
@@ -159,6 +163,15 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
     // Parse headers only when checking timestamp
     if (checkTimestampOnly)
     {
+      // Parse X-OTA-Update header for firmware update
+      if (line.startsWith("X-OTA-Update"))
+      {
+        m_otaUrl = line.substring(14); // Skip "X-OTA-Update: "
+        m_otaUrl.trim();               // Remove whitespace and \r
+        m_otaRequired = true;
+        Logger::log<Logger::Topic::HEADER>("OTA Update requested: {}\n", m_otaUrl);
+      }
+
       // Parse Timestamp header
       if (line.startsWith("Timestamp"))
       {
