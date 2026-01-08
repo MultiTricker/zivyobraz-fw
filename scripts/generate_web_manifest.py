@@ -21,6 +21,9 @@ def generate_manifest(source, target, env):
     if "esp32s3" in mcu:
         bootloader_offset = 0x0
         chip_family = "ESP32-S3"
+    elif "esp32c3" in mcu:
+        bootloader_offset = 0x0
+        chip_family = "ESP32-C3"
     else:
         bootloader_offset = 0x1000
         chip_family = "ESP32"
