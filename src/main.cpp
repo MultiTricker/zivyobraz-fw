@@ -55,8 +55,16 @@ void configModeCallback()
   // Reset timestamp to force update when reconnected
   StateManager::setTimestamp(0);
 
-  // Show WiFi configuration screen on display
-  Display::showWiFiError(Wireless::getSoftAPSSID(), wifiPassword, "http://" + Wireless::getSoftAPIP(), urlWiki);
+  // Show WiFi configuration screen on display only if ShowNoWifiError is enabled (default: 1)
+  if (StateManager::getShowNoWifiError() == 1)
+  {
+    Display::showWiFiError(Wireless::getSoftAPSSID(), wifiPassword, "http://" + Wireless::getSoftAPIP(), urlWiki);
+  }
+  else
+  {
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>(
+      "ShowNoWifiError disabled, not showing AP configuration screen\n");
+  }
 }
 
 ///////////////////////////////////////////////
