@@ -395,11 +395,11 @@ void clear()
 {
   Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Clearing display...\n");
 
-  init();
-
   // Enable power supply for ePaper
   Board::setEPaperPowerOn(true);
   delay(500);
+
+  init();
 
   setToFullWindow();
   setToFirstPage();
@@ -689,11 +689,11 @@ void refreshDisplay() { display.epd2.refresh(false); }
 
 void showNoWiFiError(uint64_t sleepSeconds, const String &wikiUrl)
 {
-  init();
-
   // Enable power supply for ePaper
   Board::setEPaperPowerOn(true);
   delay(500);
+
+  init();
 
   setToFullWindow();
   setToFirstPage();
@@ -725,11 +725,11 @@ void showWiFiError(const String &hostname, const String &password, const String 
   const String qrString = "WIFI:S:" + hostname + ";T:WPA;P:" + password + ";;";
   // Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>("Generated string: {}\n", qrString);
 
-  init();
-
   // Enable power supply for ePaper
   Board::setEPaperPowerOn(true);
   delay(500);
+
+  init();
 
   setToFullWindow();
   setToFirstPage();
