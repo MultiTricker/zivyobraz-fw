@@ -158,24 +158,24 @@ static constexpr const char COLOR_TYPE_STRING[] = XSTR(COLOR_TYPE);
   #define DT_GDEQ0583Z31 30
   #define DT_GDEY075Z08 31
   #define DT_GDEH075Z90 32
-  #define DT_GDEM102Z91 48
-  #define DT_GDEY116Z91 33
-  #define DT_GDEY1248Z51 34
-  #define DT_GDEM133Z91 35
+  #define DT_GDEM102Z91 33
+  #define DT_GDEY116Z91 34
+  #define DT_GDEY1248Z51 35
+  #define DT_GDEM133Z91 36
   // 4C displays
-  #define DT_GDEY0213F51 36
-  #define DT_GDEY0266F51H 37
-  #define DT_GDEY029F51H 38
-  #define DT_WS3004YRBW 39
-  #define DT_GDEY0420F51 40
-  #define DT_WS437YRBW 41
-  #define DT_GDEY0579F51 42
-  #define DT_GDEM075F52 43
-  #define DT_GDEY116F51 44
+  #define DT_GDEY0213F51 37
+  #define DT_GDEY0266F51H 38
+  #define DT_GDEY029F51H 39
+  #define DT_WS3004YRBW 40
+  #define DT_GDEY0420F51 41
+  #define DT_WS437YRBW 42
+  #define DT_GDEY0579F51 43
+  #define DT_GDEM075F52 44
+  #define DT_GDEY116F51 45
   // 7C displays
-  #define DT_GDEP0565D90 45
-  #define DT_GDEY073D46 46
-  #define DT_GDEP073E01 47
+  #define DT_GDEP0565D90 46
+  #define DT_GDEY073D46 47
+  #define DT_GDEP073E01 48
 
 // Create DISPLAY_TYPE_STRING constant
 static constexpr const char DISPLAY_TYPE_STRING[] = XSTR(DISPLAY_TYPE);
@@ -184,7 +184,7 @@ static constexpr const char DISPLAY_TYPE_STRING[] = XSTR(DISPLAY_TYPE);
   #define DISPLAY_ID XCAT(DT_, DISPLAY_TYPE)
 
   // Validate DISPLAY_TYPE - DISPLAY_ID will be 0 if DT_<DISPLAY_TYPE> is not defined
-  #if DISPLAY_ID < DT_GDEW0154T8 || DISPLAY_ID > DT_GDEM102Z91
+  #if DISPLAY_ID < DT_GDEW0154T8 || DISPLAY_ID > DT_GDEP073E01
     #pragma message("DISPLAY_TYPE: " XSTR(DISPLAY_TYPE))
     #error "DISPLAY_TYPE not supported!"
   #endif
