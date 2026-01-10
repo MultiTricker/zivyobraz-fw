@@ -52,6 +52,7 @@
 // #define DISPLAY_TYPE GDEQ0583Z31   // 648x480, 5.83"
 // #define DISPLAY_TYPE GDEY075Z08    // 800x480, 7.5"
 // #define DISPLAY_TYPE GDEH075Z90    // 880x528, 7.5"
+// #define DISPLAY_TYPE GDEM102Z91    // 960x640, 10.2"
 // #define DISPLAY_TYPE GDEY116Z91    // 960x640, 11.6"
 // #define DISPLAY_TYPE GDEY1248Z51   // 1304x984, 12.48"
 // #define DISPLAY_TYPE GDEM133Z91    // 960x680, 13.3"
@@ -157,6 +158,7 @@ static constexpr const char COLOR_TYPE_STRING[] = XSTR(COLOR_TYPE);
   #define DT_GDEQ0583Z31 30
   #define DT_GDEY075Z08 31
   #define DT_GDEH075Z90 32
+  #define DT_GDEM102Z91 48
   #define DT_GDEY116Z91 33
   #define DT_GDEY1248Z51 34
   #define DT_GDEM133Z91 35
@@ -182,7 +184,7 @@ static constexpr const char DISPLAY_TYPE_STRING[] = XSTR(DISPLAY_TYPE);
   #define DISPLAY_ID XCAT(DT_, DISPLAY_TYPE)
 
   // Validate DISPLAY_TYPE - DISPLAY_ID will be 0 if DT_<DISPLAY_TYPE> is not defined
-  #if DISPLAY_ID < DT_GDEW0154T8 || DISPLAY_ID > DT_GDEP073E01
+  #if DISPLAY_ID < DT_GDEW0154T8 || DISPLAY_ID > DT_GDEM102Z91
     #pragma message("DISPLAY_TYPE: " XSTR(DISPLAY_TYPE))
     #error "DISPLAY_TYPE not supported!"
   #endif
