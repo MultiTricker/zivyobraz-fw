@@ -396,16 +396,25 @@ void init()
   display.setTextColor(GxEPD_BLACK); // black font
 }
 
+void powerOnAndInit()
+{
+  // For REMAP_SPI boards: init SPI first
+#ifdef REMAP_SPI
+  init();
+  Board::setEPaperPowerOn(true);
+  delay(500);
+#else
+  Board::setEPaperPowerOn(true);
+  delay(500);
+  init();
+#endif
+}
+
 void clear()
 {
   Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Clearing display...\n");
 
-  // Enable power supply for ePaper
-  Board::setEPaperPowerOn(true);
-  delay(500);
-
-  init();
-
+  powerOnAndInit();
   setToFullWindow();
   setToFirstPage();
   do
@@ -694,12 +703,7 @@ void refreshDisplay() { display.epd2.refresh(false); }
 
 void showNoWiFiError(uint64_t sleepSeconds, const String &wikiUrl)
 {
-  // Enable power supply for ePaper
-  Board::setEPaperPowerOn(true);
-  delay(500);
-
-  init();
-
+  powerOnAndInit();
   setToFullWindow();
   setToFirstPage();
   do
@@ -730,12 +734,7 @@ void showWiFiError(const String &hostname, const String &password, const String 
   const String qrString = "WIFI:S:" + hostname + ";T:WPA;P:" + password + ";;";
   // Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>("Generated string: {}\n", qrString);
 
-  // Enable power supply for ePaper
-  Board::setEPaperPowerOn(true);
-  delay(500);
-
-  init();
-
+  powerOnAndInit();
   setToFullWindow();
   setToFirstPage();
   do

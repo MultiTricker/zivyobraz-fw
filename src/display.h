@@ -195,6 +195,7 @@ static constexpr const char DISPLAY_TYPE_STRING[] = XSTR(DISPLAY_TYPE);
 namespace Display
 {
 void init();
+void powerOnAndInit();
 void clear();
 void setRotation(uint8_t rotation);
 
