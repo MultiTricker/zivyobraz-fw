@@ -88,7 +88,8 @@ void downloadAndDisplayImage(HttpClient &httpClient)
   StateManager::startDownloadTimer();
 
   // Check if direct streaming mode is available and should be used
-  bool useDirectStreaming = ImageHandler::isDirectStreamingAvailable();
+  // (direct streaming doesn't support rotation - displays require sequential row writes)
+  bool useDirectStreaming = ImageHandler::isDirectStreamingAvailable() && !httpClient.hasRotation();
 
   if (useDirectStreaming)
   {
@@ -226,6 +227,17 @@ void handleConnectedState()
 
   if (httpClient.checkForUpdate(true, useDirectStreaming))
   {
+    // Re-evaluate direct streaming: rotation requires paged mode
+    // (displays require sequential row writes, can't handle rotation in streaming)
+    if (useDirectStreaming && httpClient.hasRotation())
+    {
+      Logger::log<Logger::Level::INFO, Logger::Topic::IMAGE>(
+        "Rotation requested, switching from direct streaming to paged mode\n");
+      useDirectStreaming = false;
+      // Close the kept-open connection - paged mode will reopen for each page
+      httpClient.stop();
+    }
+
     // Check if OTA update is requested by server
     if (httpClient.hasOTAUpdate())
     {
