@@ -70,8 +70,12 @@ SensorType Sensor::detectSensor()
   delay(50);
   #endif
 
+  // End any previous Wire session to ensure clean state after deep sleep
+  Wire.end();
   #if (defined PIN_SDA) && (defined PIN_SCL)
   Wire.begin(PIN_SDA, PIN_SCL);
+  #else
+  Wire.begin();
   #endif
 
   SensorType found = SensorType::NONE;
@@ -129,8 +133,12 @@ bool Sensor::readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
   delay(50);
   #endif
 
+  // End any previous Wire session to ensure clean state after deep sleep
+  Wire.end();
   #if (defined PIN_SDA) && (defined PIN_SCL)
   Wire.begin(PIN_SDA, PIN_SCL);
+  #else
+  Wire.begin();
   #endif
 
   bool ret = false;
