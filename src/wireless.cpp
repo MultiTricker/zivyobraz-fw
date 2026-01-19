@@ -1,11 +1,13 @@
 #include "wireless.h"
 
+#include "improv_handler.h"
 #include "logger.h"
 
 #include <WiFi.h>
 #include <WiFiManager.h>
 
 static WiFiManager wm;
+static bool configPortalActive = false;
 
 namespace Wireless
 {
@@ -15,6 +17,11 @@ static void (*userlCallback)() = nullptr;
 // This is called if the WifiManager is in config mode (AP open)
 void APCallback(WiFiManager *wm)
 {
+  configPortalActive = true;
+
+  // Start Improv handler immediately when AP mode starts
+  ImprovHandler::begin();
+
   if (userlCallback != nullptr)
     userlCallback();
 }
@@ -33,15 +40,47 @@ void init(const String &hostname, const String &password, void (*callback)())
   // Redirect captive portal directly to WiFi setup page
   wm.setCustomHeadElement("<script>if(location.pathname==='/'){location.replace('/wifi');}</script>");
 
-  // reset settings - wipe stored credentials for testing
-  // wm.resetSettings();
+  // Non-blocking mode - allows Improv to process alongside portal
+  wm.setConfigPortalBlocking(false);
 
   // Set callback
   userlCallback = callback;
   wm.setConfigPortalTimeout(240); // set portal time to 4 min, then sleep/try again.
   wm.setAPCallback(APCallback);
-  wm.autoConnect(hostname.c_str(), password.c_str());
+
+  // Start autoConnect (non-blocking)
+  if (wm.autoConnect(hostname.c_str(), password.c_str()))
+  {
+    Logger::log<Logger::Topic::WIFI>("Connected to WiFi\n");
+  }
+  else
+  {
+    Logger::log<Logger::Topic::WIFI>("Config portal started (non-blocking)\n");
+  }
 }
+
+void process()
+{
+  // Process WiFiManager portal
+  wm.process();
+
+  // Process Improv handler if config portal is active
+  if (configPortalActive)
+  {
+    ImprovHandler::loop();
+
+    // Check if we got connected or portal closed (timeout, etc.)
+    if (WiFi.status() == WL_CONNECTED || !wm.getConfigPortalActive())
+    {
+      configPortalActive = false;
+      ImprovHandler::end();
+      Logger::log<Logger::Topic::WIFI>("Config portal closed{}\n",
+                                       WiFi.status() == WL_CONNECTED ? ", WiFi connected" : "");
+    }
+  }
+}
+
+bool isConfigPortalActive() { return configPortalActive; }
 
 String getSSID()
 {

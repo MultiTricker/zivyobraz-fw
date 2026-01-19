@@ -29,6 +29,7 @@
 #include "display.h"
 #include "http_client.h"
 #include "image_handler.h"
+#include "improv_handler.h"
 #include "logger.h"
 #include "state_manager.h"
 #include "streaming_handler.h"
@@ -49,6 +50,8 @@ const String urlWiki = "https://wiki.zivyobraz.eu";
 
 void configModeCallback()
 {
+  // Note: ImprovHandler::begin() is already called in Wireless::APCallback
+
   // Increment failure counter
   StateManager::incrementFailureCount();
 
@@ -58,7 +61,13 @@ void configModeCallback()
   // Show WiFi configuration screen on display only if ShowNoWifiError is enabled (default: 1)
   if (StateManager::getShowNoWifiError() == 1)
   {
+    // Set Improv busy callback so Improv processes serial data during display refresh
+    Display::setBusyCallback(ImprovHandler::busyCallback);
+
     Display::showWiFiError(Wireless::getSoftAPSSID(), wifiPassword, "http://" + Wireless::getSoftAPIP(), urlWiki);
+
+    // Clear busy callback after display refresh
+    Display::setBusyCallback(nullptr);
   }
   else
   {
@@ -76,6 +85,14 @@ void initializeWiFi()
   String hostname = "INK_" + Wireless::getMacAddress();
   hostname.replace(":", "");
   Wireless::init(hostname, wifiPassword, configModeCallback);
+
+  // In non-blocking mode, loop while config portal is active
+  // This allows both WiFiManager and Improv to process
+  while (Wireless::isConfigPortalActive() && !Wireless::isConnected())
+  {
+    Wireless::process();
+    delay(10);
+  }
 }
 
 void downloadAndDisplayImage(HttpClient &httpClient)

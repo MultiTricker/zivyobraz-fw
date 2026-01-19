@@ -230,6 +230,7 @@ bool supportsPartialRefresh();
 void setToFirstPage();
 bool setToNextPage();
 void enableLightSleepDuringRefresh(bool enable);
+void setBusyCallback(void (*callback)(const void *));
 
 // Direct streaming functions (for row-by-row streaming mode)
 bool supportsDirectStreaming();

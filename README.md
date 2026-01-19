@@ -16,7 +16,8 @@ In brief, about custom compilation and settings in the firmware code:
 You will need to have the following libraries installed:
 ```ini
 lib_deps =
-    zinggjm/GxEPD2@^1.6.0
+    zinggjm/GxEPD2@^1.6.5
+    jnthas/Improv WiFi Library@^0.0.4
     bblanchon/ArduinoJson@^7.2.1
     adafruit/Adafruit GFX Library@^1.11.9
     adafruit/Adafruit SHT4x Library@^1.0.5

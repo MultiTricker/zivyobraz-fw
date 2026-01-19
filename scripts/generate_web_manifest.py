@@ -65,6 +65,7 @@ def generate_manifest(source, target, env):
         "name": fw_name,
         "version": fw_version,
         "new_install_prompt_erase": True,
+        "improv": True,
         "builds": [{"chipFamily": chip_family, "parts": parts_full}]
     }
 

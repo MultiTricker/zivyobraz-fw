@@ -6,6 +6,9 @@
 namespace Wireless
 {
 void init(const String &hostname, const String &password, void (*callback)());
+void process();
+bool isConfigPortalActive();
+
 String getSSID();
 int8_t getStrength();
 String getMacAddress();

@@ -561,12 +561,19 @@ void enableLightSleepDuringRefresh(bool enable)
   if (enable)
   {
     Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Enabling light sleep during display refresh\n");
-    display.epd2.setBusyCallback(busyCallbackLightSleep, nullptr);
+    setBusyCallback(busyCallbackLightSleep);
   }
   else
   {
-    display.epd2.setBusyCallback(nullptr, nullptr);
+    setBusyCallback(nullptr);
   }
+#endif
+}
+
+void setBusyCallback(void (*callback)(const void *))
+{
+#ifndef M5StackCoreInk
+  display.epd2.setBusyCallback(callback);
 #endif
 }
 
