@@ -76,6 +76,7 @@
 // #define DISPLAY_TYPE GDEP0565D90   // 600x448, 5.65"
 // #define DISPLAY_TYPE GDEY073D46    // 800x480, 7.3"
 // #define DISPLAY_TYPE GDEP073E01    // 800x480, 7.3"
+// #define DISPLAY_TYPE GDEP133C02    // 1200x1600, 13.3" QSPI
 
 // ...
 // More supported display classes in GxEPD2 can be found example here:
@@ -185,6 +186,7 @@ static constexpr const char COLOR_TYPE_STRING[] = XSTR(COLOR_TYPE);
   #define DT_GDEP0565D90 51
   #define DT_GDEY073D46 52
   #define DT_GDEP073E01 53
+  #define DT_GDEP133C02 54
 
 // Create DISPLAY_TYPE_STRING constant
 static constexpr const char DISPLAY_TYPE_STRING[] = XSTR(DISPLAY_TYPE);
@@ -193,7 +195,7 @@ static constexpr const char DISPLAY_TYPE_STRING[] = XSTR(DISPLAY_TYPE);
   #define DISPLAY_ID XCAT(DT_, DISPLAY_TYPE)
 
   // Validate DISPLAY_TYPE - DISPLAY_ID will be 0 if DT_<DISPLAY_TYPE> is not defined
-  #if DISPLAY_ID < DT_GDEW0154T8 || DISPLAY_ID > DT_GDEP073E01
+  #if DISPLAY_ID < DT_GDEW0154T8 || DISPLAY_ID > DT_GDEP133C02
     #pragma message("DISPLAY_TYPE: " XSTR(DISPLAY_TYPE))
     #error "DISPLAY_TYPE not supported!"
   #endif

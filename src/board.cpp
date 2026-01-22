@@ -44,7 +44,7 @@ void setupHW()
   pinMode(ePaperPowerPin, OUTPUT);
 #endif
 
-#if (defined SVERIO_PAPERBOARD_SPI) || (defined SEEEDSTUDIO_RETERMINAL)
+#if (defined SVERIO_PAPERBOARD_SPI) || (defined SEEEDSTUDIO_RETERMINAL) || (defined SEEEDSTUDIO_EE02)
   pinMode(enableBattery, OUTPUT);
   digitalWrite(enableBattery, LOW);
 #endif
@@ -222,9 +222,9 @@ float getBatteryVoltage()
   digitalWrite(enableBattery, LOW);
   pinMode(enableBattery, INPUT);
 
-#elif defined SEEEDSTUDIO_RETERMINAL
-  Logger::log<Logger::Level::DEBUG, Logger::Topic::BATTERY>("Reading on SeeedStudio reTerminal board\n");
-  // Enable battery voltage measurement circuit via GPIO21
+#elif (defined SEEEDSTUDIO_RETERMINAL) || (defined SEEEDSTUDIO_EE02)
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::BATTERY>("Reading on SeeedStudio reTerminal/EE02 board\n");
+  // Enable battery voltage measurement circuit
   digitalWrite(enableBattery, HIGH);
   pinMode(enableBattery, OUTPUT);
   delay(10); // Allow measurement circuit to stabilize
