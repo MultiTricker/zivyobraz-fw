@@ -129,7 +129,8 @@ bool RowStreamBuffer::init(size_t rowSizeBytes, size_t rowCount)
   return false;
 }
 
-bool RowStreamBuffer::initDirect(uint16_t displayWidth, size_t rowCount, PixelPacker::DisplayFormat format)
+bool RowStreamBuffer::initDirect(uint16_t displayWidth, size_t rowCount, PixelPacker::DisplayFormat format,
+                                 bool needsPngDecoder)
 {
   if (m_initialized)
   {
@@ -159,19 +160,16 @@ bool RowStreamBuffer::initDirect(uint16_t displayWidth, size_t rowCount, PixelPa
 
   // Check available heap and dynamically adjust row count if needed
   // IMPORTANT: Use largest contiguous block, not total free heap, to avoid fragmentation issues
-  // After buffer allocation, the PNG decoder needs a contiguous block for its internal buffers
   size_t freeHeap = Utils::getFreeHeap();
   size_t largestBlock = Utils::getLargestFreeBlock();
 
-  // Reserve memory for PNG decoder (needs contiguous block)
-  // PNG decoder (pngle) needs: ~1KB base + width*4 for RGBA scanline + zlib state (~32KB)
-  // For 800px wide display: ~1KB + 3.2KB + 32KB ≈ 36KB, add margin for safety
-  constexpr size_t PNG_DECODER_CONTIGUOUS = 50 * 1024; // 50KB contiguous block for PNG decoder
-  constexpr size_t MIN_FREE_HEAP = 10 * 1024;          // 10KB minimum free heap after allocation
+  // Reserve memory based on what decoder will be used
+  // PNG decoder (pngle) needs: ~1KB base + width*4 for RGBA scanline + zlib state (~32KB) ≈ 40KB total
+  // Z format (RLE) only needs a small HTTP buffer (512 bytes) + general overhead
+  constexpr size_t PNG_DECODER_RESERVE = 50 * 1024; // 40KB for PNG decoder + 10KB margin
+  constexpr size_t MIN_FREE_HEAP = 10 * 1024;       // 10KB minimum free heap after allocation
 
-  // For buffer allocation, we need to ensure PNG decoder can still get a contiguous block AFTER we allocate
-  // Strategy: limit our allocation so that the remaining largest block is sufficient for PNG decoder
-  // This is tricky because allocation can fragment memory - be conservative
+  size_t memoryReserve = needsPngDecoder ? (PNG_DECODER_RESERVE + MIN_FREE_HEAP) : MIN_FREE_HEAP;
 
   size_t bytesPerRow = m_rowSize * buffersNeeded;
   // Also account for rowWritePos (size_t) and rowPixelCount (uint16_t) vectors
@@ -179,10 +177,7 @@ bool RowStreamBuffer::initDirect(uint16_t displayWidth, size_t rowCount, PixelPa
   size_t totalBytesPerRow = bytesPerRow + overheadPerRow;
 
   // Calculate how much we can safely allocate
-  // If we allocate from the largest block, we need to leave PNG_DECODER_CONTIGUOUS remaining
-  size_t maxBufferAllocation = (largestBlock > PNG_DECODER_CONTIGUOUS + MIN_FREE_HEAP)
-                                 ? (largestBlock - PNG_DECODER_CONTIGUOUS - MIN_FREE_HEAP)
-                                 : 0;
+  size_t maxBufferAllocation = (largestBlock > memoryReserve) ? (largestBlock - memoryReserve) : 0;
 
   // Calculate maximum rows that can fit
   size_t maxAffordableRows = maxBufferAllocation / totalBytesPerRow;
@@ -191,8 +186,8 @@ bool RowStreamBuffer::initDirect(uint16_t displayWidth, size_t rowCount, PixelPa
   constexpr size_t MIN_ROW_COUNT = 8;
 
   Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>(
-    "Memory: heap={}, largest={}, reserve={}, max_alloc={}, bytes/row={} ({}x buf)\n", freeHeap, largestBlock,
-    PNG_DECODER_CONTIGUOUS, maxBufferAllocation, totalBytesPerRow, buffersNeeded);
+    "Memory: heap={}, largest={}, reserve={} (png={}), max_alloc={}, bytes/row={} ({}x buf)\n", freeHeap, largestBlock,
+    memoryReserve, needsPngDecoder ? 1 : 0, maxBufferAllocation, totalBytesPerRow, buffersNeeded);
 
   if (maxAffordableRows < MIN_ROW_COUNT)
   {
@@ -488,7 +483,7 @@ bool StreamingManager::init(size_t rowSizeBytes, size_t rowCount)
   return true;
 }
 
-bool StreamingManager::initDirect(uint16_t displayWidth, size_t rowCount)
+bool StreamingManager::initDirect(uint16_t displayWidth, size_t rowCount, bool needsPngDecoder)
 {
   if (m_buffer)
   {
@@ -505,7 +500,7 @@ bool StreamingManager::initDirect(uint16_t displayWidth, size_t rowCount)
   }
 
   m_buffer.reset(new RowStreamBuffer());
-  if (!m_buffer->initDirect(displayWidth, rowCount, format))
+  if (!m_buffer->initDirect(displayWidth, rowCount, format, needsPngDecoder))
   {
     Logger::log<Logger::Level::ERROR, Logger::Topic::STREAM>("Failed to initialize direct row buffer\n");
     m_buffer.reset();

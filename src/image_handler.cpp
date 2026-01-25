@@ -881,13 +881,20 @@ bool readImageDataDirect(HttpClient &http)
   uint32_t startTime = millis();
   bool success = false;
 
-  // Initialize streaming manager in direct mode
+  // Read format header FIRST to determine memory requirements
+  ImageFormat format = static_cast<ImageFormat>(http.read16());
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Header: 0x{} (direct mode)\n",
+                                                          String(static_cast<uint16_t>(format), HEX).c_str());
+
+  // Initialize streaming manager in direct mode with appropriate memory reserve
   StreamingHandler::StreamingManager &streamMgr = StreamingHandler::StreamingManager::getInstance();
 
   if (!streamMgr.isEnabled())
   {
     uint16_t displayWidth = Display::getResolutionX();
-    if (!streamMgr.initDirect(displayWidth, STREAMING_BUFFER_ROWS_COUNT))
+
+    bool needsPngDecoder = (format == ImageFormat::PNG);
+    if (!streamMgr.initDirect(displayWidth, STREAMING_BUFFER_ROWS_COUNT, needsPngDecoder))
     {
       Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Failed to initialize direct streaming\n");
       return false;
@@ -898,10 +905,6 @@ bool readImageDataDirect(HttpClient &http)
     Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Direct streaming - Total: {}, Free: {}, Buffer: {}\n",
                                                             totalHeap, freeHeap, bufferUsed);
   }
-
-  // Read format header
-  uint16_t header = http.read16();
-  Logger::log<Logger::Level::INFO, Logger::Topic::IMAGE>("Header: 0x{} (direct mode)\n", String(header, HEX).c_str());
 
   // Allocate processing buffer
   const uint16_t STREAM_BUFFER_SIZE = 512;
@@ -915,7 +918,7 @@ bool readImageDataDirect(HttpClient &http)
   }
 
   // Route to direct streaming format handlers
-  switch (static_cast<ImageFormat>(header))
+  switch (format)
   {
     case ImageFormat::PNG:
       success = processPNGDirect(http, startTime, buffer, STREAM_BUFFER_SIZE);
@@ -935,7 +938,7 @@ bool readImageDataDirect(HttpClient &http)
 
     default:
       Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Unknown format header: 0x{}\n",
-                                                              String(header, HEX).c_str());
+                                                              String(static_cast<uint16_t>(format), HEX).c_str());
       success = false;
       break;
   }
