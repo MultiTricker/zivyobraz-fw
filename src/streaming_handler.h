@@ -44,7 +44,9 @@ public:
   bool init(size_t rowSizeBytes, size_t rowCount);
 
   // Initialize for direct streaming mode with display format
-  bool initDirect(uint16_t displayWidth, size_t rowCount, PixelPacker::DisplayFormat format);
+  // needsPngDecoder: if true, reserves ~40KB for PNG decoder + margin; if false, only minimal reserve
+  bool initDirect(uint16_t displayWidth, size_t rowCount, PixelPacker::DisplayFormat format,
+                  bool needsPngDecoder = true);
 
   size_t writeRow(size_t rowIndex, const uint8_t *data, size_t length);
 
@@ -108,7 +110,8 @@ public:
   bool init(size_t rowSizeBytes, size_t rowCount = STREAMING_BUFFER_ROWS_COUNT);
 
   // Initialize for direct streaming mode
-  bool initDirect(uint16_t displayWidth, size_t rowCount = STREAMING_BUFFER_ROWS_COUNT);
+  // needsPngDecoder: if true, reserves ~40KB for PNG decoder + margin; if false, only minimal reserve
+  bool initDirect(uint16_t displayWidth, size_t rowCount = STREAMING_BUFFER_ROWS_COUNT, bool needsPngDecoder = true);
 
   RowStreamBuffer *getBuffer() { return m_buffer.get(); }
 
