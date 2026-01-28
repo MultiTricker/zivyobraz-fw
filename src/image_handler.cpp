@@ -869,20 +869,27 @@ bool isDirectStreamingAvailable()
 #endif
 }
 
-bool readImageDataDirect(HttpClient &http)
+ImageStreamingResult readImageDataDirect(HttpClient &http)
 {
 #if defined(STREAMING_ENABLED) && defined(STREAMING_DIRECT_MODE)
   if (!isDirectStreamingAvailable())
   {
     Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("Direct streaming not available, use paged mode\n");
-    return false;
+    return ImageStreamingResult::FallbackToPaged;
   }
 
   uint32_t startTime = millis();
   bool success = false;
 
-  // Read format header FIRST to determine memory requirements
-  ImageFormat format = static_cast<ImageFormat>(http.read16());
+  // Scan for format header (handles potential error messages at start)
+  uint16_t headerValue;
+  if (!scanForImageHeader(http, headerValue))
+  {
+    Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Failed to find valid image format header\n");
+    return ImageStreamingResult::FatalError;
+  }
+
+  ImageFormat format = static_cast<ImageFormat>(headerValue);
   Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Header: 0x{} (direct mode)\n",
                                                           String(static_cast<uint16_t>(format), HEX).c_str());
 
@@ -897,7 +904,7 @@ bool readImageDataDirect(HttpClient &http)
     if (!streamMgr.initDirect(displayWidth, STREAMING_BUFFER_ROWS_COUNT, needsPngDecoder))
     {
       Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Failed to initialize direct streaming\n");
-      return false;
+      return ImageStreamingResult::FallbackToPaged;
     }
 
     size_t totalHeap, freeHeap, bufferUsed;
@@ -914,7 +921,7 @@ bool readImageDataDirect(HttpClient &http)
   {
     Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Failed to allocate processing buffer\n");
     streamMgr.cleanup();
-    return false;
+    return ImageStreamingResult::FallbackToPaged;
   }
 
   // Route to direct streaming format handlers
@@ -953,12 +960,12 @@ bool readImageDataDirect(HttpClient &http)
   }
 
   streamMgr.cleanup();
-  return success;
+  return success ? ImageStreamingResult::Success : ImageStreamingResult::FatalError;
 
 #else
   // Direct streaming not compiled in
   Logger::log<Logger::Level::INFO, Logger::Topic::IMAGE>("Direct streaming not enabled at compile time\n");
-  return false;
+  return ImageStreamingResult::FallbackToPaged;
 #endif
 }
 
