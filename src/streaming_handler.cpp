@@ -166,8 +166,14 @@ bool RowStreamBuffer::initDirect(uint16_t displayWidth, size_t rowCount, PixelPa
   // Reserve memory based on what decoder will be used
   // PNG decoder (pngle) needs: ~1KB base + width*4 for RGBA scanline + zlib state (~32KB) ≈ 40KB total
   // Z format (RLE) only needs a small HTTP buffer (512 bytes) + general overhead
-  constexpr size_t PNG_DECODER_RESERVE = 50 * 1024; // 40KB for PNG decoder + 10KB margin
-  constexpr size_t MIN_FREE_HEAP = 10 * 1024;       // 10KB minimum free heap after allocation
+  constexpr size_t PNG_DECODER_RESERVE = 40 * 1024; // 40KB for PNG decoder
+  // SSL/TLS (WiFiClientSecure) may allocate up to 16KB buffers during read operations,
+  // even after the handshake is complete. With HTTP (non-SSL), less reserve is needed.
+  #ifdef USE_CLIENT_HTTPS
+  constexpr size_t MIN_FREE_HEAP = 20 * 1024; // 20KB for SSL read buffers + general overhead
+  #else
+  constexpr size_t MIN_FREE_HEAP = 10 * 1024; // 10KB sufficient for plain HTTP
+  #endif
 
   size_t memoryReserve = needsPngDecoder ? (PNG_DECODER_RESERVE + MIN_FREE_HEAP) : MIN_FREE_HEAP;
 

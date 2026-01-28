@@ -79,6 +79,126 @@ static void printReadError(uint32_t bytesRead)
   Logger::log<Logger::Level::ERROR, Logger::Topic::HTTP>("Client got disconnected after bytes: {}\n", bytesRead);
 }
 
+// Maximum bytes to scan for image header (4 KB)
+static const uint16_t MAX_HEADER_SCAN_BYTES = 4096;
+
+// Check if a 16-bit value is a valid image format header
+static bool isValidFormatHeader(uint16_t header)
+{
+  switch (static_cast<ImageFormat>(header))
+  {
+    case ImageFormat::PNG:
+    case ImageFormat::Z1:
+    case ImageFormat::Z2:
+    case ImageFormat::Z3:
+      return true;
+    default:
+      return false;
+  }
+}
+
+// Scan through first KB of data to find a valid image header
+// This handles cases where PHP error messages precede the actual image data
+// Returns true if valid header found, header value stored in outHeader
+static bool scanForImageHeader(HttpClient &http, uint16_t &outHeader)
+{
+  // Read first byte
+  uint8_t firstByte = http.readByte();
+  uint8_t secondByte = http.readByte();
+
+  // Build initial header (little-endian: second byte << 8 | first byte)
+  uint16_t header = (secondByte << 8) | firstByte;
+
+  // Check if first 2 bytes are already a valid header
+  if (isValidFormatHeader(header))
+  {
+    outHeader = header;
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Image header found at offset 0\n");
+    return true;
+  }
+
+  // Not a valid header at start - scan through first KB
+  // Print scanned bytes to Serial to help debug server response issues
+  Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("Scanning for image header, dumping response:\n");
+  Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>(">>> ");
+
+  // Buffer for batching output (flush every 64 chars)
+  constexpr uint8_t PRINT_BUFFER_SIZE = 64;
+  char printBuffer[PRINT_BUFFER_SIZE + 1]; // +1 for null terminator
+  uint8_t bufferPos = 0;
+
+  // Helper lambda to add char to buffer and flush when full
+  auto bufferChar = [&](char c)
+  {
+    printBuffer[bufferPos++] = c;
+    if (bufferPos >= PRINT_BUFFER_SIZE)
+    {
+      printBuffer[bufferPos] = '\0';
+      Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("{}", printBuffer);
+      bufferPos = 0;
+    }
+  };
+
+  // Helper lambda to flush remaining buffer
+  auto flushBuffer = [&]()
+  {
+    if (bufferPos > 0)
+    {
+      printBuffer[bufferPos] = '\0';
+      Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("{}", printBuffer);
+      bufferPos = 0;
+    }
+  };
+
+  // Print the first two bytes we already read (as characters if printable)
+  bufferChar((firstByte >= 32 && firstByte < 127) ? (char)firstByte : '.');
+  bufferChar((secondByte >= 32 && secondByte < 127) ? (char)secondByte : '.');
+
+  // We've already read 2 bytes, scan up to MAX_HEADER_SCAN_BYTES - 2 more
+  for (uint16_t offset = 2; offset < MAX_HEADER_SCAN_BYTES; offset++)
+  {
+    if (!http.isConnected() || http.available() <= 0)
+    {
+      flushBuffer();
+      Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>(" <<<\n");
+      Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Connection lost while scanning for header\n");
+      return false;
+    }
+
+    // Shift bytes: previous secondByte becomes firstByte, read new secondByte
+    firstByte = secondByte;
+    secondByte = http.readByte();
+    header = (secondByte << 8) | firstByte;
+
+    // Buffer scanned byte (printable ASCII or dot for non-printable)
+    if (secondByte >= 32 && secondByte < 127)
+      bufferChar((char)secondByte);
+    else if (secondByte == '\n')
+    {
+      flushBuffer();
+      Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("\n>>> ");
+    }
+    else if (secondByte != '\r') // Skip carriage returns
+      bufferChar('.');
+
+    if (isValidFormatHeader(header))
+    {
+      flushBuffer();
+      Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>(" <<<\n");
+      outHeader = header;
+      Logger::log<Logger::Level::INFO, Logger::Topic::IMAGE>("Image header found at offset {}\n", offset - 1);
+      return true;
+    }
+  }
+
+  flushBuffer();
+  Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>(" <<<\n");
+
+  Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("No valid image header found in first {} bytes\n",
+                                                          MAX_HEADER_SCAN_BYTES);
+  return false;
+}
+
 static uint16_t getSecondColor()
 {
 #if (defined TYPE_BW) || (defined TYPE_GRAYSCALE)
@@ -791,8 +911,13 @@ void readImageData(HttpClient &http)
   }
 #endif
 
-  // Read format header (2 bytes)
-  uint16_t header = http.read16();
+  // Scan for format header (handles potential error messages at start)
+  uint16_t header;
+  if (!scanForImageHeader(http, header))
+  {
+    Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Failed to find valid image format header\n");
+    return;
+  }
 
   Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Image format header: 0x{}\n", String(header, HEX).c_str());
 
@@ -869,20 +994,27 @@ bool isDirectStreamingAvailable()
 #endif
 }
 
-bool readImageDataDirect(HttpClient &http)
+ImageStreamingResult readImageDataDirect(HttpClient &http)
 {
 #if defined(STREAMING_ENABLED) && defined(STREAMING_DIRECT_MODE)
   if (!isDirectStreamingAvailable())
   {
     Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("Direct streaming not available, use paged mode\n");
-    return false;
+    return ImageStreamingResult::FallbackToPaged;
   }
 
   uint32_t startTime = millis();
   bool success = false;
 
-  // Read format header FIRST to determine memory requirements
-  ImageFormat format = static_cast<ImageFormat>(http.read16());
+  // Scan for format header (handles potential error messages at start)
+  uint16_t headerValue;
+  if (!scanForImageHeader(http, headerValue))
+  {
+    Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Failed to find valid image format header\n");
+    return ImageStreamingResult::FatalError;
+  }
+
+  ImageFormat format = static_cast<ImageFormat>(headerValue);
   Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Header: 0x{} (direct mode)\n",
                                                           String(static_cast<uint16_t>(format), HEX).c_str());
 
@@ -897,7 +1029,7 @@ bool readImageDataDirect(HttpClient &http)
     if (!streamMgr.initDirect(displayWidth, STREAMING_BUFFER_ROWS_COUNT, needsPngDecoder))
     {
       Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Failed to initialize direct streaming\n");
-      return false;
+      return ImageStreamingResult::FallbackToPaged;
     }
 
     size_t totalHeap, freeHeap, bufferUsed;
@@ -914,7 +1046,7 @@ bool readImageDataDirect(HttpClient &http)
   {
     Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Failed to allocate processing buffer\n");
     streamMgr.cleanup();
-    return false;
+    return ImageStreamingResult::FallbackToPaged;
   }
 
   // Route to direct streaming format handlers
@@ -953,12 +1085,12 @@ bool readImageDataDirect(HttpClient &http)
   }
 
   streamMgr.cleanup();
-  return success;
+  return success ? ImageStreamingResult::Success : ImageStreamingResult::FatalError;
 
 #else
   // Direct streaming not compiled in
   Logger::log<Logger::Level::INFO, Logger::Topic::IMAGE>("Direct streaming not enabled at compile time\n");
-  return false;
+  return ImageStreamingResult::FallbackToPaged;
 #endif
 }
 
