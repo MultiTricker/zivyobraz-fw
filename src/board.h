@@ -21,6 +21,7 @@
 // #define BOARD_TYPE SEEEDSTUDIO_XIAO_ESP32C3 // Seeed Studio XIAO ESP32C3, bundled with 800x480 BW display
 // #define BOARD_TYPE SEEEDSTUDIO_XIAO_EDDB_ESP32S3 // Dev board distributed as part of the TRMNL 7.5" (OG) DIY Kit
 // #define BOARD_TYPE SEEEDSTUDIO_RETERMINAL // SeeedStudio reTerminal E1001/E1002
+// #define BOARD_TYPE SEEEDSTUDIO_EE02 // SeeedStudio EE02 with 60-pin QSPI connector for 13.3" display
 
 #include <Arduino.h>
 
@@ -44,6 +45,7 @@
   #define BT_SEEEDSTUDIO_XIAO_ESP32C3 14
   #define BT_SEEEDSTUDIO_XIAO_EDDB_ESP32S3 15
   #define BT_SEEEDSTUDIO_RETERMINAL 16
+  #define BT_SEEEDSTUDIO_EE02 17
 
 // Create BOARD_TYPE_STRING constant here before board type is defined
 static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
@@ -82,6 +84,8 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
     #define SEEEDSTUDIO_XIAO_EDDB_ESP32S3
   #elif BOARD_ID == BT_SEEEDSTUDIO_RETERMINAL
     #define SEEEDSTUDIO_RETERMINAL
+  #elif BOARD_ID == BT_SEEEDSTUDIO_EE02
+    #define SEEEDSTUDIO_EE02
   #else
     #pragma message("BOARD_TYPE: " XSTR(BOARD_TYPE))
     #error "BOARD_TYPE not supported!"
@@ -290,6 +294,31 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define dividerRatio (2.0f)
   #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
   #define REMAP_SPI
+
+#elif defined SEEEDSTUDIO_EE02
+  // SeeedStudio EE02 board with 60-pin connector for GDEP133C02 13.3" 1600x1200 6-color Spectra display
+  // Display uses two UC8179 controllers in master/slave configuration
+  #define PIN_SS 44     // CS (Master) - UC8179 #1
+  #define PIN_DC 10     // Data/Command select
+  #define PIN_RST 38    // Hardware reset (shared by both controllers)
+  #define PIN_BUSY 4    // Busy signal (shared by both controllers, active LOW)
+  #define PIN_CS2 41    // CS1 (Slave) - UC8179 #2
+  #define PIN_SPI_CLK 7 // SPI clock (10 MHz, Mode 0)
+  #define PIN_SPI_D0 9  // SPI MOSI
+  #define PIN_SPI_D1 8  // SPI_Data1 (for QSPI mode, unused in SPI mode), somewhere referenced as PIN_SPI_MISO
+  #define PIN_SPI_D2 39 // SPI_Data2 (for QSPI mode, unused in SPI mode)
+  #define PIN_SPI_D3 42 // SPI_Data3 (for QSPI mode, unused in SPI mode)
+  #define PIN_SPI_MOSI PIN_SPI_D0
+  #define PIN_SPI_MISO -1
+  #define PIN_SPI_SS PIN_SS
+  #define ePaperPowerPin 43    // LOAD_SW (PWR_EN)
+  #define enableBattery 6      // ADC_ENABLE_PIN (GPIO6/A5)
+  #define vBatPin 1            // VOLTAGE_PIN (GPIO1/A0)
+  #define EXT_BUTTON 2         // User button (GPIO2/D1/A1)
+  #define dividerRatio (3.58f) // Corresponds to voltage formula: (adcValue / 4096.0) * 7.16
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
+  #define REMAP_SPI
+  #define SPI_FREQUENCY 40000000 // 40 MHz for SPI write operations
 #endif
 
 #ifdef REMAP_SPI

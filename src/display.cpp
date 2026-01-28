@@ -21,7 +21,12 @@ static Adafruit_NeoPixel pixel(1, RGBledPin, NEO_GRB + NEO_KHZ800);
 
 #ifdef REMAP_SPI
   #include "SPI.h"
+  // Use FSPI on ESP32-S3 to avoid "HSPI Does not have default pins" warning
+  #if CONFIG_IDF_TARGET_ESP32S3
+static SPIClass hspi(FSPI);
+  #else
 static SPIClass hspi(HSPI);
+  #endif
 #endif
 
 ///////////////////////
@@ -335,6 +340,12 @@ GxEPD2_7C<GxEPD2_730c_GDEY073D46, CALC_PAGE_HEIGHT(GxEPD2_730c_GDEY073D46::HEIGH
 GxEPD2_7C<GxEPD2_730c_GDEP073E01, CALC_PAGE_HEIGHT(GxEPD2_730c_GDEP073E01::HEIGHT, GxEPD2_730c_GDEP073E01::WIDTH, 4)>
   display(GxEPD2_730c_GDEP073E01(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
+// GDEP133C02 - 7C, 1200x1600px, 13.3" QSPI
+#elif DISPLAY_ID == DT_GDEP133C02
+GxEPD2_7C<GxEPD2_1330c_GDEP133C02, CALC_PAGE_HEIGHT(GxEPD2_1330c_GDEP133C02::HEIGHT, GxEPD2_1330c_GDEP133C02::WIDTH, 8)>
+  display(GxEPD2_1330c_GDEP133C02(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY, PIN_CS2, PIN_SPI_D0, PIN_SPI_D1, PIN_SPI_D2,
+                                  PIN_SPI_D3, ePaperPowerPin));
+
 #endif
 
 // Font
@@ -399,12 +410,16 @@ void init()
 #ifdef REMAP_SPI
   // only CLK and MOSI are important for EPD
   hspi.begin(PIN_SPI_CLK, PIN_SPI_MISO, PIN_SPI_MOSI, PIN_SPI_SS); // swap pins
+  #ifdef SPI_FREQUENCY
+  display.epd2.selectSPI(hspi, SPISettings(SPI_FREQUENCY, MSBFIRST, SPI_MODE0));
+  #else
   display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
+  #endif
 #endif
 
 #if (defined ES3ink) || (defined ESP32S3Adapter) || (defined ESPink_V3) || (defined ESPink_V35) ||                     \
   (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42) || (defined CROWPANEL_ESP32S3_213) ||              \
-  (defined SVERIO_PAPERBOARD_SPI)
+  (defined SVERIO_PAPERBOARD_SPI) || (defined SEEEDSTUDIO_EE02)
   display.init(115200, false, 2, false); // S3 boards with special reset circuits
 #else
   display.init();
@@ -635,7 +650,11 @@ void initDirectStreaming(bool partialRefresh, uint16_t maxRowCount)
   // (otherwise the library forces a full refresh on first update)
 #ifdef REMAP_SPI
   hspi.begin(PIN_SPI_CLK, PIN_SPI_MISO, PIN_SPI_MOSI, PIN_SPI_SS);
+  #ifdef SPI_FREQUENCY
+  display.epd2.selectSPI(hspi, SPISettings(SPI_FREQUENCY, MSBFIRST, SPI_MODE0));
+  #else
   display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
+  #endif
 #endif
 
 #if (defined ESPink_V2) || (defined MakerBadge_revB) || (defined MakerBadge_revD) || (defined TTGO_T5_v23) ||          \
