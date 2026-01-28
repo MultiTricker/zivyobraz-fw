@@ -364,36 +364,6 @@ namespace Display
 // Track whether partial refresh is requested for direct streaming mode
 static bool directStreamingPartialRefresh = false;
 
-#if defined(TYPE_GRAYSCALE)
-// Buffer manager for grayscale-to-BW conversion
-static struct
-{
-  uint8_t *data = nullptr;
-  size_t size = 0;
-
-  bool allocate(size_t bytes)
-  {
-    release();
-    data = (uint8_t *)malloc(bytes);
-    if (data)
-      size = bytes;
-    return data != nullptr;
-  }
-
-  void release()
-  {
-    if (data)
-    {
-      free(data);
-      data = nullptr;
-      size = 0;
-    }
-  }
-
-  bool canFit(size_t bytes) const { return data && size >= bytes; }
-} bwConversionBuffer;
-#endif
-
 void init()
 {
 #ifdef REMAP_SPI
@@ -616,19 +586,6 @@ void initDirectStreaming(bool partialRefresh, uint16_t maxRowCount)
     Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Partial refresh mode requested\n");
   }
 
-#if defined(TYPE_GRAYSCALE)
-  // Pre-allocate BW conversion buffer for partial refresh on grayscale displays
-  if (partialRefresh && maxRowCount > 0)
-  {
-    size_t bufferSize = ((DISPLAY_RESOLUTION_X + 7) / 8) * maxRowCount;
-    if (bwConversionBuffer.allocate(bufferSize))
-      Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Pre-allocated BW conversion buffer: {} bytes\n",
-                                                             bufferSize);
-    else
-      Logger::log<Logger::Level::WARNING, Logger::Topic::DISP>("Failed to pre-allocate BW conversion buffer\n");
-  }
-#endif
-
   // Initialize display
   // When partialRefresh is true, we pass initial=false to the library
   // This sets _initial_refresh=false, allowing partial refresh to work
@@ -682,19 +639,9 @@ void writeRowsDirect(uint16_t yStart, uint16_t rowCount, const uint8_t *blackDat
 #elif defined(TYPE_GRAYSCALE)
   if (directStreamingPartialRefresh)
   {
-    // For partial refresh: convert 2bpp grayscale to 1bpp BW for fast refresh
-    size_t requiredSize = ((DISPLAY_RESOLUTION_X + 7) / 8) * rowCount;
-
-    if (bwConversionBuffer.canFit(requiredSize))
-    {
-      PixelPacker::convertGrayscaleToBW(blackData, bwConversionBuffer.data, DISPLAY_RESOLUTION_X, rowCount);
-      display.epd2.writeImage(bwConversionBuffer.data, 0, yStart, DISPLAY_RESOLUTION_X, rowCount, false, false, false);
-    }
-    else
-    {
-      Logger::log<Logger::Level::ERROR, Logger::Topic::DISP>("BW conversion buffer not available or too small\n");
-      display.epd2.writeImage_4G(blackData, 2, 0, yStart, DISPLAY_RESOLUTION_X, rowCount, false, false, false);
-    }
+    // For partial refresh: convert 2bpp grayscale to 1bpp BW in-place
+    PixelPacker::convertGrayscaleToBW(const_cast<uint8_t *>(blackData), DISPLAY_RESOLUTION_X, rowCount);
+    display.epd2.writeImage(blackData, 0, yStart, DISPLAY_RESOLUTION_X, rowCount, false, false, false);
   }
   else
   {
@@ -725,10 +672,6 @@ void finishDirectStreaming()
     Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Finishing direct streaming with FULL refresh\n");
     display.epd2.refresh(false);
   }
-
-#if defined(TYPE_GRAYSCALE)
-  bwConversionBuffer.release();
-#endif
 }
 
 void refreshDisplay() { display.epd2.refresh(false); }

@@ -118,17 +118,16 @@ void packPixel7C(uint8_t *buffer, uint16_t x, uint8_t color7)
     buffer[byteIndex] = (buffer[byteIndex] & 0x0F) | ((color7 & 0x0F) << 4); // Even pixel: high nibble
 }
 
-
-void convertGrayscaleToBW(const uint8_t *src2bpp, uint8_t *dst1bpp, uint16_t width, uint16_t rowCount)
+size_t convertGrayscaleToBW(uint8_t *buffer, uint16_t width, uint16_t rowCount)
 {
   uint16_t srcBytesPerRow = (width + 3) / 4; // 2bpp = 4 pixels per byte
   uint16_t dstBytesPerRow = (width + 7) / 8; // 1bpp = 8 pixels per byte
 
+  size_t srcOffset = 0;
+  size_t dstOffset = 0;
+
   for (uint16_t row = 0; row < rowCount; row++)
   {
-    const uint8_t *srcRow = src2bpp + row * srcBytesPerRow;
-    uint8_t *dstRow = dst1bpp + row * dstBytesPerRow;
-
     for (uint16_t dstByte = 0; dstByte < dstBytesPerRow; dstByte++)
     {
       uint8_t outByte = 0;
@@ -140,20 +139,24 @@ void convertGrayscaleToBW(const uint8_t *src2bpp, uint8_t *dst1bpp, uint16_t wid
           break;
 
         // Extract 2-bit grayscale value (0=black, 1=dark gray, 2=light gray, 3=white)
-        uint16_t srcByteIndex = pixelIndex / 4;
+        uint16_t srcByteIndex = srcOffset + (pixelIndex / 4);
         uint8_t srcBitOffset = (3 - (pixelIndex % 4)) * 2; // MSB first
-        uint8_t grayValue = (srcRow[srcByteIndex] >> srcBitOffset) & 0x03;
+        uint8_t grayValue = (buffer[srcByteIndex] >> srcBitOffset) & 0x03;
 
-        // Threshold: >= 2 becomes white (1), < 2 becomes black (0)
+        // Only white (3) stays white, everything else becomes black
         // In e-paper: 1 = white, 0 = black
-        if (grayValue >= 2)
+        if (grayValue == 3)
         {
           outByte |= (0x80 >> bit); // Set bit for white
         }
       }
-      dstRow[dstByte] = outByte;
+      buffer[dstOffset + dstByte] = outByte;
     }
+    srcOffset += srcBytesPerRow;
+    dstOffset += dstBytesPerRow;
   }
+
+  return dstOffset; // Return new size (1bpp)
 }
 
 uint8_t gxepdTo4CColor(uint16_t color)
