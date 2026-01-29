@@ -141,12 +141,14 @@ void downloadAndDisplayImage(HttpClient &httpClient)
     }
 
     // Stream image data directly to display buffer
-    bool success = connectionReady && ImageHandler::readImageDataDirect(httpClient);
+    ImageHandler::ImageStreamingResult result = ImageHandler::ImageStreamingResult::FatalError;
+    if (connectionReady)
+      result = ImageHandler::readImageDataDirect(httpClient);
 
     // Always close connection before proceeding
     httpClient.stop();
 
-    if (success)
+    if (result == ImageHandler::ImageStreamingResult::Success)
     {
       StateManager::endDownloadTimer();
       Wireless::turnOff();
@@ -161,11 +163,15 @@ void downloadAndDisplayImage(HttpClient &httpClient)
       Display::enableLightSleepDuringRefresh(false);
       StateManager::endRefreshTimer();
     }
-    else
+    else if (result == ImageHandler::ImageStreamingResult::FallbackToPaged)
     {
       Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>(
         "Direct streaming failed, falling back to paged mode\n");
       useDirectStreaming = false; // Fall through to paged mode below
+    }
+    else // FatalError
+    {
+      Logger::log<Logger::Level::ERROR, Logger::Topic::IMAGE>("Fatal error during direct image streaming, aborting\n");
     }
   }
 

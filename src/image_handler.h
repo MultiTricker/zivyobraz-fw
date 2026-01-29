@@ -5,12 +5,21 @@
 
 namespace ImageHandler
 {
+
+// Result of image streaming operation
+enum class ImageStreamingResult
+{
+  Success,
+  FallbackToPaged,
+  FatalError
+};
+
 // Read image data from HTTP client (paged mode - for backward compatibility)
 void readImageData(HttpClient &http);
 
 // Read image data with direct streaming to display controller
-// Returns true if direct streaming was used, false if fell back to paged mode
-bool readImageDataDirect(HttpClient &http);
+// Returns ImageStreamingResult to indicate success, fallback, or fatal error
+ImageStreamingResult readImageDataDirect(HttpClient &http);
 
 // Check if direct streaming mode is available
 bool isDirectStreamingAvailable();
