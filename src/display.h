@@ -58,10 +58,13 @@
 // #define DISPLAY_TYPE GDEM133Z91    // 960x680, 13.3"
 
 // 4C
+// #define DISPLAY_TYPE GDEM0154F51H  // 200x200, 1.54"
 // #define DISPLAY_TYPE GDEY0213F51   // 128x250, 2.13"
 // #define DISPLAY_TYPE GDEY0266F51H  // 184x460, 2.66"
 // #define DISPLAY_TYPE GDEY029F51H   // 168x384, 2.9"
 // #define DISPLAY_TYPE WS3004YRBW    // 168x400, 3.00"
+// #define DISPLAY_TYPE GDEM035F51    // 184x384, 3.5"
+// #define DISPLAY_TYPE GDEM0397F81   // 800x480, 3.97"
 // #define DISPLAY_TYPE GDEY0420F51   // 400x300, 4.2"
 // #define DISPLAY_TYPE GDEM042F52    // 400x300, 4.2"
 // #define DISPLAY_TYPE WS437YRBW     // 512x368, 4.37"
@@ -168,23 +171,26 @@ static constexpr const char COLOR_TYPE_STRING[] = XSTR(COLOR_TYPE);
   #define DT_GDEY1248Z51 36
   #define DT_GDEM133Z91 37
   // 4C displays
-  #define DT_GDEY0213F51 38
-  #define DT_GDEY0266F51H 39
-  #define DT_GDEY029F51H 40
-  #define DT_WS3004YRBW 41
-  #define DT_GDEY0420F51 42
-  #define DT_GDEM042F52 43
-  #define DT_WS437YRBW 44
-  #define DT_GDEY0579F51 45
-  #define DT_GDEY0583F41 46
-  #define DT_GDEM075F52 47
-  #define DT_GDEM102F91 48
-  #define DT_GDEY116F51 49
-  #define DT_GDEY116F91 50
+  #define DT_GDEM0154F51H 38
+  #define DT_GDEY0213F51 39
+  #define DT_GDEY0266F51H 40
+  #define DT_GDEY029F51H 41
+  #define DT_WS3004YRBW 42
+  #define DT_GDEM035F51 43
+  #define DT_GDEM0397F81 44
+  #define DT_GDEY0420F51 45
+  #define DT_GDEM042F52 46
+  #define DT_WS437YRBW 47
+  #define DT_GDEY0579F51 48
+  #define DT_GDEY0583F41 49
+  #define DT_GDEM075F52 50
+  #define DT_GDEM102F91 51
+  #define DT_GDEY116F51 52
+  #define DT_GDEY116F91 53
   // 7C displays
-  #define DT_GDEP0565D90 51
-  #define DT_GDEY073D46 52
-  #define DT_GDEP073E01 53
+  #define DT_GDEP0565D90 54
+  #define DT_GDEY073D46 55
+  #define DT_GDEP073E01 56
 
 // Create DISPLAY_TYPE_STRING constant
 static constexpr const char DISPLAY_TYPE_STRING[] = XSTR(DISPLAY_TYPE);
