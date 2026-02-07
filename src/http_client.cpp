@@ -390,19 +390,16 @@ bool HttpClient::performOTAUpdate()
     return false;
   }
 
-  Logger::log<Logger::Level::INFO, Logger::Topic::SYSTEM>("Starting OTA update from: {}\n", m_otaUrl);
-
   // Close any existing connection before OTA
   stop();
 
-  WiFiClientSecure otaClient;
-  otaClient.setInsecure(); // Skip certificate validation
+  Logger::log<Logger::Level::INFO, Logger::Topic::SYSTEM>("Starting OTA update from: {}\n", m_otaUrl);
 
   // Configure HTTPUpdate
   httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
   httpUpdate.rebootOnUpdate(true); // Automatically restart on success
 
-  t_httpUpdate_return result = httpUpdate.update(otaClient, m_otaUrl);
+  t_httpUpdate_return result = httpUpdate.update(m_client, m_otaUrl);
 
   switch (result)
   {
