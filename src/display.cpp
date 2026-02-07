@@ -7,6 +7,9 @@
 // ESP32 sleep functions for light sleep during display refresh
 #include <esp_sleep.h>
 
+// Server name defined in main.cpp
+extern const String serverName;
+
 // Calculate optimal page height based on buffer size, display dimensions, and bits per pixel
 // Returns full height if it fits in buffer, otherwise the maximum height that fits
 #define CALC_PAGE_HEIGHT(height, width, bpp)                                                                           \
@@ -725,6 +728,8 @@ void showWiFiError(const String &hostname, const String &password, const String 
   const String qrString = "WIFI:S:" + hostname + ";T:WPA;P:" + password + ";;";
   // Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>("Generated string: {}\n", qrString);
 
+  Board::DeviceInfo devInfo = Board::getDeviceInfo();
+
   powerOnAndInit();
   setToFullWindow();
   setToFirstPage();
@@ -732,56 +737,64 @@ void showWiFiError(const String &hostname, const String &password, const String 
   {
     if (DISPLAY_RESOLUTION_X >= 800)
     {
-      display.fillRect(0, 0, DISPLAY_RESOLUTION_X, 90, GxEPD_BLACK);
+      display.fillRect(0, 0, DISPLAY_RESOLUTION_X, 80, GxEPD_BLACK);
       display.setTextColor(GxEPD_WHITE);
       display.setFont(&OpenSansSB_24px);
-      centeredText("No Wi-Fi configured OR connection lost", DISPLAY_RESOLUTION_X / 2, 28);
+      centeredText("No Wi-Fi configured OR connection lost", DISPLAY_RESOLUTION_X / 2, 20);
       display.setFont(&OpenSansSB_18px);
-      centeredText("Retries in a few minutes if lost.", DISPLAY_RESOLUTION_X / 2, 64);
+      centeredText("Retries in a few minutes if lost.", DISPLAY_RESOLUTION_X / 2, 56);
       display.setTextColor(GxEPD_BLACK);
-      centeredText("To setup or change Wi-Fi configuration", DISPLAY_RESOLUTION_X / 2, 120);
-      centeredText("(with mobile data turned off):", DISPLAY_RESOLUTION_X / 2, 145);
-      centeredText("1) Connect to this AP:", DISPLAY_RESOLUTION_X / 4, (DISPLAY_RESOLUTION_Y / 2) - 50);
-      centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4, (DISPLAY_RESOLUTION_Y / 2) - 50);
+      centeredText("To setup or change Wi-Fi configuration (with mobile data turned off):", DISPLAY_RESOLUTION_X / 2,
+                   106);
+      centeredText("1) Connect to this AP:", DISPLAY_RESOLUTION_X / 4, 160);
+      centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4, 160);
 
-      drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 40, DISPLAY_RESOLUTION_X / 4, 4);
-      display.drawLine(DISPLAY_RESOLUTION_X / 2 - 1, (DISPLAY_RESOLUTION_Y / 2) - 60, DISPLAY_RESOLUTION_X / 2 - 1,
-                       (DISPLAY_RESOLUTION_Y / 2) + 170, GxEPD_BLACK);
-      display.drawLine(DISPLAY_RESOLUTION_X / 2, (DISPLAY_RESOLUTION_Y / 2) - 60, DISPLAY_RESOLUTION_X / 2,
-                       (DISPLAY_RESOLUTION_Y / 2) + 170, GxEPD_BLACK);
-      drawQrCode(urlWeb.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 40, DISPLAY_RESOLUTION_X * 3 / 4, 4);
+      drawQrCode(qrString.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 15, DISPLAY_RESOLUTION_X / 4, 4);
+      display.drawLine(DISPLAY_RESOLUTION_X / 2 - 1, 145, DISPLAY_RESOLUTION_X / 2 - 1, DISPLAY_RESOLUTION_Y - 75,
+                       GxEPD_BLACK);
+      display.drawLine(DISPLAY_RESOLUTION_X / 2, 145, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 75, GxEPD_BLACK);
+      drawQrCode(urlWeb.c_str(), 4, (DISPLAY_RESOLUTION_Y / 2) + 15, DISPLAY_RESOLUTION_X * 3 / 4, 4);
 
-      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, (DISPLAY_RESOLUTION_Y / 2) + 130);
-      centeredText("Password: " + password, DISPLAY_RESOLUTION_X / 4, (DISPLAY_RESOLUTION_Y / 2) + 155);
-      centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, (DISPLAY_RESOLUTION_Y / 2) + 130);
-      display.fillRect(0, DISPLAY_RESOLUTION_Y - 40, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
+      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, (DISPLAY_RESOLUTION_Y / 2) + 110);
+      centeredText("Password: " + password, DISPLAY_RESOLUTION_X / 4, (DISPLAY_RESOLUTION_Y / 2) + 135);
+      centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, (DISPLAY_RESOLUTION_Y / 2) + 110);
+      display.fillRect(0, DISPLAY_RESOLUTION_Y - 56, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
       display.setTextColor(GxEPD_WHITE);
-      centeredText("Documentation: " + wikiUrl, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 22);
+      display.setFont(&OpenSansSB_14px);
+      centeredText(devInfo.hw, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 41);
+      centeredText(devInfo.runtime, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 19);
     }
     else if (DISPLAY_RESOLUTION_X >= 600)
     {
       display.fillRect(0, 0, DISPLAY_RESOLUTION_X, 70, GxEPD_BLACK);
       display.setTextColor(GxEPD_WHITE);
+
       display.setFont(&OpenSansSB_20px);
       centeredText("No Wi-Fi configured OR connection lost", DISPLAY_RESOLUTION_X / 2, 20);
       display.setFont(&OpenSansSB_14px);
-      centeredText("Retries in a few minutes if lost.", DISPLAY_RESOLUTION_X / 2, 50);
+      centeredText("Retries in a few minutes if lost.", DISPLAY_RESOLUTION_X / 2, 49);
       display.setTextColor(GxEPD_BLACK);
-      centeredText("To setup or change Wi-Fi configuration", DISPLAY_RESOLUTION_X / 2, 90);
-      centeredText("(with mobile data turned off):", DISPLAY_RESOLUTION_X / 2, 110);
-      centeredText("1) Connect to this AP:", DISPLAY_RESOLUTION_X / 4, 140);
-      centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4, 140);
-      int qrScale = (DISPLAY_RESOLUTION_Y < 280) ? 2 : 3;
-      drawQrCode(qrString.c_str(), 4, 225, DISPLAY_RESOLUTION_X / 4 + 18, qrScale);
-      display.drawLine(DISPLAY_RESOLUTION_X / 2 - 1, 135, DISPLAY_RESOLUTION_X / 2 - 1, 310, GxEPD_BLACK);
-      display.drawLine(DISPLAY_RESOLUTION_X / 2, 135, DISPLAY_RESOLUTION_X / 2, 310, GxEPD_BLACK);
-      drawQrCode(urlWeb.c_str(), 4, 225, DISPLAY_RESOLUTION_X * 3 / 4 + 18, qrScale);
-      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 280);
-      centeredText("Password: " + password, DISPLAY_RESOLUTION_X / 4, 300);
-      centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, 280);
-      display.fillRect(0, DISPLAY_RESOLUTION_Y - 36, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
+
+      centeredText("To setup or change Wi-Fi configuration (mobile data off):", DISPLAY_RESOLUTION_X / 2, 91);
+      centeredText("1) Connect to this AP:", DISPLAY_RESOLUTION_X / 4, 135);
+      centeredText("2) Open in web browser:", DISPLAY_RESOLUTION_X * 3 / 4, 135);
+
+      int qrScale = (DISPLAY_RESOLUTION_Y < 350) ? 2 : 3;
+      drawQrCode(qrString.c_str(), 4, 220, DISPLAY_RESOLUTION_X / 4 + 18, qrScale);
+      display.drawLine(DISPLAY_RESOLUTION_X / 2 - 1, 120, DISPLAY_RESOLUTION_X / 2 - 1, DISPLAY_RESOLUTION_Y - 75,
+                       GxEPD_BLACK);
+      display.drawLine(DISPLAY_RESOLUTION_X / 2, 120, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 75, GxEPD_BLACK);
+      drawQrCode(urlWeb.c_str(), 4, 220, DISPLAY_RESOLUTION_X * 3 / 4 + 18, qrScale);
+
+      centeredText("SSID: " + hostname, DISPLAY_RESOLUTION_X / 4, 270);
+      centeredText("Password: " + password, DISPLAY_RESOLUTION_X / 4, 290);
+      centeredText(urlWeb, DISPLAY_RESOLUTION_X * 3 / 4, 270);
+
+      display.fillRect(0, DISPLAY_RESOLUTION_Y - 56, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_BLACK);
       display.setTextColor(GxEPD_WHITE);
-      centeredText("Documentation: " + wikiUrl, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 24);
+      display.setFont(&OpenSansSB_14px);
+      centeredText(devInfo.hw, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 41);
+      centeredText(devInfo.runtime, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 19);
     }
     else if (DISPLAY_RESOLUTION_X >= 400)
     {
@@ -833,7 +846,7 @@ void showWiFiError(const String &hostname, const String &password, const String 
       setTextPos("Setup or change cfg:", 2, 44);
       setTextPos("AP: ..." + hostname.substring(hostname.length() - 6), 2, 64);
       setTextPos("Password: " + password, 2, 84);
-      setTextPos("Help: zivyobraz.eu ", 2, 104);
+      setTextPos("Help: " + serverName, 2, 104);
 
       drawQrCode(qrString.c_str(), 3, 93, small_resolution_x - 28, 3);
     }

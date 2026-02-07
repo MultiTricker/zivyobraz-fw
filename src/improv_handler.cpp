@@ -9,6 +9,7 @@
 
 // External configuration
 extern const char *firmware;
+extern const String serverName;
 
 namespace ImprovHandler
 {
@@ -58,7 +59,7 @@ void begin()
   if (!initialized)
   {
     static String deviceName = String(Board::getBoardType()) + " + " + Display::getDisplayType();
-    improvSerial.setDeviceInfo(ImprovTypes::ChipFamily::CF_ESP32, "ZivyObraz.eu", firmware, deviceName.c_str(), "");
+    improvSerial.setDeviceInfo(ImprovTypes::ChipFamily::CF_ESP32, serverName.c_str(), firmware, deviceName.c_str(), "");
     improvSerial.onImprovConnected(onImprovWiFiConnected);
     initialized = true;
   }
