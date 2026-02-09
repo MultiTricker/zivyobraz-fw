@@ -347,6 +347,13 @@ const char *getResetReasonString();
 unsigned long checkButtonPressDuration();
 
 constexpr const char *getBoardType() { return BOARD_TYPE_STRING; }
+
+struct DeviceInfo
+{
+  String hw;
+  String runtime;
+};
+DeviceInfo getDeviceInfo();
 } // namespace Board
 
 #endif // BOARD_H

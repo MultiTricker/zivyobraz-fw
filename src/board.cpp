@@ -3,6 +3,12 @@
 #include "display.h"
 #include "logger.h"
 #include "sensor.h"
+#include "utils.h"
+#include "wireless.h"
+
+// Server name and firmware version defined in main.cpp
+extern const String serverName;
+extern const char *firmware;
 
 // M5Stack CoreInk
 #ifdef M5StackCoreInk
@@ -341,4 +347,58 @@ const char *getResetReasonString()
       return "unknown";
   }
 }
+
+DeviceInfo getDeviceInfo()
+{
+  DeviceInfo info;
+
+  // Reserve memory upfront to avoid reallocations
+  info.hw.reserve(128);
+  info.runtime.reserve(192);
+
+  // Line 1 - hardware identity
+  info.hw = serverName + " | ";
+  info.hw += getBoardType();
+  info.hw += " | ";
+  info.hw += Display::getDisplayType();
+  info.hw += " | ";
+  info.hw += String(Display::getResolutionX()) + "x" + String(Display::getResolutionY());
+  info.hw += " | ";
+  info.hw += Display::getColorType();
+
+  // Line 2 - runtime / system info
+  info.runtime = "FW: ";
+  info.runtime += firmware;
+  info.runtime += " (";
+  info.runtime += BUILD_DATE;
+  info.runtime += ") | ";
+  info.runtime += Wireless::getMacAddress();
+
+  // Battery voltage
+  info.runtime += " | Bat: ";
+  info.runtime += String(getBatteryVoltage(), 2);
+  info.runtime += "V";
+
+#ifdef SENSOR
+  // Sensor type if detected
+  Sensor &sensor = Sensor::getInstance();
+  const char *sensorType = sensor.getSensorTypeStr();
+  if (sensorType != nullptr && strlen(sensorType) > 0)
+  {
+    info.runtime += " | Sensor: ";
+    info.runtime += sensorType;
+  }
+#endif
+
+  // Saved SSID if configured
+  String savedSSID = Wireless::getSSID();
+  if (savedSSID.length() > 0)
+  {
+    info.runtime += " | SSID: ";
+    info.runtime += savedSSID;
+  }
+
+  return info;
+}
+
 } // namespace Board

@@ -39,6 +39,7 @@
 // Configuration
 ///////////////////////////////////////////////
 
+extern const String serverName = "zivyobraz.eu";
 const char *host = "cdn.zivyobraz.eu";
 const char *firmware = "3.0";
 const String wifiPassword = "zivyobraz";
