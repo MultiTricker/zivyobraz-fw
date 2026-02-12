@@ -1,4 +1,5 @@
 # Živý obraz - firmware
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/MultiTricker/zivyobraz-fw)
 
 Welcome to the Živý obraz repository with firmware for e-Paper development boards based on ESP32/ESP32-S3. Live Image is used to feed ePaper/e-Ink displays with image data from a web server, whether it is a PNG or a custom basic RLE format called Z1/Z2/Z3.
 
