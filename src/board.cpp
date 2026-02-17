@@ -23,9 +23,14 @@ extern const char *firmware;
 static SFE_MAX1704X lipo(MAX1704X_MAX17048);
 #endif
 
-#if (defined ESP32S3Adapter) || (defined ES3ink) || (defined SVERIO_PAPERBOARD_SPI)
+#if (defined ESP32S3Adapter) || (defined ES3ink) || (defined SVERIO_PAPERBOARD_SPI) || (defined SVERIO_PAPERBOARD_EPDIY)
   #include <esp_adc_cal.h>
   #include <soc/adc_channel.h>
+  #include <driver/adc.h>
+#endif
+
+#if defined(SVERIO_PAPERBOARD_EPDIY)
+  #include <driver/i2c.h>
 #endif
 
 namespace Board
@@ -46,7 +51,7 @@ void setupHW()
   M5.begin(false, false, true);
   Display::initM5();
   M5.update();
-#elif !defined SEEEDSTUDIO_RETERMINAL
+#elif !defined SEEEDSTUDIO_RETERMINAL && !defined SVERIO_PAPERBOARD_EPDIY
   pinMode(ePaperPowerPin, OUTPUT);
 #endif
 
@@ -61,12 +66,19 @@ void setupHW()
   delay(50);
 #endif
 
+  // Initialize display (epdiy boards set up I2C here via TPS65185 init)
+  Display::init();
+
 #ifdef SENSOR
+  #if defined(SVERIO_PAPERBOARD_EPDIY)
+  // Epdiy already installed the ESP-IDF I2C driver for TPS65185.
+  // Arduino Wire doesn't know about it, so delete and let Wire reinstall
+  // on the same port. Epdiy's i2c_master_cmd_begin() still works afterward.
+  i2c_driver_delete(I2C_NUM_0);
+  Wire.begin(PIN_SDA, PIN_SCL);
+  #endif
   Sensor::getInstance().init();
 #endif
-
-  // Initialize display
-  Display::init();
 }
 
 void setEPaperPowerOn(bool on)
@@ -74,7 +86,7 @@ void setEPaperPowerOn(bool on)
   // use HIGH/LOW notation for better readability
 #if (defined ES3ink) || (defined MakerBadge_revD) || (defined SVERIO_PAPERBOARD_SPI)
   digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
-#elif (!defined M5StackCoreInk) && (!defined SEEEDSTUDIO_RETERMINAL)
+#elif (!defined M5StackCoreInk) && (!defined SEEEDSTUDIO_RETERMINAL) && (!defined SVERIO_PAPERBOARD_EPDIY)
   digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
 #endif
 }
@@ -189,24 +201,28 @@ float getBatteryVoltage()
   digitalWrite(enableBattery, HIGH);
 
 #elif defined SVERIO_PAPERBOARD_SPI
-  // Battery measurement with calibrated ADC on SVERIO SPI Paperboard
-  esp_adc_cal_characteristics_t adc_cal;
-  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_WIDTH_BIT_12, 0, &adc_cal);
+  // Battery measurement with calibrated linear approximation
+  // mV = CAL_SLOPE * raw + CAL_INTERCEPT (R²=0.9946, max error ~40 mV)
+  adc1_config_width(ADC_WIDTH_BIT_12);
   adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_12);
 
   // Enable the measurement path via PMOS gate
+  pinMode(enableBattery, OUTPUT);
   digitalWrite(enableBattery, HIGH);
   delay(200);
 
-  uint32_t raw = adc1_get_raw(vBatPin);
-  uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw, &adc_cal);
+  // Average 16 samples for stability
+  uint32_t rawSum = 0;
+  for (int i = 0; i < 16; i++)
+  {
+    rawSum += adc1_get_raw(vBatPin);
+    delay(5);
+  }
 
   digitalWrite(enableBattery, LOW);
 
-  const uint32_t upper_divider = 1000;
-  const uint32_t lower_divider = 1000;
-  volt = (float)(upper_divider + lower_divider) / lower_divider / 1000 * millivolts;
-  volt = volt * dividerRatio;
+  uint32_t rawAvg = rawSum / 16;
+  volt = (CAL_SLOPE * rawAvg + CAL_INTERCEPT) / 1000.0f;
 
 #elif defined TTGO_T5_v23
   esp_adc_cal_characteristics_t adc_chars;
@@ -237,6 +253,32 @@ float getBatteryVoltage()
   volt = ((float)analogReadMilliVolts(vBatPin) * dividerRatio) / 1000;
   digitalWrite(enableBattery, LOW);
   pinMode(enableBattery, INPUT);
+
+#elif defined SVERIO_PAPERBOARD_EPDIY
+  // Battery measurement with calibrated linear approximation
+  // mV = CAL_SLOPE * raw + CAL_INTERCEPT (R²=0.9956, max error ~34 mV)
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::BATTERY>("Reading on SVERIO Paperboard EPDIY board\n");
+
+  adc1_config_width(ADC_WIDTH_BIT_12);
+  adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_12);
+
+  // Enable battery voltage measurement circuit via GPIO2
+  pinMode(enableBattery, OUTPUT);
+  digitalWrite(enableBattery, HIGH);
+  delay(200);
+
+  // Average 16 samples for stability
+  uint32_t rawSum = 0;
+  for (int i = 0; i < 16; i++)
+  {
+    rawSum += adc1_get_raw(vBatPin);
+    delay(5);
+  }
+
+  digitalWrite(enableBattery, LOW);
+
+  uint32_t rawAvg = rawSum / 16;
+  volt = (CAL_SLOPE * rawAvg + CAL_INTERCEPT) / 1000.0f;
 
 #else
   volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);

@@ -10,6 +10,7 @@
 // #define COLOR_TYPE 4C        // 4 colors - black, white, red and yellow
 // #define COLOR_TYPE GRAYSCALE // grayscale - 4 colors
 // #define COLOR_TYPE 7C        // 7 colors
+// #define COLOR_TYPE 8G        // 8-level grayscale (epdiy driver only)
 
 //////////////////////////////////////////////////////////////
 // Uncomment for correct ePaper you have
@@ -101,6 +102,7 @@
   #define CT_3C 2
   #define CT_4C 3
   #define CT_7C 4
+  #define CT_8G 5
 
 // Create COLOR_TYPE_STRING constant
 static constexpr const char COLOR_TYPE_STRING[] = XSTR(COLOR_TYPE);
@@ -117,6 +119,8 @@ static constexpr const char COLOR_TYPE_STRING[] = XSTR(COLOR_TYPE);
     #define TYPE_GRAYSCALE
   #elif COLOR_ID == CT_7C
     #define TYPE_7C
+  #elif COLOR_ID == CT_8G
+    #define TYPE_8G
   #else
     #pragma message("COLOR_TYPE: " XSTR(COLOR_TYPE))
     #error "COLOR_TYPE not supported!"
@@ -193,6 +197,9 @@ static constexpr const char COLOR_TYPE_STRING[] = XSTR(COLOR_TYPE);
   #define DT_GDEP0565D90 55
   #define DT_GDEY073D46 56
   #define DT_GDEP073E01 57
+  // epdiy displays (parallel interface)
+  #define DT_ED097TC2_EPDIY 100
+  #define DT_ED060XC3_EPDIY 101
 
 // Create DISPLAY_TYPE_STRING constant
 static constexpr const char DISPLAY_TYPE_STRING[] = XSTR(DISPLAY_TYPE);
@@ -201,7 +208,8 @@ static constexpr const char DISPLAY_TYPE_STRING[] = XSTR(DISPLAY_TYPE);
   #define DISPLAY_ID XCAT(DT_, DISPLAY_TYPE)
 
   // Validate DISPLAY_TYPE - DISPLAY_ID will be 0 if DT_<DISPLAY_TYPE> is not defined
-  #if DISPLAY_ID < DT_GDEW0154T8 || DISPLAY_ID > DT_GDEP073E01
+  #if (DISPLAY_ID < DT_GDEW0154T8 || DISPLAY_ID > DT_GDEP073E01) &&                                                    \
+    (DISPLAY_ID < DT_ED097TC2_EPDIY || DISPLAY_ID > DT_ED060XC3_EPDIY)
     #pragma message("DISPLAY_TYPE: " XSTR(DISPLAY_TYPE))
     #error "DISPLAY_TYPE not supported!"
   #endif
