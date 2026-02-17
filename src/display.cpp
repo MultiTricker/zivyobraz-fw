@@ -4,6 +4,10 @@
 #include "pixel_packer.h"
 #include "logger.h"
 
+#ifdef USE_EPDIY_DRIVER
+  #include "epdiy_gxepd2_bridge.h"
+#endif
+
 // ESP32 sleep functions for light sleep during display refresh
 #include <esp_sleep.h>
 
@@ -26,6 +30,8 @@ static Adafruit_NeoPixel pixel(1, RGBledPin, NEO_GRB + NEO_KHZ800);
   #include "SPI.h"
 static SPIClass hspi(HSPI);
 #endif
+
+#ifndef USE_EPDIY_DRIVER
 
 ///////////////////////
 // ePaper library includes based on type
@@ -360,6 +366,12 @@ GxEPD2_7C<GxEPD2_730c_GDEP073E01, CALC_PAGE_HEIGHT(GxEPD2_730c_GDEP073E01::HEIGH
 
 #endif
 
+#else
+
+static EpdiyDisplay display;
+
+#endif // USE_EPDIY_DRIVER
+
 // Font
 #include <gfxfont.h>
 // #include "fonts/OpenSansSB_12px.h"
@@ -493,6 +505,10 @@ void resetPixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b)
 
 void drawPixel(int16_t xCord, int16_t yCord, uint16_t color) { display.drawPixel(xCord, yCord, color); }
 
+#ifdef USE_EPDIY_DRIVER
+void drawPixel8bit(int16_t xCord, int16_t yCord, uint8_t gray) { display.drawPixel8bit(xCord, yCord, gray); }
+#endif
+
 void drawQrCode(const char *qrStr, int qrSize, int yCord, int xCord, byte qrSizeMulti)
 {
   QRCode qrcode;
@@ -596,9 +612,15 @@ void setBusyCallback(void (*callback)(const void *))
 
 bool supportsDirectStreaming()
 {
+#ifdef USE_EPDIY_DRIVER
+  // Epdiy uses direct framebuffer access with full 16-level grayscale support
+  // Direct streaming would reduce this to 4 levels, so disable it
+  return false;
+#else
   // All display types now support direct streaming
   // BW, Grayscale, 3C, 4C, and 7C displays support the setPaged()/writeNative()/refresh() API
   return true;
+#endif
 }
 
 void initDirectStreaming(bool partialRefresh, uint16_t maxRowCount)
@@ -708,9 +730,23 @@ void showNoWiFiError(uint64_t sleepSeconds, const String &wikiUrl)
   {
     display.fillRect(0, 0, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_WHITE);
     display.setTextColor(GxEPD_BLACK);
-    display.setFont(&OpenSansSB_20px);
+    if (DISPLAY_RESOLUTION_X >= 1200)
+    {
+      display.setFont(&OpenSansSB_24px);
+    }
+    else
+    {
+      display.setFont(&OpenSansSB_20px);
+    }
     centeredText("Cannot connect to Wi-Fi", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y / 2 - 15);
-    display.setFont(&OpenSansSB_16px);
+    if (DISPLAY_RESOLUTION_X >= 1200)
+    {
+      display.setFont(&OpenSansSB_24px);
+    }
+    else
+    {
+      display.setFont(&OpenSansSB_16px);
+    }
     centeredText("Retries in " + String((sleepSeconds + 30) / 60) + " minutes.", DISPLAY_RESOLUTION_X / 2,
                  DISPLAY_RESOLUTION_Y / 2 + 15);
     display.setFont(&OpenSansSB_14px);
@@ -859,5 +895,6 @@ void showWiFiError(const String &hostname, const String &password, const String 
   delay(100);
   // Disable power supply for ePaper
   Board::setEPaperPowerOn(false);
+
 }
 } // namespace Display
