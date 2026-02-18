@@ -260,17 +260,17 @@ static uint8_t mapColorValue8bit(uint8_t pixelColor)
     case 0x1:
       return 0x00; // Black
     case 0x2:
-      return 0xEE; // Light grey 1  (was 0xEE)
+      return 0xEE; // Light grey 1
     case 0x3:
-      return 0xDD; // Dark grey 1   (was 0xBB)
+      return 0xDD; // Dark grey 1
     case 0x4:
-      return 0xEE; // Light grey 2  (was 0xDD)
+      return 0xEE; // Light grey 2
     case 0x5:
-      return 0xDD; // Light grey 3  (was 0xCC)
+      return 0xDD; // Light grey 3
     case 0x6:
-      return 0xBB; // Dark grey 2   (was 0x99)
+      return 0xBB; // Dark grey 2
     case 0x7:
-      return 0x88; // Dark grey 3   (was 0x55)
+      return 0x88; // Dark grey 3
     default:
       return 0xFF; // White
   }
