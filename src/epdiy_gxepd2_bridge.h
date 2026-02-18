@@ -17,9 +17,11 @@
   #define GxEPD_ORANGE 0xFD20
 #endif
 
-class EpdiyDisplay : public Adafruit_GFX {
+class EpdiyDisplay : public Adafruit_GFX
+{
 public:
-  struct EpdiyEpd2 {
+  struct EpdiyEpd2
+  {
     explicit EpdiyEpd2(EpdiyDisplay *owner);
 
     int16_t WIDTH;
@@ -31,14 +33,14 @@ public:
     void setBusyCallback(void (*callback)(const void *));
     void setBusyCallback(void (*callback)(const void *), void *context);
     void refresh(bool partial);
-    void writeImage(const uint8_t *black, const uint8_t *color, int16_t x, int16_t y, int16_t w, int16_t h,
-                    bool invert, bool mirror, bool pgm);
+    void writeImage(const uint8_t *black, const uint8_t *color, int16_t x, int16_t y, int16_t w, int16_t h, bool invert,
+                    bool mirror, bool pgm);
     void writeImage(const uint8_t *black, int16_t x, int16_t y, int16_t w, int16_t h, bool invert, bool mirror,
                     bool pgm);
     void writeImage_4G(const uint8_t *data, uint8_t level, int16_t x, int16_t y, int16_t w, int16_t h, bool invert,
                        bool mirror, bool pgm);
-    void writeNative(const uint8_t *data, const uint8_t *color, int16_t x, int16_t y, int16_t w, int16_t h,
-                     bool invert, bool mirror, bool pgm);
+    void writeNative(const uint8_t *data, const uint8_t *color, int16_t x, int16_t y, int16_t w, int16_t h, bool invert,
+                     bool mirror, bool pgm);
 
   private:
     EpdiyDisplay *owner_;

@@ -895,6 +895,5 @@ void showWiFiError(const String &hostname, const String &password, const String 
   delay(100);
   // Disable power supply for ePaper
   Board::setEPaperPowerOn(false);
-
 }
 } // namespace Display

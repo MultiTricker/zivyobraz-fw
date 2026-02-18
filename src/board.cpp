@@ -70,13 +70,13 @@ void setupHW()
   Display::init();
 
 #ifdef SENSOR
-#if defined(SVERIO_PAPERBOARD_EPDIY)
+  #if defined(SVERIO_PAPERBOARD_EPDIY)
   // Epdiy already installed the ESP-IDF I2C driver for TPS65185.
   // Arduino Wire doesn't know about it, so delete and let Wire reinstall
   // on the same port. Epdiy's i2c_master_cmd_begin() still works afterward.
   i2c_driver_delete(I2C_NUM_0);
   Wire.begin(PIN_SDA, PIN_SCL);
-#endif
+  #endif
   Sensor::getInstance().init();
 #endif
 }

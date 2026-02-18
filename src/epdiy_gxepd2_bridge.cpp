@@ -1,47 +1,49 @@
 #ifdef USE_EPDIY_DRIVER
 
-#include "board.h"
-#include "display.h"
-#include "epdiy_gxepd2_bridge.h"
+  #include "board.h"
+  #include "display.h"
+  #include "epdiy_gxepd2_bridge.h"
 
-// Map DISPLAY_TYPE to epdiy display descriptor
-#if DISPLAY_ID == DT_ED097TC2_EPDIY
-  #define EPDIY_DISPLAY ED097TC2
-  #ifndef EPDIY_VCOM
-    #define EPDIY_VCOM 1500
+  // Map DISPLAY_TYPE to epdiy display descriptor
+  #if DISPLAY_ID == DT_ED097TC2_EPDIY
+    #define EPDIY_DISPLAY ED097TC2
+    #ifndef EPDIY_VCOM
+      #define EPDIY_VCOM 1500
+    #endif
+  #elif DISPLAY_ID == DT_ED060XC3_EPDIY
+    #define EPDIY_DISPLAY ED060XC3
+    #ifndef EPDIY_VCOM
+      #define EPDIY_VCOM 300
+    #endif
+  #else
+    #error "Unknown epdiy display type"
   #endif
-#elif DISPLAY_ID == DT_ED060XC3_EPDIY
-  #define EPDIY_DISPLAY ED060XC3
-  #ifndef EPDIY_VCOM
-    #define EPDIY_VCOM 300
-  #endif
-#else
-  #error "Unknown epdiy display type"
-#endif
 
-// Map BOARD_TYPE to epdiy board descriptor
-#if defined(SVERIO_PAPERBOARD_EPDIY)
-  #define EPDIY_BOARD sverio_paperboard_v1
-#else
-  #error "No epdiy board mapping for this BOARD_TYPE"
-#endif
+  // Map BOARD_TYPE to epdiy board descriptor
+  #if defined(SVERIO_PAPERBOARD_EPDIY)
+    #define EPDIY_BOARD sverio_paperboard_v1
+  #else
+    #error "No epdiy board mapping for this BOARD_TYPE"
+  #endif
 
 static uint8_t colorToEpdiy(uint16_t color)
 {
   switch (color)
   {
-    case GxEPD_WHITE:     return 0xFF;
-    case GxEPD_BLACK:     return 0x00;
-    case GxEPD_LIGHTGREY: return 0xDD;
-    case GxEPD_DARKGREY:  return 0x88;
-    default:              return 0xFF;
+    case GxEPD_WHITE:
+      return 0xFF;
+    case GxEPD_BLACK:
+      return 0x00;
+    case GxEPD_LIGHTGREY:
+      return 0xDD;
+    case GxEPD_DARKGREY:
+      return 0x88;
+    default:
+      return 0xFF;
   }
 }
 
-EpdiyDisplay::EpdiyEpd2::EpdiyEpd2(EpdiyDisplay *owner)
-  : WIDTH(0), HEIGHT(0), hasPartialUpdate(false), owner_(owner)
-{
-}
+EpdiyDisplay::EpdiyEpd2::EpdiyEpd2(EpdiyDisplay *owner) : WIDTH(0), HEIGHT(0), hasPartialUpdate(false), owner_(owner) {}
 
 void EpdiyDisplay::EpdiyEpd2::selectSPI(SPIClass &spi, SPISettings settings)
 {
@@ -49,14 +51,9 @@ void EpdiyDisplay::EpdiyEpd2::selectSPI(SPIClass &spi, SPISettings settings)
   (void)settings;
 }
 
-void EpdiyDisplay::EpdiyEpd2::setPaged()
-{
-}
+void EpdiyDisplay::EpdiyEpd2::setPaged() {}
 
-void EpdiyDisplay::EpdiyEpd2::setBusyCallback(void (*callback)(const void *))
-{
-  (void)callback;
-}
+void EpdiyDisplay::EpdiyEpd2::setBusyCallback(void (*callback)(const void *)) { (void)callback; }
 
 void EpdiyDisplay::EpdiyEpd2::setBusyCallback(void (*callback)(const void *), void *context)
 {
@@ -64,10 +61,7 @@ void EpdiyDisplay::EpdiyEpd2::setBusyCallback(void (*callback)(const void *), vo
   (void)context;
 }
 
-void EpdiyDisplay::EpdiyEpd2::refresh(bool partial)
-{
-  owner_->refreshDisplay(partial);
-}
+void EpdiyDisplay::EpdiyEpd2::refresh(bool partial) { owner_->refreshDisplay(partial); }
 
 void EpdiyDisplay::EpdiyEpd2::writeImage(const uint8_t *black, const uint8_t *color, int16_t x, int16_t y, int16_t w,
                                          int16_t h, bool invert, bool mirror, bool pgm)
@@ -78,8 +72,10 @@ void EpdiyDisplay::EpdiyEpd2::writeImage(const uint8_t *black, const uint8_t *co
   (void)pgm;
 
   owner_->ensureInit();
-  if (!black) return;
-  if (!owner_->framebuffer_) return;
+  if (!black)
+    return;
+  if (!owner_->framebuffer_)
+    return;
 
   const int fb_width = epd_width();
   uint8_t *fb = owner_->framebuffer_;
@@ -120,8 +116,10 @@ void EpdiyDisplay::EpdiyEpd2::writeImage_4G(const uint8_t *data, uint8_t level, 
   (void)pgm;
 
   owner_->ensureInit();
-  if (!data) return;
-  if (!owner_->framebuffer_) return;
+  if (!data)
+    return;
+  if (!owner_->framebuffer_)
+    return;
 
   static const uint8_t lut_2bit_to_4bit[] = {0x00, 0x08, 0x0D, 0x0F};
   const int fb_width = epd_width();
@@ -163,13 +161,14 @@ void EpdiyDisplay::EpdiyEpd2::writeNative(const uint8_t *data, const uint8_t *co
 }
 
 EpdiyDisplay::EpdiyDisplay()
-  : Adafruit_GFX(0, 0), epd2(this), framebuffer_(nullptr), initialized_(false), page_active_(false)
+    : Adafruit_GFX(0, 0), epd2(this), framebuffer_(nullptr), initialized_(false), page_active_(false)
 {
 }
 
 void EpdiyDisplay::init()
 {
-  if (initialized_) return;
+  if (initialized_)
+    return;
 
   epd_init(&EPDIY_BOARD, &EPDIY_DISPLAY, EPD_LUT_64K);
   epd_set_vcom(EPDIY_VCOM);
@@ -195,28 +194,31 @@ void EpdiyDisplay::init(uint32_t baud, bool initial, uint16_t reset, bool pulldo
   init();
 }
 
-void EpdiyDisplay::powerOff()
-{
-  epd_poweroff();
-}
+void EpdiyDisplay::powerOff() { epd_poweroff(); }
 
 void EpdiyDisplay::setRotation(uint8_t rotation)
 {
   EpdRotation rot = EPD_ROT_LANDSCAPE;
   switch (rotation)
   {
-    case 0: rot = EPD_ROT_LANDSCAPE; break;
-    case 1: rot = EPD_ROT_PORTRAIT; break;
-    case 2: rot = EPD_ROT_INVERTED_LANDSCAPE; break;
-    case 3: rot = EPD_ROT_INVERTED_PORTRAIT; break;
+    case 0:
+      rot = EPD_ROT_LANDSCAPE;
+      break;
+    case 1:
+      rot = EPD_ROT_PORTRAIT;
+      break;
+    case 2:
+      rot = EPD_ROT_INVERTED_LANDSCAPE;
+      break;
+    case 3:
+      rot = EPD_ROT_INVERTED_PORTRAIT;
+      break;
   }
   epd_set_rotation(rot);
   updateDimensions();
 }
 
-void EpdiyDisplay::setFullWindow()
-{
-}
+void EpdiyDisplay::setFullWindow() {}
 
 void EpdiyDisplay::setPartialWindow(int16_t x, int16_t y, int16_t w, int16_t h)
 {
@@ -226,15 +228,13 @@ void EpdiyDisplay::setPartialWindow(int16_t x, int16_t y, int16_t w, int16_t h)
   (void)h;
 }
 
-void EpdiyDisplay::fillScreen(uint16_t color)
-{
-  fillRect(0, 0, width(), height(), color);
-}
+void EpdiyDisplay::fillScreen(uint16_t color) { fillRect(0, 0, width(), height(), color); }
 
 void EpdiyDisplay::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 {
   ensureInit();
-  if (!framebuffer_) return;
+  if (!framebuffer_)
+    return;
 
   EpdRect rect = {x, y, w, h};
   epd_fill_rect(rect, colorToEpdiy(color), framebuffer_);
@@ -243,7 +243,8 @@ void EpdiyDisplay::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t
 void EpdiyDisplay::drawPixel(int16_t x, int16_t y, uint16_t color)
 {
   ensureInit();
-  if (!framebuffer_) return;
+  if (!framebuffer_)
+    return;
 
   epd_draw_pixel(x, y, colorToEpdiy(color), framebuffer_);
 }
@@ -251,7 +252,8 @@ void EpdiyDisplay::drawPixel(int16_t x, int16_t y, uint16_t color)
 void EpdiyDisplay::drawPixel8bit(int16_t x, int16_t y, uint8_t gray)
 {
   ensureInit();
-  if (!framebuffer_) return;
+  if (!framebuffer_)
+    return;
 
   epd_draw_pixel(x, y, gray, framebuffer_);
 }
@@ -269,20 +271,19 @@ void EpdiyDisplay::firstPage()
 
 bool EpdiyDisplay::nextPage()
 {
-  if (!page_active_) return false;
+  if (!page_active_)
+    return false;
   refreshDisplay(false);
   page_active_ = false;
   return false;
 }
 
-uint16_t EpdiyDisplay::pages() const
-{
-  return 1;
-}
+uint16_t EpdiyDisplay::pages() const { return 1; }
 
 void EpdiyDisplay::ensureInit()
 {
-  if (!initialized_) init();
+  if (!initialized_)
+    init();
 }
 
 void EpdiyDisplay::updateDimensions()
