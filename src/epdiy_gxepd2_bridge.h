@@ -43,7 +43,7 @@ public:
                      bool mirror, bool pgm);
 
   private:
-    EpdiyDisplay *owner_;
+    EpdiyDisplay *m_owner;
   };
 
   EpdiyDisplay();
@@ -78,10 +78,10 @@ private:
   void updateDimensions();
   void refreshDisplay(bool partial);
 
-  EpdiyHighlevelState hl_;
-  uint8_t *framebuffer_;
-  bool initialized_;
-  bool page_active_;
+  EpdiyHighlevelState m_hl;
+  uint8_t *m_framebuffer;
+  bool m_initialized;
+  bool m_pageActive;
 };
 
 #endif

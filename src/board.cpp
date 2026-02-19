@@ -86,10 +86,7 @@ void setEPaperPowerOn(bool on)
   // use HIGH/LOW notation for better readability
 #if (defined ES3ink) || (defined MakerBadge_revD) || (defined SVERIO_PAPERBOARD_SPI)
   digitalWrite(ePaperPowerPin, on ? LOW : HIGH);
-#elif defined SVERIO_PAPERBOARD_EPDIY
-  // Power management is handled by epdiy library via TPS65185
-  // This function is a no-op for epdiy boards
-#elif (!defined M5StackCoreInk) && (!defined SEEEDSTUDIO_RETERMINAL)
+#elif (!defined M5StackCoreInk) && (!defined SEEEDSTUDIO_RETERMINAL) && (!defined SVERIO_PAPERBOARD_EPDIY)
   digitalWrite(ePaperPowerPin, on ? HIGH : LOW);
 #endif
 }

@@ -43,7 +43,9 @@ static uint8_t colorToEpdiy(uint16_t color)
   }
 }
 
-EpdiyDisplay::EpdiyEpd2::EpdiyEpd2(EpdiyDisplay *owner) : WIDTH(0), HEIGHT(0), hasPartialUpdate(false), owner_(owner) {}
+EpdiyDisplay::EpdiyEpd2::EpdiyEpd2(EpdiyDisplay *owner) : WIDTH(0), HEIGHT(0), hasPartialUpdate(false), m_owner(owner)
+{
+}
 
 void EpdiyDisplay::EpdiyEpd2::selectSPI(SPIClass &spi, SPISettings settings)
 {
@@ -61,7 +63,7 @@ void EpdiyDisplay::EpdiyEpd2::setBusyCallback(void (*callback)(const void *), vo
   (void)context;
 }
 
-void EpdiyDisplay::EpdiyEpd2::refresh(bool partial) { owner_->refreshDisplay(partial); }
+void EpdiyDisplay::EpdiyEpd2::refresh(bool partial) { m_owner->refreshDisplay(partial); }
 
 void EpdiyDisplay::EpdiyEpd2::writeImage(const uint8_t *black, const uint8_t *color, int16_t x, int16_t y, int16_t w,
                                          int16_t h, bool invert, bool mirror, bool pgm)
@@ -71,14 +73,14 @@ void EpdiyDisplay::EpdiyEpd2::writeImage(const uint8_t *black, const uint8_t *co
   (void)mirror;
   (void)pgm;
 
-  owner_->ensureInit();
+  m_owner->ensureInit();
   if (!black)
     return;
-  if (!owner_->framebuffer_)
+  if (!m_owner->m_framebuffer)
     return;
 
   const int fb_width = epd_width();
-  uint8_t *fb = owner_->framebuffer_;
+  uint8_t *fb = m_owner->m_framebuffer;
 
   for (int16_t row = 0; row < h; row++)
   {
@@ -115,15 +117,15 @@ void EpdiyDisplay::EpdiyEpd2::writeImage_4G(const uint8_t *data, uint8_t level, 
   (void)mirror;
   (void)pgm;
 
-  owner_->ensureInit();
+  m_owner->ensureInit();
   if (!data)
     return;
-  if (!owner_->framebuffer_)
+  if (!m_owner->m_framebuffer)
     return;
 
   static const uint8_t lut_2bit_to_4bit[] = {0x00, 0x08, 0x0D, 0x0F};
   const int fb_width = epd_width();
-  uint8_t *fb = owner_->framebuffer_;
+  uint8_t *fb = m_owner->m_framebuffer;
 
   for (int16_t row = 0; row < h; row++)
   {
@@ -161,21 +163,21 @@ void EpdiyDisplay::EpdiyEpd2::writeNative(const uint8_t *data, const uint8_t *co
 }
 
 EpdiyDisplay::EpdiyDisplay()
-    : Adafruit_GFX(0, 0), epd2(this), framebuffer_(nullptr), initialized_(false), page_active_(false)
+    : Adafruit_GFX(0, 0), epd2(this), m_framebuffer(nullptr), m_initialized(false), m_pageActive(false)
 {
 }
 
 void EpdiyDisplay::init()
 {
-  if (initialized_)
+  if (m_initialized)
     return;
 
   epd_init(&EPDIY_BOARD, &EPDIY_DISPLAY, EPD_LUT_64K);
   epd_set_vcom(EPDIY_VCOM);
-  hl_ = epd_hl_init(EPD_BUILTIN_WAVEFORM);
+  m_hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
   epd_set_rotation(EPD_ROT_LANDSCAPE);
-  framebuffer_ = epd_hl_get_framebuffer(&hl_);
-  initialized_ = true;
+  m_framebuffer = epd_hl_get_framebuffer(&m_hl);
+  m_initialized = true;
   updateDimensions();
 }
 
@@ -233,48 +235,48 @@ void EpdiyDisplay::fillScreen(uint16_t color) { fillRect(0, 0, width(), height()
 void EpdiyDisplay::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 {
   ensureInit();
-  if (!framebuffer_)
+  if (!m_framebuffer)
     return;
 
   EpdRect rect = {x, y, w, h};
-  epd_fill_rect(rect, colorToEpdiy(color), framebuffer_);
+  epd_fill_rect(rect, colorToEpdiy(color), m_framebuffer);
 }
 
 void EpdiyDisplay::drawPixel(int16_t x, int16_t y, uint16_t color)
 {
   ensureInit();
-  if (!framebuffer_)
+  if (!m_framebuffer)
     return;
 
-  epd_draw_pixel(x, y, colorToEpdiy(color), framebuffer_);
+  epd_draw_pixel(x, y, colorToEpdiy(color), m_framebuffer);
 }
 
 void EpdiyDisplay::drawPixel8bit(int16_t x, int16_t y, uint8_t gray)
 {
   ensureInit();
-  if (!framebuffer_)
+  if (!m_framebuffer)
     return;
 
-  epd_draw_pixel(x, y, gray, framebuffer_);
+  epd_draw_pixel(x, y, gray, m_framebuffer);
 }
 
 void EpdiyDisplay::firstPage()
 {
   ensureInit();
-  page_active_ = true;
+  m_pageActive = true;
 
-  if (framebuffer_)
+  if (m_framebuffer)
   {
-    memset(framebuffer_, 0xFF, epd_width() * epd_height() / 2);
+    memset(m_framebuffer, 0xFF, epd_width() * epd_height() / 2);
   }
 }
 
 bool EpdiyDisplay::nextPage()
 {
-  if (!page_active_)
+  if (!m_pageActive)
     return false;
   refreshDisplay(false);
-  page_active_ = false;
+  m_pageActive = false;
   return false;
 }
 
@@ -282,7 +284,7 @@ uint16_t EpdiyDisplay::pages() const { return 1; }
 
 void EpdiyDisplay::ensureInit()
 {
-  if (!initialized_)
+  if (!m_initialized)
     init();
 }
 
@@ -301,7 +303,7 @@ void EpdiyDisplay::refreshDisplay(bool partial)
 
   epd_poweron();
   epd_clear();
-  epd_hl_update_screen(&hl_, MODE_EPDIY_WHITE_TO_GL16, epd_ambient_temperature());
+  epd_hl_update_screen(&m_hl, MODE_EPDIY_WHITE_TO_GL16, epd_ambient_temperature());
   epd_poweroff();
 }
 
