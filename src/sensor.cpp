@@ -71,11 +71,14 @@ SensorType Sensor::detectSensor()
   #endif
 
   // End any previous Wire session to ensure clean state after deep sleep
+  // epdiy uses the same I2C driver; do not delete it.
+  #if !defined(SVERIO_PAPERBOARD_EPDIY)
   Wire.end();
-  #if (defined PIN_SDA) && (defined PIN_SCL)
+    #if (defined PIN_SDA) && (defined PIN_SCL)
   Wire.begin(PIN_SDA, PIN_SCL);
-  #else
+    #else
   Wire.begin();
+    #endif
   #endif
 
   SensorType found = SensorType::NONE;
@@ -134,11 +137,14 @@ bool Sensor::readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
   #endif
 
   // End any previous Wire session to ensure clean state after deep sleep
+  // epdiy uses the same I2C driver; do not delete it.
+  #if !defined(SVERIO_PAPERBOARD_EPDIY)
   Wire.end();
-  #if (defined PIN_SDA) && (defined PIN_SCL)
+    #if (defined PIN_SDA) && (defined PIN_SCL)
   Wire.begin(PIN_SDA, PIN_SCL);
-  #else
+    #else
   Wire.begin();
+    #endif
   #endif
 
   bool ret = false;

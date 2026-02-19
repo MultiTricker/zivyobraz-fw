@@ -52,6 +52,10 @@ static SPIClass hspi(HSPI);
 #elif defined TYPE_7C
   #include <GxEPD2_7C.h>
 
+// 8-level grayscale (epdiy parallel driver)
+#elif defined TYPE_8G
+  #include "epdiy_gxepd2_bridge.h"
+
 #endif
 
 ///////////////////////
@@ -358,6 +362,10 @@ GxEPD2_7C<GxEPD2_730c_GDEY073D46, CALC_PAGE_HEIGHT(GxEPD2_730c_GDEY073D46::HEIGH
 GxEPD2_7C<GxEPD2_730c_GDEP073E01, CALC_PAGE_HEIGHT(GxEPD2_730c_GDEP073E01::HEIGHT, GxEPD2_730c_GDEP073E01::WIDTH, 4)>
   display(GxEPD2_730c_GDEP073E01(PIN_SS, PIN_DC, PIN_RST, PIN_BUSY));
 
+// epdiy parallel driver
+#elif defined USE_EPDIY_DRIVER
+static EpdiyDisplay display;
+
 #endif
 
 // Font
@@ -493,6 +501,10 @@ void resetPixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b)
 
 void drawPixel(int16_t xCord, int16_t yCord, uint16_t color) { display.drawPixel(xCord, yCord, color); }
 
+#ifdef USE_EPDIY_DRIVER
+void drawPixel8bit(int16_t xCord, int16_t yCord, uint8_t gray) { display.drawPixel8bit(xCord, yCord, gray); }
+#endif
+
 void drawQrCode(const char *qrStr, int qrSize, int yCord, int xCord, byte qrSizeMulti)
 {
   QRCode qrcode;
@@ -596,9 +608,15 @@ void setBusyCallback(void (*callback)(const void *))
 
 bool supportsDirectStreaming()
 {
+#ifdef USE_EPDIY_DRIVER
+  // Epdiy uses direct framebuffer access with full 16-level grayscale support
+  // Direct streaming would reduce this to 4 levels, so disable it
+  return false;
+#else
   // All display types now support direct streaming
   // BW, Grayscale, 3C, 4C, and 7C displays support the setPaged()/writeNative()/refresh() API
   return true;
+#endif
 }
 
 void initDirectStreaming(bool partialRefresh, uint16_t maxRowCount)
@@ -708,9 +726,9 @@ void showNoWiFiError(uint64_t sleepSeconds, const String &wikiUrl)
   {
     display.fillRect(0, 0, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_WHITE);
     display.setTextColor(GxEPD_BLACK);
-    display.setFont(&OpenSansSB_20px);
+    display.setFont(DISPLAY_RESOLUTION_X >= 1200 ? &OpenSansSB_24px : &OpenSansSB_20px);
     centeredText("Cannot connect to Wi-Fi", DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y / 2 - 15);
-    display.setFont(&OpenSansSB_16px);
+    display.setFont(DISPLAY_RESOLUTION_X >= 1200 ? &OpenSansSB_24px : &OpenSansSB_16px);
     centeredText("Retries in " + String((sleepSeconds + 30) / 60) + " minutes.", DISPLAY_RESOLUTION_X / 2,
                  DISPLAY_RESOLUTION_Y / 2 + 15);
     display.setFont(&OpenSansSB_14px);
