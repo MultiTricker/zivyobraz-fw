@@ -395,7 +395,11 @@ void init()
   display.epd2.selectSPI(hspi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
 #endif
 
-#if (defined ES3ink) || (defined ESP32S3Adapter) || (defined ESPink_V3) || (defined ESPink_V35) ||                     \
+// For non-REMAP_SPI boards with 4C/7C displays, use initial=true to ensure proper state
+// REMAP_SPI boards don't need this as the power sequence provides a clean hardware reset
+#if !defined(REMAP_SPI) && (defined(TYPE_7C) || defined(TYPE_4C))
+  display.init(115200, true, 2, false);
+#elif (defined ES3ink) || (defined ESP32S3Adapter) || (defined ESPink_V3) || (defined ESPink_V35) ||                   \
   (defined CROWPANEL_ESP32S3_579) || (defined CROWPANEL_ESP32S3_42) || (defined CROWPANEL_ESP32S3_213) ||              \
   (defined SVERIO_PAPERBOARD_SPI)
   display.init(115200, false, 2, false); // S3 boards with special reset circuits
