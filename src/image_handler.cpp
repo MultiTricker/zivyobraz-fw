@@ -134,7 +134,7 @@ static bool scanForImageHeader(HttpClient &http, uint16_t &outHeader)
     if (bufferPos >= PRINT_BUFFER_SIZE)
     {
       printBuffer[bufferPos] = '\0';
-      Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("{}", printBuffer);
+      Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("{}\n", printBuffer);
       bufferPos = 0;
     }
   };
@@ -145,7 +145,7 @@ static bool scanForImageHeader(HttpClient &http, uint16_t &outHeader)
     if (bufferPos > 0)
     {
       printBuffer[bufferPos] = '\0';
-      Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("{}", printBuffer);
+      Logger::log<Logger::Level::WARNING, Logger::Topic::IMAGE>("{}\n", printBuffer);
       bufferPos = 0;
     }
   };
