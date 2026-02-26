@@ -26,6 +26,18 @@ void APCallback(WiFiManager *wm)
     userlCallback();
 }
 
+#ifdef USE_EPDIY_DRIVER
+// Reboot after saving WiFi credentials. The captive portal leaves the
+// TPS65185 PMIC / I2C bus in an inconsistent state that causes epdiy
+// display artefacts. A clean restart re-initialises everything correctly.
+void saveConfigCallback()
+{
+  Logger::log<Logger::Topic::WIFI>("WiFi credentials saved, rebooting for clean display...\n");
+  delay(500);
+  ESP.restart();
+}
+#endif
+
 void init(const String &hostname, const String &password, void (*callback)())
 {
   // Connecting to WiFi
@@ -47,6 +59,11 @@ void init(const String &hostname, const String &password, void (*callback)())
   userlCallback = callback;
   wm.setConfigPortalTimeout(240); // set portal time to 4 min, then sleep/try again.
   wm.setAPCallback(APCallback);
+
+#ifdef USE_EPDIY_DRIVER
+  // Reboot after saving credentials for clean display state
+  wm.setSaveConfigCallback(saveConfigCallback);
+#endif
 
   // Start autoConnect (non-blocking)
   if (wm.autoConnect(hostname.c_str(), password.c_str()))

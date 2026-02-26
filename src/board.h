@@ -44,6 +44,7 @@
   #define BT_SEEEDSTUDIO_XIAO_ESP32C3 14
   #define BT_SEEEDSTUDIO_XIAO_EDDB_ESP32S3 15
   #define BT_SEEEDSTUDIO_RETERMINAL 16
+  #define BT_SVERIO_PAPERBOARD_EPDIY 17
 
 // Create BOARD_TYPE_STRING constant here before board type is defined
 static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
@@ -82,6 +83,8 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
     #define SEEEDSTUDIO_XIAO_EDDB_ESP32S3
   #elif BOARD_ID == BT_SEEEDSTUDIO_RETERMINAL
     #define SEEEDSTUDIO_RETERMINAL
+  #elif BOARD_ID == BT_SVERIO_PAPERBOARD_EPDIY
+    #define SVERIO_PAPERBOARD_EPDIY
   #else
     #pragma message("BOARD_TYPE: " XSTR(BOARD_TYPE))
     #error "BOARD_TYPE not supported!"
@@ -290,6 +293,19 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define dividerRatio (2.0f)
   #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
   #define REMAP_SPI
+
+#elif defined SVERIO_PAPERBOARD_EPDIY
+  // Paperboard with parallel interface for epdiy
+  // SPI pins are not needed - epdiy uses I2S parallel bus
+  // Power management is handled by epdiy library (TPS65185)
+  #define PIN_SDA 39
+  #define PIN_SCL 40
+  #define vBatPin 1
+  #define dividerRatio (2.7507665f)
+  #define enableBattery 2
+  #define BOARD_HAS_PSRAM
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (512 * 1024)
+  // No ePaperPowerPin - epdiy manages display power via TPS65185
 #endif
 
 #ifdef REMAP_SPI
