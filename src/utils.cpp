@@ -9,6 +9,7 @@
 RTC_DATA_ATTR uint32_t rtc_cachedPIN = 0;
 
 // NVS storage for PIN (survives power cycles)
+extern const char *const NVS_NAMESPACE;
 static Preferences prefs;
 
 namespace Utils
@@ -32,7 +33,7 @@ void printMemoryStats()
 
 void initializeAPIKey()
 {
-  prefs.begin("zivyobraz");
+  prefs.begin(NVS_NAMESPACE);
 
   if (!prefs.isKey("apikey"))
   {
@@ -54,7 +55,7 @@ uint32_t getStoredAPIKey()
 {
   if (rtc_cachedPIN == 0)
   {
-    prefs.begin("zivyobraz", true); // read-only
+    prefs.begin(NVS_NAMESPACE, true); // read-only
     rtc_cachedPIN = prefs.getULong("apikey", 0);
     prefs.end();
   }

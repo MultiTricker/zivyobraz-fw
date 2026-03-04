@@ -44,6 +44,7 @@ const char *host = "cdn.zivyobraz.eu";
 const char *firmware = "3.0";
 const String wifiPassword = "zivyobraz";
 const String urlWiki = "https://wiki.zivyobraz.eu";
+extern const char *const NVS_NAMESPACE = "zivyobraz";
 
 ///////////////////////////////////////////////
 // WiFi AP configuration mode callback
@@ -83,6 +84,14 @@ void configModeCallback()
 
 void initializeWiFi()
 {
+  // Try fast connect using cached BSSID and channel (skips WiFi scan)
+  if (Wireless::tryFastConnect())
+  {
+    Wireless::saveConnectionCache();
+    return;
+  }
+
+  // Fall back to WiFiManager (full scan + config portal if needed)
   String hostname = "INK_" + Wireless::getMacAddress();
   hostname.replace(":", "");
   Wireless::init(hostname, wifiPassword, configModeCallback);
@@ -94,6 +103,10 @@ void initializeWiFi()
     Wireless::process();
     delay(10);
   }
+
+  // Save BSSID/channel for next fast connect
+  if (Wireless::isConnected())
+    Wireless::saveConnectionCache();
 }
 
 void downloadAndDisplayImage(HttpClient &httpClient)

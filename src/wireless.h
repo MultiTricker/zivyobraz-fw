@@ -9,6 +9,10 @@ void init(const String &hostname, const String &password, void (*callback)());
 void process();
 bool isConfigPortalActive();
 
+bool tryFastConnect();
+void saveConnectionCache();
+void invalidateConnectionCache();
+
 String getSSID();
 int8_t getStrength();
 String getMacAddress();
