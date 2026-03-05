@@ -382,6 +382,12 @@ void handleButtonActions()
 void setup()
 {
   Serial.begin(115200);
+
+  // On ESP32-S3/S2 with native USB CDC, detect if USB host is connected to and set log level accordingly
+#if defined(ARDUINO_USB_CDC_ON_BOOT) && ARDUINO_USB_CDC_ON_BOOT == 1
+  Logger::setRuntimeLevel(Serial ? Logger::Level::DEBUG : Logger::Level::ERROR);
+#endif
+
   Logger::log<Logger::Topic::SYSTEM>("Starting firmware for Zivy Obraz service\n");
 
   Board::setupHW();

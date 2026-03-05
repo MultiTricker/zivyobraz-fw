@@ -38,6 +38,10 @@ public:
 
   static Logger &getInstance();
 
+  // Set runtime log level (for dynamic filtering, e.g. USB detection on S3 boards)
+  static void setRuntimeLevel(Level level) { getInstance()._runtimeLevel = level; }
+  static Level getRuntimeLevel() { return getInstance()._runtimeLevel; }
+
   // Primary template: Level and Topic both specified
   template <Level L, Topic T, typename... Args>
   static typename std::enable_if<(L >= LOG_LEVEL_MINIMUM), void>::type log(const String &format, Args... args)
@@ -60,6 +64,8 @@ public:
   }
 
 private:
+  Level _runtimeLevel = Level::DEBUG; // Default: show all (no runtime filtering)
+
   Logger() = default;
   Logger(const Logger &) = delete;
   Logger &operator=(const Logger &) = delete;
@@ -68,6 +74,10 @@ private:
   template <Level L, Topic T, typename... Args>
   void logMessageImpl(const String &format, Args... args)
   {
+    // Runtime level check (for dynamic filtering, e.g. USB detection)
+    if (L < _runtimeLevel)
+      return;
+
     // All string concatenation can be optimized away by compiler
     constexpr const char *levelStr = getLevelString(L);
     constexpr const char *topicStr = getTopicString(T);
