@@ -86,10 +86,7 @@ void initializeWiFi()
 {
   // Try fast connect using cached BSSID and channel (skips WiFi scan)
   if (Wireless::tryFastConnect())
-  {
-    Wireless::saveConnectionCache();
     return;
-  }
 
   // Fall back to WiFiManager (full scan + config portal if needed)
   String hostname = "INK_" + Wireless::getMacAddress();
