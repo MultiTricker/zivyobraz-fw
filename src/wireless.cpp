@@ -129,9 +129,11 @@ bool tryFastConnect()
     return false;
   }
 
-  Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>(
-    "Fast connect: channel {} BSSID {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}\n", channel, bssid[0], bssid[1], bssid[2],
-    bssid[3], bssid[4], bssid[5]);
+  char bssidStr[18];
+  snprintf(bssidStr, sizeof(bssidStr), "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3],
+           bssid[4], bssid[5]);
+
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>("Fast connect: channel {} BSSID {}\n", channel, bssidStr);
 
   // Initialize WiFi in STA mode and start the driver to access NVS credentials
   WiFi.mode(WIFI_STA);
@@ -181,13 +183,22 @@ void saveConnectionCache()
   const uint8_t *bssid = WiFi.BSSID();
   uint8_t channel = WiFi.channel();
 
-  if (bssid != nullptr && channel != 0)
-  {
-    saveWifiCache(bssid, channel);
-    Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>(
-      "Saved BSSID/channel cache: ch {} BSSID {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}\n", channel, bssid[0], bssid[1],
-      bssid[2], bssid[3], bssid[4], bssid[5]);
-  }
+  if (bssid == nullptr || channel == 0)
+    return;
+
+  // Check if cache already matches — avoid unnecessary NVS writes
+  uint8_t cachedBssid[BSSID_LEN];
+  uint8_t cachedChannel;
+  if (loadWifiCache(cachedBssid, cachedChannel) && cachedChannel == channel &&
+      memcmp(cachedBssid, bssid, BSSID_LEN) == 0)
+    return;
+
+  saveWifiCache(bssid, channel);
+  char bssidStr[18];
+  snprintf(bssidStr, sizeof(bssidStr), "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3],
+           bssid[4], bssid[5]);
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>("Saved BSSID/channel cache: ch {} BSSID {}\n", channel,
+                                                         bssidStr);
 }
 
 String getSSID()
