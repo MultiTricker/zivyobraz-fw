@@ -3,6 +3,7 @@
 #include "improv_handler.h"
 #include "logger.h"
 
+#include <array>
 #include <esp_wifi.h>
 #include <Preferences.h>
 #include <WiFi.h>
@@ -22,25 +23,46 @@ static void (*userlCallback)() = nullptr;
 static const unsigned long FAST_CONNECT_TIMEOUT_MS = 4000;
 static constexpr size_t BSSID_LEN = sizeof(wifi_sta_config_t::bssid);
 
-static bool loadWifiCache(uint8_t *bssid, uint8_t &channel)
+struct WifiCache
 {
-  prefs.begin(NVS_NAMESPACE, true);
-  channel = prefs.getUChar("channel", 0);
-  if (channel == 0)
-  {
-    prefs.end();
-    return false;
-  }
-  size_t len = prefs.getBytes("bssid", bssid, BSSID_LEN);
-  prefs.end();
-  return len == BSSID_LEN;
+  std::array<uint8_t, BSSID_LEN> bssid;
+  uint8_t channel;
+
+  bool isValid() const { return channel != 0; }
+
+  bool operator==(const WifiCache &other) const { return channel == other.channel && bssid == other.bssid; }
+};
+
+static void formatBssid(const uint8_t *bssid, char *buffer, size_t bufferSize)
+{
+  snprintf(buffer, bufferSize, "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3], bssid[4],
+           bssid[5]);
 }
 
-static void saveWifiCache(const uint8_t *bssid, uint8_t channel)
+static WifiCache loadWifiCache()
+{
+  WifiCache cache{};
+  prefs.begin(NVS_NAMESPACE, true);
+  cache.channel = prefs.getUChar("channel", 0);
+  if (!cache.isValid())
+  {
+    prefs.end();
+    return cache;
+  }
+
+  size_t len = prefs.getBytes("bssid", cache.bssid.data(), cache.bssid.size());
+  prefs.end();
+
+  if (len != cache.bssid.size())
+    cache = {};
+  return cache;
+}
+
+static void saveWifiCache(const WifiCache &cache)
 {
   prefs.begin(NVS_NAMESPACE);
-  prefs.putBytes("bssid", bssid, BSSID_LEN);
-  prefs.putUChar("channel", channel);
+  prefs.putBytes("bssid", cache.bssid.data(), cache.bssid.size());
+  prefs.putUChar("channel", cache.channel);
   prefs.end();
 }
 
@@ -120,18 +142,17 @@ bool isConfigPortalActive() { return configPortalActive; }
 
 bool tryFastConnect()
 {
-  uint8_t bssid[BSSID_LEN];
-  uint8_t channel;
-
-  if (!loadWifiCache(bssid, channel))
+  auto cached = loadWifiCache();
+  if (!cached.isValid())
   {
     Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>("No cached BSSID/channel, skipping fast connect\n");
     return false;
   }
 
-  Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>(
-    "Fast connect: channel {} BSSID {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}\n", channel, bssid[0], bssid[1], bssid[2],
-    bssid[3], bssid[4], bssid[5]);
+  char bssidStr[18];
+  formatBssid(cached.bssid.data(), bssidStr, sizeof(bssidStr));
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>("Fast connect: channel {} BSSID {}\n", cached.channel,
+                                                         bssidStr);
 
   // Initialize WiFi in STA mode and start the driver to access NVS credentials
   WiFi.mode(WIFI_STA);
@@ -151,7 +172,7 @@ bool tryFastConnect()
   }
 
   // Attempt direct connection with cached BSSID and channel (skips scan)
-  WiFi.begin(ssid, pass, channel, bssid);
+  WiFi.begin(ssid, pass, cached.channel, cached.bssid.data());
 
   unsigned long start = millis();
   while (WiFi.status() != WL_CONNECTED && (millis() - start) < FAST_CONNECT_TIMEOUT_MS)
@@ -180,14 +201,24 @@ void saveConnectionCache()
 
   const uint8_t *bssid = WiFi.BSSID();
   uint8_t channel = WiFi.channel();
+  if (bssid == nullptr || channel == 0)
+    return;
 
-  if (bssid != nullptr && channel != 0)
-  {
-    saveWifiCache(bssid, channel);
-    Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>(
-      "Saved BSSID/channel cache: ch {} BSSID {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}\n", channel, bssid[0], bssid[1],
-      bssid[2], bssid[3], bssid[4], bssid[5]);
-  }
+  // Create current cache
+  WifiCache current;
+  current.channel = channel;
+  std::copy(bssid, bssid + BSSID_LEN, current.bssid.begin());
+
+  // Compare with cached version
+  auto cached = loadWifiCache();
+  if (cached.isValid() && cached == current)
+    return;
+
+  saveWifiCache(current);
+  char bssidStr[18];
+  formatBssid(bssid, bssidStr, sizeof(bssidStr));
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>("Saved BSSID/channel cache: ch {} BSSID {}\n", channel,
+                                                         bssidStr);
 }
 
 String getSSID()
