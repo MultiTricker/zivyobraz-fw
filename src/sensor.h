@@ -79,6 +79,7 @@ private:
   bool readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres);
 
   SensorType m_detectedSensor = SensorType::NONE;
+  uint8_t m_sht4xAddress = 0;
 };
 
 #endif // SENSOR
