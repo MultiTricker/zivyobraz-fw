@@ -7,8 +7,8 @@
 #ifdef SENSOR
 
   // SHT40/41/45
-  #include "Adafruit_SHT4x.h"
-static Adafruit_SHT4x sht4 = Adafruit_SHT4x();
+  #include <SensirionI2cSht4x.h>
+static SensirionI2cSht4x sht4;
 
   // SCD40/41
   #include "SparkFun_SCD4x_Arduino_Library.h"
@@ -25,6 +25,7 @@ static SensirionI2cStcc4 stcc4;
 
 // Store detected sensor type in RTC memory (persists through deep sleep)
 RTC_DATA_ATTR SensorType detectedSensor = SensorType::NONE;
+RTC_DATA_ATTR uint8_t detectedSht4xAddress = 0;
 
 Sensor &Sensor::getInstance()
 {
@@ -41,11 +42,13 @@ void Sensor::init()
   {
     Logger::log<Logger::Topic::SENS>("Fresh boot - resetting detection\n");
     detectedSensor = SensorType::NONE;
+    detectedSht4xAddress = 0;
     m_detectedSensor = SensorType::NONE;
   }
   else if (reason == ResetReason::DEEPSLEEP)
   {
     m_detectedSensor = detectedSensor;
+    m_sht4xAddress = detectedSht4xAddress;
     Logger::log<Logger::Topic::SENS>("Wake from deep sleep - using cached sensor: {}\n", getSensorTypeStr());
   }
 
@@ -54,6 +57,7 @@ void Sensor::init()
   {
     m_detectedSensor = detectSensor();
     detectedSensor = m_detectedSensor;
+    detectedSht4xAddress = m_sht4xAddress;
 
     if (m_detectedSensor != SensorType::NONE)
       Logger::log<Logger::Topic::SENS>("Detected and cached: {}\n", getSensorTypeStr());
@@ -80,22 +84,36 @@ SensorType Sensor::detectSensor()
 
   SensorType found = SensorType::NONE;
 
-  // Check for SHT40 OR SHT41 OR SHT45
-  if (sht4.begin())
+  // Check for SHT40 OR SHT41 OR SHT45 (scan addresses)
+  const uint8_t sht4xAddrs[] = {0x44, 0x45, 0x46};
+  for (uint8_t addr : sht4xAddrs)
   {
-    Logger::log<Logger::Topic::SENS>("SHT4x FOUND\n");
-    found = SensorType::SHT4X;
+    sht4.begin(Wire, addr);
+    uint32_t serialNumber = 0;
+    if (sht4.serialNumber(serialNumber) == 0)
+    {
+      m_sht4xAddress = addr;
+      Logger::log<Logger::Level::INFO, Logger::Topic::SENS>("SHT4x FOUND, SN: {}\n", serialNumber);
+      found = SensorType::SHT4X;
+      break;
+    }
+  }
+
+  // Got SHT4x?
+  if (found != SensorType::NONE)
+  {
+    // Already found SHT4x, skip other sensors
   }
   // Check for BME280
   else if (bme.begin())
   {
-    Logger::log<Logger::Topic::SENS>("BME280 FOUND\n");
+    Logger::log<Logger::Level::INFO, Logger::Topic::SENS>("BME280 FOUND\n");
     found = SensorType::BME280;
   }
   // Check for SCD40 OR SCD41
   else if (SCD4.begin(false, true, false))
   {
-    Logger::log<Logger::Topic::SENS>("SCD4x FOUND\n");
+    Logger::log<Logger::Level::INFO, Logger::Topic::SENS>("SCD4x FOUND\n");
     found = SensorType::SCD4X;
   }
   // Check for STCC4
@@ -106,7 +124,7 @@ SensorType Sensor::detectSensor()
     uint64_t serialNumber;
     if (stcc4.getProductId(productId, serialNumber) == 0)
     {
-      Logger::log<Logger::Topic::SENS>("STCC4 FOUND\n");
+      Logger::log<Logger::Level::INFO, Logger::Topic::SENS>("STCC4 FOUND, SN: {}\n", serialNumber);
       found = SensorType::STCC4;
     }
   }
@@ -179,20 +197,20 @@ bool Sensor::readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 
 bool Sensor::readSHT4X(float &sen_temp, int &sen_humi)
 {
-  if (!sht4.begin())
+  sht4.begin(Wire, m_sht4xAddress);
+  sht4.softReset();
+  delay(10);
+
+  float temperature = 0.0f;
+  float humidity = 0.0f;
+  if (sht4.measureLowestPrecision(temperature, humidity) != 0)
   {
-    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("SHT4x not responding\n");
+    Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("SHT4x read failed\n");
     return false;
   }
 
-  sht4.setPrecision(SHT4X_LOW_PRECISION);
-  sht4.setHeater(SHT4X_NO_HEATER);
-
-  sensors_event_t hum, temp;
-  sht4.getEvent(&hum, &temp);
-
-  sen_temp = temp.temperature;
-  sen_humi = hum.relative_humidity;
+  sen_temp = temperature;
+  sen_humi = static_cast<int>(humidity);
   return true;
 }
 
