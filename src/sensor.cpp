@@ -42,8 +42,8 @@ void Sensor::init()
   {
     Logger::log<Logger::Topic::SENS>("Fresh boot - resetting detection\n");
     detectedSensor = SensorType::NONE;
-    detectedSht4xAddress = 0;
     m_detectedSensor = SensorType::NONE;
+    detectedSht4xAddress = 0;
   }
   else if (reason == ResetReason::DEEPSLEEP)
   {
