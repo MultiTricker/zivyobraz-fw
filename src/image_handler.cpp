@@ -35,6 +35,11 @@
   #include "GxEPD2_4G_BW.h"
 #elif defined TYPE_7C
   #include <GxEPD2_7C.h>
+#elif defined TYPE_8G
+  #ifndef USE_EPDIY_DRIVER
+    #error "TYPE_8G requires USE_EPDIY_DRIVER (epdiy only)."
+  #endif
+  #include "epdiy_gxepd2_bridge.h"
 #endif
 
 #include <pngle.h>
@@ -201,7 +206,9 @@ static bool scanForImageHeader(HttpClient &http, uint16_t &outHeader)
 
 static uint16_t getSecondColor()
 {
-#if (defined TYPE_BW) || (defined TYPE_GRAYSCALE)
+#if defined(TYPE_8G)
+  return GxEPD_GRAY_EE;
+#elif defined(TYPE_BW) || defined(TYPE_GRAYSCALE)
   return GxEPD_LIGHTGREY;
 #else
   return GxEPD_RED;
@@ -210,7 +217,9 @@ static uint16_t getSecondColor()
 
 static uint16_t getThirdColor()
 {
-#if (defined TYPE_BW) || (defined TYPE_GRAYSCALE)
+#if defined(TYPE_8G)
+  return GxEPD_LIGHTGREY;
+#elif defined(TYPE_BW) || defined(TYPE_GRAYSCALE)
   return GxEPD_DARKGREY;
 #else
   return GxEPD_YELLOW;
@@ -236,6 +245,15 @@ static uint16_t mapColorValue(uint8_t pixelColor, uint16_t color2, uint16_t colo
       return GxEPD_BLUE;
     case 0x6:
       return GxEPD_ORANGE;
+#elif defined(TYPE_8G)
+    case 0x4:
+      return GxEPD_GRAY_EE;
+    case 0x5:
+      return GxEPD_LIGHTGREY;
+    case 0x6:
+      return GxEPD_GRAY_BB;
+    case 0x7:
+      return GxEPD_DARKGREY;
 #endif
     default:
       return GxEPD_WHITE;
@@ -426,6 +444,17 @@ static uint16_t rgbaToDisplayColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
   if (gray > 32)
     return GxEPD_DARKGREY;
   return GxEPD_BLACK;
+
+#elif defined(TYPE_8G)
+  // 8-level grayscale: produce RGB565 gray value
+  // drawPixel → colorToEpdiy will convert to full 16-level 4bpp grayscale
+  {
+    uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+    uint8_t r5 = gray >> 3;
+    uint8_t g6 = gray >> 2;
+    uint8_t b5 = gray >> 3;
+    return (uint16_t)(r5 << 11) | (g6 << 5) | b5;
+  }
 
 #else
   uint8_t gray = (r * 77 + g * 150 + b * 29) >> 8;

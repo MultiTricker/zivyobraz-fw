@@ -189,7 +189,9 @@ void downloadAndDisplayImage(HttpClient &httpClient)
   if (!useDirectStreaming)
   {
     // Fall back to paged mode (original behavior)
-    Logger::log<Logger::Level::INFO, Logger::Topic::IMAGE>("Using paged mode (multiple downloads)\n");
+    bool imageReady = httpClient.hasImageDataReady();
+    Logger::log<Logger::Level::INFO, Logger::Topic::IMAGE>("Using paged mode ({})\n",
+                                                           imageReady ? "single download" : "multiple downloads");
 
     // Partial (fast) refresh if supported, driven by server request
     if (httpClient.hasPartialRefresh() && Display::supportsPartialRefresh())
@@ -201,9 +203,6 @@ void downloadAndDisplayImage(HttpClient &httpClient)
     if (httpClient.hasRotation())
       Display::setRotation(2);
 
-    // Get that lovely image and put it on your gorgeous grayscale ePaper screen!
-    // If you can't use whole display at once, there will be multiple pages and therefore
-    // requests and downloads of one image from server
     Display::setToFirstPage();
 
     // Store number of pages needed to fill the buffer of the display to turn off the WiFi after last page is loaded
@@ -211,9 +210,16 @@ void downloadAndDisplayImage(HttpClient &httpClient)
 
     do
     {
-      // For paged displays, download image once per page
-      if (!httpClient.startImageDownload())
+      // Reuse kept-open connection for first page if available, otherwise open new
+      if (imageReady)
+      {
+        Logger::log<Logger::Level::DEBUG, Logger::Topic::IMAGE>("Using existing connection from timestamp check\n");
+        imageReady = false; // Only reuse once; subsequent pages need fresh downloads
+      }
+      else if (!httpClient.startImageDownload())
+      {
         break;
+      }
       ImageHandler::readImageData(httpClient);
 
       // turn of WiFi if no more pages left
@@ -255,11 +261,13 @@ void handleConnectedState()
 
   HttpClient httpClient;
 
-  // For direct streaming mode, keep connection open to avoid second request
-  // For paged mode, close connection (will reopen for each page)
+  // Keep connection open to avoid a redundant second HTTP request when possible:
+  // - Direct streaming mode always benefits
+  // - Single-page displays (e.g. epdiy with full PSRAM framebuffer) only need one download
   bool useDirectStreaming = ImageHandler::isDirectStreamingAvailable();
+  bool keepConnectionOpen = useDirectStreaming || Display::getNumberOfPages() == 1;
 
-  if (httpClient.checkForUpdate(true, useDirectStreaming))
+  if (httpClient.checkForUpdate(true, keepConnectionOpen))
   {
     // Re-evaluate direct streaming: rotation requires paged mode
     // (displays require sequential row writes, can't handle rotation in streaming)
