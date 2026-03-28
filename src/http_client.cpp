@@ -318,7 +318,11 @@ bool HttpClient::isConnected() { return m_client.connected() || m_client.availab
 
 int HttpClient::available() { return m_client.available(); }
 
-void HttpClient::stop() { m_client.stop(); }
+void HttpClient::stop()
+{
+  m_client.stop();
+  m_imageDataReady = false;
+}
 
 uint32_t HttpClient::readBytes(uint8_t *buf, int32_t bytes)
 {
