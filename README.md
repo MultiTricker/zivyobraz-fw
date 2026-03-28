@@ -59,6 +59,23 @@ or `-DUSE_CLIENT_HTTPS` compiler flag. Default value is `https` variant.
 #define DISPLAY_TYPE=GDEW075T7     // 800x480, 7.5"
 ```
 
+### EPDiy parallel displays (SVERIO Paperboard)
+
+For e-Paper displays with a parallel interface (e.g. ED060XC3, ED097TC2) driven by the [EPDiy](https://github.com/Pajenicko/epdiy) driver on the SVERIO Paperboard, dedicated build environments are already defined in **platformio.ini**. You do **not** need to manually edit `display.h` or `board.h` — simply select the matching environment to compile and use your display in definition.
+
+```ini
+[env:sverio_paperboard_epdiy]
+```
+
+These environment automatically set:
+- `COLOR_TYPE=8G` (8-level grayscale)
+- `BOARD_TYPE=SVERIO_PAPERBOARD_EPDIY`
+- `USE_EPDIY_DRIVER` flag
+- EPDiy library dependency (`https://github.com/Pajenicko/epdiy.git`)
+- Both `GxEPD2` and `GxEPD2_4G` libraries are ignored (not needed for parallel displays)
+
+If your display requires a specific VCOM voltage (might be referred on sticker placed on display), uncomment and adjust the `-D EPDIY_VCOM=1500` build flag.
+
 After successfully compiling and flashing the board, continue with the documentation "Bringing your own ePaper to life":
 https://wiki.zivyobraz.eu/doku.php?id=start#oziveni_vlastniho_epaperu
 
