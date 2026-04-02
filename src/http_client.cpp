@@ -158,7 +158,7 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
   m_otaRequired = false;
   m_otaUrl = "";
 
-  while (m_client.connected())
+  while (m_client.connected() || m_client.available())
   {
     String line = m_client.readStringUntil('\n');
 
