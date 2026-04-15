@@ -18,9 +18,11 @@
 // #define BOARD_TYPE CROWPANEL_ESP32S3_213 // Elecrow CrowPanel 2.13" 250x122, ESP32-S3-WROOM-1
 // #define BOARD_TYPE WS_EPAPER_ESP32_BOARD // Waveshare ESP32 Driver Board
 // #define BOARD_TYPE SVERIO_PAPERBOARD_SPI // Custom ESP32-S3 board with SPI ePaper (SVERIO)
+// #define BOARD_TYPE SVERIO_PAPERBOARD_EPDIY // ESP32-S3 board with parallel ePaper for use with EPDiy library
 // #define BOARD_TYPE SEEEDSTUDIO_XIAO_ESP32C3 // Seeed Studio XIAO ESP32C3, bundled with 800x480 BW display
 // #define BOARD_TYPE SEEEDSTUDIO_XIAO_EDDB_ESP32S3 // Dev board distributed as part of the TRMNL 7.5" (OG) DIY Kit
 // #define BOARD_TYPE SEEEDSTUDIO_RETERMINAL // SeeedStudio reTerminal E1001/E1002
+// #define BOARD_TYPE ESP32_DEMOKIT_GOODDISPLAY // ESP32 demo kit with 4.2" ePaper display from Good Display
 
 #include <Arduino.h>
 
@@ -41,10 +43,11 @@
   #define BT_CROWPANEL_ESP32S3_213 11
   #define BT_WS_EPAPER_ESP32_BOARD 12
   #define BT_SVERIO_PAPERBOARD_SPI 13
-  #define BT_SEEEDSTUDIO_XIAO_ESP32C3 14
-  #define BT_SEEEDSTUDIO_XIAO_EDDB_ESP32S3 15
-  #define BT_SEEEDSTUDIO_RETERMINAL 16
-  #define BT_SVERIO_PAPERBOARD_EPDIY 17
+  #define BT_SVERIO_PAPERBOARD_EPDIY 14
+  #define BT_SEEEDSTUDIO_XIAO_ESP32C3 15
+  #define BT_SEEEDSTUDIO_XIAO_EDDB_ESP32S3 16
+  #define BT_SEEEDSTUDIO_RETERMINAL 17
+  #define BT_ESP32_DEMOKIT_GOODDISPLAY 18
 
 // Create BOARD_TYPE_STRING constant here before board type is defined
 static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
@@ -77,14 +80,16 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
     #define WS_EPAPER_ESP32_BOARD
   #elif BOARD_ID == BT_SVERIO_PAPERBOARD_SPI
     #define SVERIO_PAPERBOARD_SPI
+  #elif BOARD_ID == BT_SVERIO_PAPERBOARD_EPDIY
+    #define SVERIO_PAPERBOARD_EPDIY
   #elif BOARD_ID == BT_SEEEDSTUDIO_XIAO_ESP32C3
     #define SEEEDSTUDIO_XIAO_ESP32C3
   #elif BOARD_ID == BT_SEEEDSTUDIO_XIAO_EDDB_ESP32S3
     #define SEEEDSTUDIO_XIAO_EDDB_ESP32S3
   #elif BOARD_ID == BT_SEEEDSTUDIO_RETERMINAL
     #define SEEEDSTUDIO_RETERMINAL
-  #elif BOARD_ID == BT_SVERIO_PAPERBOARD_EPDIY
-    #define SVERIO_PAPERBOARD_EPDIY
+  #elif BOARD_ID == BT_ESP32_DEMOKIT_GOODDISPLAY
+    #define ESP32_DEMOKIT_GOODDISPLAY
   #else
     #pragma message("BOARD_TYPE: " XSTR(BOARD_TYPE))
     #error "BOARD_TYPE not supported!"
@@ -252,6 +257,20 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define CAL_INTERCEPT 623.0f
   #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
+#elif defined SVERIO_PAPERBOARD_EPDIY
+  // Paperboard with parallel interface for epdiy
+  // SPI pins are not needed - epdiy uses I2S parallel bus
+  // Power management is handled by epdiy library (TPS65185)
+  #define PIN_SDA 39
+  #define PIN_SCL 40
+  #define vBatPin ADC1_GPIO1_CHANNEL
+  #define CAL_SLOPE 4.27f
+  #define CAL_INTERCEPT 487.0f
+  #define enableBattery 2
+  #define BOARD_HAS_PSRAM
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (512 * 1024)
+  // No ePaperPowerPin - epdiy manages display power via TPS65185
+
 #elif defined SEEEDSTUDIO_XIAO_ESP32C3
   #define PIN_SS 3
   #define PIN_DC 5
@@ -295,19 +314,16 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
   #define REMAP_SPI
 
-#elif defined SVERIO_PAPERBOARD_EPDIY
-  // Paperboard with parallel interface for epdiy
-  // SPI pins are not needed - epdiy uses I2S parallel bus
-  // Power management is handled by epdiy library (TPS65185)
-  #define PIN_SDA 39
-  #define PIN_SCL 40
-  #define vBatPin ADC1_GPIO1_CHANNEL
-  #define CAL_SLOPE 4.27f
-  #define CAL_INTERCEPT 487.0f
-  #define enableBattery 2
-  #define BOARD_HAS_PSRAM
-  #define BOARD_MAX_PAGE_BUFFER_SIZE (512 * 1024)
-  // No ePaperPowerPin - epdiy manages display power via TPS65185
+#elif defined ESP32_DEMOKIT_GOODDISPLAY
+  #define PIN_SS 12
+  #define PIN_DC 41
+  #define PIN_RST 40
+  #define PIN_BUSY 39
+  #define PIN_CS2 42
+  #define PIN_SPI_MOSI 18
+  #define PIN_SPI_CLK 23
+  #define ePaperPowerPin 2
+  #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 #endif
 
 #ifdef REMAP_SPI
