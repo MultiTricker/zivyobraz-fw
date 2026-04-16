@@ -60,11 +60,11 @@ void setupHW()
   digitalWrite(enableBattery, LOW);
 #endif
 
-#ifdef CROWPANEL_ESP32S3_579
-  pinMode(ePaperPowerPin, OUTPUT);
+  // Power on ePaper early — sufficient time for stabilization passes
+  // during Display::init(), sensor init, WiFi connect, and HTTP before
+  // any actual display SPI transaction occurs
   setEPaperPowerOn(true);
   delay(50);
-#endif
 
   // Initialize display (epdiy boards set up I2C here via TPS65185 init)
   Display::init();
@@ -93,6 +93,9 @@ void setEPaperPowerOn(bool on)
 
 void enterDeepSleepMode(uint64_t sleepDuration)
 {
+  // Safety net: ensure ePaper power is off before deep sleep regardless of code path
+  setEPaperPowerOn(false);
+
   // Enter deep sleep
 #ifdef M5StackCoreInk
   Display::powerOffM5();
@@ -115,10 +118,7 @@ float getBatteryVoltage()
 #ifdef ESPink_V3
   Logger::log<Logger::Level::DEBUG, Logger::Topic::BATTERY>("Readingon ESPink V3 board\n");
 
-  setEPaperPowerOn(true);
   pinMode(PIN_ALERT, INPUT_PULLUP);
-
-  delay(100);
 
   Wire.begin(PIN_SDA, PIN_SCL);
 
@@ -146,8 +146,6 @@ float getBatteryVoltage()
 
   lipo.clearAlert();
   lipo.enableHibernate();
-
-  setEPaperPowerOn(false);
 
 #elif defined ES3ink
   esp_adc_cal_characteristics_t adc_cal;
