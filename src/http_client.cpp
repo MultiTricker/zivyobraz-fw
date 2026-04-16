@@ -125,10 +125,17 @@ bool HttpClient::sendRequest(bool timestampCheck)
   String url = "/index.php?timestampCheck=";
   url += timestampCheck ? "1" : "0";
 
-  m_client.print(String("POST ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" +
-                 "X-API-Key: " + String(Utils::getStoredAPIKey()) + "\r\n" + "Content-Type: application/json\r\n" +
-                 "Content-Length: " + String(m_jsonPayload.length()) + "\r\n" + "Connection: close\r\n\r\n" +
-                 m_jsonPayload);
+  // Send HTTP request using multiple print() calls to avoid allocating one large heap String
+  m_client.print("POST ");
+  m_client.print(url);
+  m_client.print(" HTTP/1.1\r\nHost: ");
+  m_client.print(host);
+  m_client.print("\r\nX-API-Key: ");
+  m_client.print(Utils::getStoredAPIKey());
+  m_client.print("\r\nContent-Type: application/json\r\nContent-Length: ");
+  m_client.print(m_jsonPayload.length());
+  m_client.print("\r\nConnection: close\r\n\r\n");
+  m_client.print(m_jsonPayload);
 
   Logger::log<Logger::Topic::HTTP>("Request sent\n");
 
