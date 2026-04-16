@@ -346,6 +346,61 @@ static void directStreamPixel(uint16_t x, uint16_t y, uint16_t color)
   g_directCtx.pixelsProcessed++;
 }
 
+// Write a run of identical pixels in direct streaming mode.
+// Handles row boundaries and buffer flushing internally.
+// Much faster than calling directStreamPixel() per pixel for RLE formats.
+static void directStreamPixelRun(uint16_t &col, uint16_t &row, uint16_t count, uint16_t color)
+{
+  if (!g_directCtx.initialized || !g_directCtx.buffer || count == 0)
+    return;
+
+  const uint16_t w = g_directCtx.displayWidth;
+  const uint32_t totalPixels = (uint32_t)g_directCtx.displayWidth * g_directCtx.displayHeight;
+
+  while (count > 0 && g_directCtx.pixelsProcessed < totalPixels)
+  {
+    // Ensure buffer row index is up to date for the current absolute row
+    if (row != g_directCtx.currentRow)
+    {
+      uint16_t newBufferRowIndex = row - g_directCtx.firstRowInBuffer;
+
+      if (newBufferRowIndex >= g_directCtx.bufferRowCount)
+      {
+        flushCompletedRows();
+        g_directCtx.firstRowInBuffer = row;
+        newBufferRowIndex = 0;
+      }
+
+      g_directCtx.currentRow = row;
+      g_directCtx.bufferRowIndex = newBufferRowIndex;
+    }
+
+    // How many pixels can we write before hitting the row boundary?
+    uint16_t pixelsInRow = w - col;
+    uint16_t pixelsToWrite = (count < pixelsInRow) ? count : pixelsInRow;
+
+    // Also cap to remaining total pixels
+    uint32_t remainingTotal = totalPixels - g_directCtx.pixelsProcessed;
+    if (pixelsToWrite > remainingTotal)
+      pixelsToWrite = (uint16_t)remainingTotal;
+
+    if (pixelsToWrite == 0)
+      break;
+
+    // Bulk fill – replaces the per-pixel inner loop
+    g_directCtx.buffer->fillPixelRun(g_directCtx.bufferRowIndex, col, pixelsToWrite, color);
+    g_directCtx.pixelsProcessed += pixelsToWrite;
+    count -= pixelsToWrite;
+    col += pixelsToWrite;
+
+    if (col >= w)
+    {
+      col = 0;
+      row++;
+    }
+  }
+}
+
 // Initialize direct streaming context
 static bool initDirectStreamContext()
 {
@@ -762,17 +817,9 @@ static bool processRLEDirect(HttpClient &http, uint32_t startTime, ImageFormat f
 
     uint16_t color = mapColorValue(pixelColor, color2, color3);
 
-    // Draw pixels using direct streaming
-    for (uint8_t i = 0; i < count && g_directCtx.pixelsProcessed < totalPixels; i++)
-    {
-      directStreamPixel(col, row, color);
-
-      if (++col >= w)
-      {
-        col = 0;
-        row++;
-      }
-    }
+    // Write the entire RLE run in one bulk operation instead of pixel-by-pixel.
+    // directStreamPixelRun handles row boundaries and buffer flushes internally.
+    directStreamPixelRun(col, row, (uint16_t)count, color);
 
     if (g_directCtx.pixelsProcessed % 10000 == 0)
       yield();
