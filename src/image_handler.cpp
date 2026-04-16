@@ -305,8 +305,9 @@ static void flushCompletedRows()
   Logger::log<Logger::Level::DEBUG, Logger::Topic::STREAM>("Flushed {} rows starting at y={}\n", rowsToFlush,
                                                            g_directCtx.firstRowInBuffer);
 
-  // Reset buffer for next batch
-  for (uint16_t i = 0; i < g_directCtx.bufferRowCount; i++)
+  // Reset buffer for next batch — only reset rows that were actually flushed,
+  // rows beyond rowsToFlush were never written in this batch and are already clean.
+  for (uint16_t i = 0; i < rowsToFlush; i++)
   {
     g_directCtx.buffer->resetRow(i);
   }
