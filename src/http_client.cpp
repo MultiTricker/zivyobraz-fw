@@ -116,10 +116,10 @@ bool HttpClient::sendRequest(bool timestampCheck)
   Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("Sending POST to: {}{}/index.php\n", CONNECTION_URL_PREFIX,
                                                          host);
 
-  // Pretty print JSON payload for debugging
+  // Pretty print JSON payload for device info
   String prettyJson;
   serializeJsonPretty(m_jsonDoc, prettyJson);
-  Logger::log<Logger::Level::DEBUG, Logger::Topic::HTTP>("JSON Payload:\n{}\n", prettyJson);
+  Logger::log<Logger::Level::INFO, Logger::Topic::HTTP>("JSON Payload:\n{}\n", prettyJson);
 
   // Build URL with timestampCheck query parameter
   String url = "/index.php?timestampCheck=";
