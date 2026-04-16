@@ -17,7 +17,7 @@ public:
 
 // Set minimum log level - messages below this level won't be compiled in
 #ifndef LOG_LEVEL_MINIMUM
-  static constexpr Level LOG_LEVEL_MINIMUM = Level::DEBUG; // Default: show all levels
+  static constexpr Level LOG_LEVEL_MINIMUM = Level::INFO; // Default: include INFO and above
 #endif
 
   enum class Topic : uint8_t
