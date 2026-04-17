@@ -87,6 +87,12 @@ SensorType Sensor::detectSensor()
 
   SensorType found = SensorType::NONE;
 
+  // One address check could take about 1 second instead of few ms, if there is no sensor or I2C issue
+  // so break the loop at SHTx scan in that case to avoid long boot times (and skip checking other sensors)
+  constexpr unsigned long SCAN_TIMEOUT_MS = 500;
+  const unsigned long scanStart = millis();
+  bool timeout = false;
+
   // Check for SHT40 OR SHT41 OR SHT45 (scan addresses)
   const uint8_t sht4xAddrs[] = {0x44, 0x45, 0x46};
   for (uint8_t addr : sht4xAddrs)
@@ -100,12 +106,20 @@ SensorType Sensor::detectSensor()
       found = SensorType::SHT4X;
       break;
     }
+
+    if (millis() - scanStart > SCAN_TIMEOUT_MS)
+    {
+      Logger::log<Logger::Topic::SENS>(
+        "Sensor scan timeout (>{} ms) during SHT4x scan, skipping remaining addresses and sensors\n", SCAN_TIMEOUT_MS);
+      timeout = true;
+      break;
+    }
   }
 
   // Got SHT4x?
-  if (found != SensorType::NONE)
+  if (found != SensorType::NONE || timeout)
   {
-    // Already found SHT4x, skip other sensors
+    // Already found SHT4x or timeout, skip other sensors
   }
   // Check for BME280
   else if (bme.begin())
