@@ -301,6 +301,9 @@ bool Sensor::readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
     return false;
   }
 
+  // Put sensor to sleep to reduce power draw until deep sleep
+  stcc4.enterSleepMode();
+
   // Assign to output variables
   sen_temp = temp_temp;
   sen_humi = (int)temp_humidity;
