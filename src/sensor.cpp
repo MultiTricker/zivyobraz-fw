@@ -222,8 +222,14 @@ bool Sensor::readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres)
 
   SCD4.measureSingleShot();
 
+  unsigned long scd4xStart = millis();
   while (SCD4.readMeasurement() == false) // wait for a new data (approx 30s)
   {
+    if (millis() - scd4xStart > 60000)
+    {
+      Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("SCD4x measurement timed out\n");
+      return false;
+    }
     Logger::log<Logger::Topic::SENS>("Waiting for first measurement...\n");
     delay(1000);
   }
