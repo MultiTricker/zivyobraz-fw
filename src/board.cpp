@@ -282,7 +282,7 @@ float getBatteryVoltage()
   volt = (analogReadMilliVolts(vBatPin) * dividerRatio / 1000);
 #endif
 
-  Logger::log<Logger::Topic::BATTERY>("Voltage: {} V\n", volt);
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::BATTERY>("Voltage: {} V\n", volt);
   return volt;
 }
 
