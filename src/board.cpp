@@ -106,7 +106,7 @@ void enterDeepSleepMode(uint64_t sleepDuration)
   #if defined(EXT_BUTTON) && !defined(ESPink_V35)
   esp_sleep_enable_ext1_wakeup(1ULL << EXT_BUTTON, ESP_EXT1_WAKEUP_ANY_LOW);
   #endif
-  delay(100);
+  delay(10);
   esp_deep_sleep_start();
 #endif
 }
