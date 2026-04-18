@@ -94,7 +94,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #elif BOARD_ID == BT_ESP32_DEMOKIT_GOODDISPLAY
     #define ESP32_DEMOKIT_GOODDISPLAY
   #elif BOARD_ID == BT_ESP32_DEVKIT_ESP32L_GOODDISPLAY
-    #define ESP32_DEVKIT_ESP32L_GOODDISPLAY
+    #define ESP32L_DEVKIT_GOODDISPLAY
   #else
     #pragma message("BOARD_TYPE: " XSTR(BOARD_TYPE))
     #error "BOARD_TYPE not supported!"
