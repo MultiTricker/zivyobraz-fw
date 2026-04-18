@@ -23,7 +23,7 @@
 // #define BOARD_TYPE SEEEDSTUDIO_XIAO_EDDB_ESP32S3 // Dev board distributed as part of the TRMNL 7.5" (OG) DIY Kit
 // #define BOARD_TYPE SEEEDSTUDIO_RETERMINAL // SeeedStudio reTerminal E1001/E1002
 // #define BOARD_TYPE ESP32_DEMOKIT_GOODDISPLAY // ESP32 demo kit with 4.2" ePaper display from Good Display
-// #define BOARD_TYPE ESP32_DEVKIT_ESP32L_GOODDISPLAY // ESP32 Development Kit ESP32-L series with eInk Driver Board
+// #define BOARD_TYPE ESP32L_DEVKIT_GOODDISPLAY // ESP32 Development Kit ESP32-L series with eInk Driver Board
 
 #include <Arduino.h>
 
@@ -93,7 +93,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
     #define SEEEDSTUDIO_RETERMINAL
   #elif BOARD_ID == BT_ESP32_DEMOKIT_GOODDISPLAY
     #define ESP32_DEMOKIT_GOODDISPLAY
-  #elif BOARD_ID == BT_ESP32_DEVKIT_ESP32L_GOODDISPLAY
+  #elif BOARD_ID == BT_ESP32L_DEVKIT_GOODDISPLAY
     #define ESP32L_DEVKIT_GOODDISPLAY
   #else
     #pragma message("BOARD_TYPE: " XSTR(BOARD_TYPE))
@@ -330,7 +330,7 @@ static constexpr const char BOARD_TYPE_STRING[] = XSTR(BOARD_TYPE);
   #define ePaperPowerPin 2
   #define BOARD_MAX_PAGE_BUFFER_SIZE (48 * 1024)
 
-#elif defined ESP32_DEVKIT_ESP32L_GOODDISPLAY
+#elif defined ESP32L_DEVKIT_GOODDISPLAY
   #define PIN_SS 27
   #define PIN_DC 14
   #define PIN_RST 12
