@@ -54,6 +54,14 @@ void packPixel3C(uint8_t *blackBuffer, uint8_t *colorBuffer, uint16_t x, uint16_
 void packPixel4C(uint8_t *buffer, uint16_t x, uint8_t color4);
 void packPixel7C(uint8_t *buffer, uint16_t x, uint8_t color7);
 
+// Bulk fill functions: write a run of identical pixels into a row buffer.
+// Much faster than calling packPixel* per pixel; uses memset for aligned sections.
+void fillPixelRunBW(uint8_t *buffer, uint16_t startX, uint16_t count, bool isBlack);
+void fillPixelRunGrayscale(uint8_t *buffer, uint16_t startX, uint16_t count, uint8_t grey);
+void fillPixelRun3C(uint8_t *blackBuffer, uint8_t *colorBuffer, uint16_t startX, uint16_t count, uint16_t color);
+void fillPixelRun4C(uint8_t *buffer, uint16_t startX, uint16_t count, uint8_t color4);
+void fillPixelRun7C(uint8_t *buffer, uint16_t startX, uint16_t count, uint8_t color7);
+
 size_t convertGrayscaleToBW(uint8_t *buffer, uint16_t width, uint16_t rowCount);
 uint8_t gxepdToGrey(uint16_t color);
 uint8_t gxepdTo4CColor(uint16_t color);

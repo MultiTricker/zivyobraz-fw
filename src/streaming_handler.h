@@ -69,6 +69,9 @@ public:
   // Direct pixel packing methods
   void setPixel(size_t rowIndex, uint16_t x, uint16_t color);
   void setPixelGrey(size_t rowIndex, uint16_t x, uint8_t grey);
+  // Bulk fill: write a run of identical pixels starting at (rowIndex, startX).
+  // Significantly faster than calling setPixel per pixel for RLE formats.
+  void fillPixelRun(size_t rowIndex, uint16_t startX, uint16_t count, uint16_t color);
 
   // Row management
   void clearRow(size_t rowIndex);

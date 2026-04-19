@@ -118,6 +118,165 @@ void packPixel7C(uint8_t *buffer, uint16_t x, uint8_t color7)
     buffer[byteIndex] = (buffer[byteIndex] & 0x0F) | ((color7 & 0x0F) << 4); // Even pixel: high nibble
 }
 
+// ---------------------------------------------------------------------------
+// Bulk fill functions – write a run of identical pixels using memset where
+// possible, which is much faster than per-pixel bit manipulation.
+// ---------------------------------------------------------------------------
+
+// BW (1bpp, 8 pixels/byte, MSB first): pixel x → bit (7 - x%8) in byte x/8
+void fillPixelRunBW(uint8_t *buffer, uint16_t startX, uint16_t count, bool isBlack)
+{
+  if (count == 0)
+    return;
+
+  const uint16_t endX = startX + count; // exclusive
+  const uint16_t startByte = startX >> 3u;
+  const uint16_t endByte = (uint16_t)((endX - 1u) >> 3u); // inclusive
+
+  // highBit = MSB position of first pixel, lowBit = MSB position of last pixel.
+  const uint8_t highBit = 7u - (uint8_t)(startX & 7u);
+  const uint8_t lowBit = 7u - (uint8_t)((endX - 1u) & 7u);
+
+  if (startByte == endByte)
+  {
+    // All pixels fit in one byte.
+    const uint8_t mask = (uint8_t)(((1u << (highBit - lowBit + 1u)) - 1u) << lowBit);
+    if (isBlack)
+      buffer[startByte] &= ~mask;
+    else
+      buffer[startByte] |= mask;
+    return;
+  }
+
+  // First partial byte: pixels startX ..(startByte+1)*8 - 1
+  {
+    const uint8_t mask = (uint8_t)((1u << (highBit + 1u)) - 1u); // bits 0..highBit
+    if (isBlack)
+      buffer[startByte] &= ~mask;
+    else
+      buffer[startByte] |= mask;
+  }
+
+  // Full middle bytes
+  if (endByte > startByte + 1u)
+    memset(buffer + startByte + 1u, isBlack ? 0x00 : 0xFF, endByte - startByte - 1u);
+
+  // Last partial byte: pixels endByte*8 .. endX-1
+  {
+    const uint8_t mask = (uint8_t)(0xFFu << lowBit); // bits lowBit..7
+    if (isBlack)
+      buffer[endByte] &= ~mask;
+    else
+      buffer[endByte] |= mask;
+  }
+}
+
+// 2bpp helper (4 pixels/byte, MSB first) used by GRAYSCALE and 4C fills
+using PackPixelFn = void (*)(uint8_t *, uint16_t, uint8_t);
+
+static void fillPixelRun2bpp(uint8_t *buffer, uint16_t startX, uint16_t count, uint8_t value, PackPixelFn packFn)
+{
+  if (count == 0)
+    return;
+
+  const uint8_t pattern = (uint8_t)((value << 6u) | (value << 4u) | (value << 2u) | value);
+  const uint16_t endX = startX + count;
+
+  const uint16_t startByte = startX / 4u;
+  const uint16_t endByte = (endX - 1u) / 4u;
+
+  if (startByte == endByte)
+  {
+    for (uint16_t x = startX; x < endX; x++)
+      packFn(buffer, x, value);
+    return;
+  }
+
+  // Leading partial pixels (up to the next 4-pixel aligned boundary)
+  const uint16_t firstFullPx = (startByte + 1u) * 4u;
+  for (uint16_t x = startX; x < firstFullPx; x++)
+    packFn(buffer, x, value);
+
+  // Full bytes in the middle
+  if (endByte > startByte + 1u)
+    memset(buffer + startByte + 1u, pattern, endByte - startByte - 1u);
+
+  // Trailing partial pixels
+  const uint16_t lastFullPx = endByte * 4u;
+  for (uint16_t x = lastFullPx; x < endX; x++)
+    packFn(buffer, x, value);
+}
+
+void fillPixelRunGrayscale(uint8_t *buffer, uint16_t startX, uint16_t count, uint8_t grey)
+{
+  fillPixelRun2bpp(buffer, startX, count, grey >> 6u, packPixel4G);
+}
+
+// 3C (dual 1bpp planes): delegate to fillPixelRunBW for each plane
+void fillPixelRun3C(uint8_t *blackBuffer, uint8_t *colorBuffer, uint16_t startX, uint16_t count, uint16_t color)
+{
+  if (count == 0)
+    return;
+
+  bool drawOnBlackPlane, drawOnColorPlane;
+  switch (color)
+  {
+    case static_cast<uint16_t>(GxEPDColor::BLACK):
+      drawOnBlackPlane = true;
+      drawOnColorPlane = false;
+      break;
+    case static_cast<uint16_t>(GxEPDColor::RED):
+    case static_cast<uint16_t>(GxEPDColor::YELLOW):
+      drawOnBlackPlane = false;
+      drawOnColorPlane = true;
+      break;
+    default: // WHITE and others
+      drawOnBlackPlane = false;
+      drawOnColorPlane = false;
+      break;
+  }
+  fillPixelRunBW(blackBuffer, startX, count, drawOnBlackPlane);
+  fillPixelRunBW(colorBuffer, startX, count, drawOnColorPlane);
+}
+
+// 4C (2bpp, 4 pixels/byte, MSB first): same layout as GRAYSCALE
+void fillPixelRun4C(uint8_t *buffer, uint16_t startX, uint16_t count, uint8_t color4)
+{
+  fillPixelRun2bpp(buffer, startX, count, color4 & 0x03, packPixel4C);
+}
+
+// 7C (4bpp, 2 pixels/byte): even pixel → high nibble, odd pixel → low nibble
+void fillPixelRun7C(uint8_t *buffer, uint16_t startX, uint16_t count, uint8_t color7)
+{
+  if (count == 0)
+    return;
+
+  const uint8_t c = color7 & 0x0Fu;
+  const uint8_t pattern = (uint8_t)((c << 4u) | c); // both nibbles
+  const uint16_t endX = startX + count;
+
+  uint16_t x = startX;
+
+  // Handle odd-aligned start: write single pixel into low nibble
+  if (x & 1u)
+  {
+    buffer[x / 2u] = (buffer[x / 2u] & 0xF0u) | c;
+    x++;
+  }
+
+  // Full bytes (even-aligned pairs)
+  const uint16_t fullBytes = (endX - x) / 2u;
+  if (fullBytes > 0u)
+  {
+    memset(buffer + x / 2u, pattern, fullBytes);
+    x += fullBytes * 2u;
+  }
+
+  // Trailing odd pixel: write into high nibble
+  if (x < endX)
+    buffer[x / 2u] = (buffer[x / 2u] & 0x0Fu) | (uint8_t)(c << 4u);
+}
+
 size_t convertGrayscaleToBW(uint8_t *buffer, uint16_t width, uint16_t rowCount)
 {
   uint16_t srcBytesPerRow = (width + 3) / 4; // 2bpp = 4 pixels per byte

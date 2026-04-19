@@ -426,35 +426,17 @@ void init()
   display.setTextColor(GxEPD_BLACK); // black font
 }
 
-void powerOnAndInit()
-{
-  // For REMAP_SPI boards: init SPI first
-#ifdef REMAP_SPI
-  init();
-  Board::setEPaperPowerOn(true);
-  delay(500);
-#else
-  Board::setEPaperPowerOn(true);
-  delay(500);
-  init();
-#endif
-}
-
 void clear()
 {
   Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Clearing display...\n");
 
-  powerOnAndInit();
+  init();
   setToFullWindow();
   setToFirstPage();
   do
   {
     display.fillRect(0, 0, DISPLAY_RESOLUTION_X, DISPLAY_RESOLUTION_Y, GxEPD_WHITE);
   } while (setToNextPage());
-
-  delay(100);
-  // Disable power supply for ePaper
-  Board::setEPaperPowerOn(false);
 
   Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Display cleared.\n");
 }
@@ -719,7 +701,7 @@ void refreshDisplay() { display.epd2.refresh(false); }
 
 void showNoWiFiError(uint64_t sleepSeconds, const String &wikiUrl)
 {
-  powerOnAndInit();
+  init();
   setToFullWindow();
   setToFirstPage();
   do
@@ -734,10 +716,6 @@ void showNoWiFiError(uint64_t sleepSeconds, const String &wikiUrl)
     display.setFont(&OpenSansSB_14px);
     centeredText("Docs: " + wikiUrl, DISPLAY_RESOLUTION_X / 2, DISPLAY_RESOLUTION_Y - 20);
   } while (setToNextPage());
-
-  delay(100);
-  // Disable power supply for ePaper
-  Board::setEPaperPowerOn(false);
 }
 
 void showWiFiError(const String &hostname, const String &password, const String &urlWeb, const String &wikiUrl)
@@ -752,7 +730,7 @@ void showWiFiError(const String &hostname, const String &password, const String 
 
   Board::DeviceInfo devInfo = Board::getDeviceInfo();
 
-  powerOnAndInit();
+  init();
   setToFullWindow();
   setToFirstPage();
   do
@@ -873,9 +851,5 @@ void showWiFiError(const String &hostname, const String &password, const String 
       drawQrCode(qrString.c_str(), 3, 93, small_resolution_x - 28, 3);
     }
   } while (setToNextPage());
-
-  delay(100);
-  // Disable power supply for ePaper
-  Board::setEPaperPowerOn(false);
 }
 } // namespace Display
