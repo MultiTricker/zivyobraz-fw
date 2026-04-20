@@ -68,12 +68,6 @@ void Sensor::init()
 
 SensorType Sensor::detectSensor()
 {
-  #if (defined ESPink_V2) || (defined ESPink_V3) || (defined ESPink_V35) || (defined ESP32S3Adapter)
-  // LaskaKit ESPink 2.5 needs to power up uSup
-  Board::setEPaperPowerOn(true);
-  delay(50);
-  #endif
-
   // End any previous Wire session to ensure clean state after deep sleep
   // epdiy uses the same I2C driver; do not delete it.
   #if !defined(SVERIO_PAPERBOARD_EPDIY)
@@ -146,11 +140,6 @@ SensorType Sensor::detectSensor()
     }
   }
 
-  #if (defined ESPink_V2) || (defined ESPink_V3) || (defined ESPink_V35) || (defined ESP32S3Adapter)
-  // Power down for now
-  Board::setEPaperPowerOn(false);
-  #endif
-
   return found;
 }
 
@@ -161,12 +150,6 @@ bool Sensor::readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
     Logger::log<Logger::Topic::SENS>("No sensor detected\n");
     return false;
   }
-
-  #if (defined ESPink_V2) || (defined ESPink_V3) || (defined ESPink_V35) || (defined ESP32S3Adapter)
-  // LaskaKit ESPink 2.5 needs to power up uSup
-  Board::setEPaperPowerOn(true);
-  delay(50);
-  #endif
 
   // End any previous Wire session to ensure clean state after deep sleep
   // epdiy uses the same I2C driver; do not delete it.
@@ -206,11 +189,6 @@ bool Sensor::readSensorsVal(float &sen_temp, int &sen_humi, int &sen_pres)
 
   if (!ret)
     Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("Failed to read sensor data\n");
-
-  #if (defined ESPink_V2) || (defined ESPink_V3) || (defined ESPink_V35) || (defined ESP32S3Adapter)
-  // Power down for now
-  Board::setEPaperPowerOn(false);
-  #endif
 
   return ret;
 }
@@ -258,8 +236,14 @@ bool Sensor::readSCD4X(float &sen_temp, int &sen_humi, int &sen_pres)
 
   SCD4.measureSingleShot();
 
+  unsigned long scd4xStart = millis();
   while (SCD4.readMeasurement() == false) // wait for a new data (approx 30s)
   {
+    if (millis() - scd4xStart > 60000)
+    {
+      Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("SCD4x measurement timed out\n");
+      return false;
+    }
     Logger::log<Logger::Topic::SENS>("Waiting for first measurement...\n");
     delay(1000);
   }
@@ -330,6 +314,9 @@ bool Sensor::readSTCC4(float &sen_temp, int &sen_humi, int &sen_pres)
     Logger::log<Logger::Level::ERROR, Logger::Topic::SENS>("STCC4 readMeasurement error code: {}\n", error);
     return false;
   }
+
+  // Put sensor to sleep to reduce power draw until deep sleep
+  stcc4.enterSleepMode();
 
   // Assign to output variables
   sen_temp = temp_temp;

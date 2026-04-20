@@ -427,6 +427,52 @@ void RowStreamBuffer::setPixelGrey(size_t rowIndex, uint16_t x, uint8_t grey)
   incrementRowPixelCount(rowIndex);
 }
 
+void RowStreamBuffer::fillPixelRun(size_t rowIndex, uint16_t startX, uint16_t count, uint16_t color)
+{
+  if (!m_initialized || !m_directMode || rowIndex >= m_rowCount || count == 0)
+    return;
+  if (startX >= m_displayWidth)
+    return;
+
+  // Clip run to row width
+  if (startX + count > m_displayWidth)
+    count = m_displayWidth - startX;
+
+  size_t rowOffset = rowIndex * m_rowSize;
+  uint8_t *rowData = m_buffer.data() + rowOffset;
+
+  switch (m_format)
+  {
+    case PixelPacker::DisplayFormat::BW:
+      PixelPacker::fillPixelRunBW(rowData, startX, count, color == 0x0000u); // GxEPD_BLACK
+      break;
+
+    case PixelPacker::DisplayFormat::GRAYSCALE:
+      PixelPacker::fillPixelRunGrayscale(rowData, startX, count, PixelPacker::gxepdToGrey(color));
+      break;
+
+    case PixelPacker::DisplayFormat::COLOR_3C:
+    {
+      uint8_t *colorData = m_colorBuffer.data() + rowOffset;
+      PixelPacker::fillPixelRun3C(rowData, colorData, startX, count, color);
+    }
+    break;
+
+    case PixelPacker::DisplayFormat::COLOR_7C:
+      PixelPacker::fillPixelRun7C(rowData, startX, count, PixelPacker::gxepdTo7CColor(color));
+      break;
+
+    case PixelPacker::DisplayFormat::COLOR_4C:
+      PixelPacker::fillPixelRun4C(rowData, startX, count, PixelPacker::gxepdTo4CColor(color));
+      break;
+
+    default:
+      break;
+  }
+
+  m_rowPixelCount[rowIndex] += count;
+}
+
 void RowStreamBuffer::clearRow(size_t rowIndex)
 {
   if (!m_initialized || rowIndex >= m_rowCount)

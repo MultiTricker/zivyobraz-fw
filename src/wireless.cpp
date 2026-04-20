@@ -273,7 +273,7 @@ String getSSID()
 int8_t getStrength()
 {
   int8_t rssi = WiFi.RSSI();
-  Logger::log<Logger::Topic::WIFI>("Strength: {} dB\n", rssi);
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>("Strength: {} dB\n", rssi);
   return rssi;
 }
 

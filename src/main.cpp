@@ -108,10 +108,6 @@ void initializeWiFi()
 
 void downloadAndDisplayImage(HttpClient &httpClient)
 {
-  // Enable ePaper power
-  Board::setEPaperPowerOn(true);
-  delay(500);
-
   // Start tracking download duration
   StateManager::startDownloadTimer();
 
@@ -241,10 +237,6 @@ void downloadAndDisplayImage(HttpClient &httpClient)
     // Disable light sleep callback after refresh completes
     Display::enableLightSleepDuringRefresh(false);
   }
-
-  // Disable ePaper power
-  delay(100);
-  Board::setEPaperPowerOn(false);
 
   // End refresh timing
   StateManager::endRefreshTimer();
