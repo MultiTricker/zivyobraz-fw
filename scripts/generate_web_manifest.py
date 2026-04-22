@@ -8,8 +8,8 @@ def generate_manifest(source, target, env):
     # Klíč "custom_fw_name" - jinak název projektu/prostředí.
     fw_name = env.GetProjectOption("custom_fw_name", env.get("PROGNAME")).replace("'", "")
 
-    # Načtení verze, 3.1 jako výchozí
-    fw_version = env.GetProjectOption("custom_fw_version", "3.1").replace("'", "")
+    # Načtení verze, 3.2 jako výchozí
+    fw_version = env.GetProjectOption("custom_fw_version", "3.2").replace("'", "")
 
     # Zbytek nastavení
     board_config = env.BoardConfig()

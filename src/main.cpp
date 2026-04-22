@@ -41,7 +41,7 @@
 
 extern const String serverName = "zivyobraz.eu";
 const char *host = "cdn.zivyobraz.eu";
-const char *firmware = "3.1";
+const char *firmware = "3.2";
 const String wifiPassword = "zivyobraz";
 const String urlWiki = "https://wiki.zivyobraz.eu";
 extern const char *const NVS_NAMESPACE = "zivyobraz";
