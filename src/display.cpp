@@ -431,6 +431,7 @@ void clear()
   Logger::log<Logger::Level::DEBUG, Logger::Topic::DISP>("Clearing display...\n");
 
   init();
+  delay(200);
   setToFullWindow();
   setToFirstPage();
   do
@@ -702,6 +703,7 @@ void refreshDisplay() { display.epd2.refresh(false); }
 void showNoWiFiError(uint64_t sleepSeconds, const String &wikiUrl)
 {
   init();
+  delay(50);
   setToFullWindow();
   setToFirstPage();
   do
@@ -731,6 +733,7 @@ void showWiFiError(const String &hostname, const String &password, const String 
   Board::DeviceInfo devInfo = Board::getDeviceInfo();
 
   init();
+  delay(50);
   setToFullWindow();
   setToFirstPage();
   do
