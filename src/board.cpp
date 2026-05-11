@@ -258,7 +258,7 @@ float getBatteryVoltage()
   Logger::log<Logger::Level::DEBUG, Logger::Topic::BATTERY>("Reading on SVERIO Paperboard EPDIY board\n");
 
   adc1_config_width(ADC_WIDTH_BIT_12);
-  adc1_config_channel_atten(vBatPin, ADC_ATTEN_DB_12);
+  adc1_config_channel_atten((adc1_channel_t)vBatPin, ADC_ATTEN_DB_12);
 
   // Enable battery voltage measurement circuit via GPIO2
   pinMode(enableBattery, OUTPUT);
@@ -269,7 +269,7 @@ float getBatteryVoltage()
   uint32_t rawSum = 0;
   for (int i = 0; i < 16; i++)
   {
-    rawSum += adc1_get_raw(vBatPin);
+    rawSum += adc1_get_raw((adc1_channel_t)vBatPin);
     delay(5);
   }
 
