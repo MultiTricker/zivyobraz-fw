@@ -185,7 +185,8 @@ static void fillPixelRun2bpp(uint8_t *buffer, uint16_t startX, uint16_t count, u
   const uint16_t startByte = startX / 4u;
   const uint16_t endByte = (endX - 1u) / 4u;
 
-  auto writePartial = [buffer, value](uint16_t fromX, uint16_t toX) {
+  auto writePartial = [buffer, value](uint16_t fromX, uint16_t toX)
+  {
     for (uint16_t x = fromX; x < toX; x++)
     {
       const uint16_t byteIndex = x / 4u;
