@@ -17,6 +17,11 @@
     #ifndef EPDIY_VCOM
       #define EPDIY_VCOM 300
     #endif
+  #elif DISPLAY_ID == DT_ED133UT2_EPDIY
+  #define EPDIY_DISPLAY ED133UT2
+  #ifndef EPDIY_VCOM
+    #define EPDIY_VCOM 300
+  #endif
   #else
     #error "Unknown epdiy display type"
   #endif
