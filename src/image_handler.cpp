@@ -218,7 +218,7 @@ static uint16_t getSecondColor()
 static uint16_t getThirdColor()
 {
 #if defined(TYPE_8G)
-  return GxEPD_LIGHTGREY;
+  return GxEPD_GRAY_BB;
 #elif defined(TYPE_BW) || defined(TYPE_GRAYSCALE)
   return GxEPD_DARKGREY;
 #else
@@ -247,13 +247,13 @@ static uint16_t mapColorValue(uint8_t pixelColor, uint16_t color2, uint16_t colo
       return GxEPD_ORANGE;
 #elif defined(TYPE_8G)
     case 0x4:
-      return GxEPD_GRAY_EE;
+      return GxEPD_GRAY_DD;
     case 0x5:
-      return GxEPD_LIGHTGREY;
+      return GxEPD_GRAY_CC;
     case 0x6:
-      return GxEPD_GRAY_BB;
+      return GxEPD_GRAY_88;
     case 0x7:
-      return GxEPD_DARKGREY;
+      return GxEPD_GRAY_44;
 #endif
     default:
       return GxEPD_WHITE;
