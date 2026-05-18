@@ -20,8 +20,24 @@
 #ifdef TYPE_8G
   // Extended grayscale levels for 8-level grayscale displays (epdiy 4bpp)
   // RGB565-encoded gray values used by mapColorValue for Z-format indices 2,4 and 6
-  #define GxEPD_GRAY_EE 0xEF7D // Gray level 0xEE (238)
-  #define GxEPD_GRAY_BB 0xBDD7 // Gray level 0xBB (187)
+  #define GxEPD_GRAY_EE 0xEF7D // 238
+  #define GxEPD_GRAY_DD 0xDEFB // 221
+  #define GxEPD_GRAY_CC 0xCE79 // 204
+  #define GxEPD_GRAY_BB 0xBDD7 // 187
+  #define GxEPD_GRAY_88 0x8C71 // 136
+  #define GxEPD_GRAY_44 0x4228 // 68
+
+  // Other grayscale levels for reference (not currently used)
+  /*
+  #define GxEPD_GRAY_AA   0xAD55 // 170
+  #define GxEPD_GRAY_99   0x9CF3 // 153
+  #define GxEPD_GRAY_77   0x7BEF // 119
+  #define GxEPD_GRAY_66   0x6B4D // 102
+  #define GxEPD_GRAY_55   0x52AA // 85
+  #define GxEPD_GRAY_33   0x3186 // 51
+  #define GxEPD_GRAY_22   0x2104 // 34
+  #define GxEPD_GRAY_11   0x1082 // 17
+  */
 #endif
 
 class EpdiyDisplay : public Adafruit_GFX
