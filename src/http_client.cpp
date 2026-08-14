@@ -212,6 +212,14 @@ bool HttpClient::parseHeaders(bool checkTimestampOnly, uint64_t storedTimestamp)
         Logger::log<Logger::Topic::HEADER>("Partial refresh requested\n");
       }
 
+      // Server requests a full Wi-Fi scan next time - invalidate cached BSSID/channel
+      // so the next boot performs an all-channel scan and connects to the strongest AP.
+      if (line.startsWith("ForceWifiFullScan"))
+      {
+        Wireless::invalidateConnectionCache();
+        Logger::log<Logger::Topic::HEADER>("Forced Wi-Fi full scan requested, cache invalidated\n");
+      }
+
       // ShowNoWifiError setting (1 = show error on display, 0 = keep existing content)
       if (line.startsWith("ShowNoWifiError"))
       {
