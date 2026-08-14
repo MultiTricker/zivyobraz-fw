@@ -100,11 +100,39 @@ void saveConfigCallback()
 }
 #endif
 
+static void clearPinnedBssid()
+{
+  wifi_config_t conf;
+  esp_wifi_get_config(WIFI_IF_STA, &conf);
+  if (!conf.sta.bssid_set)
+  {
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>("No BSSID pinned, nothing to clear\n");
+    return;
+  }
+
+  const char *ssid = reinterpret_cast<const char *>(conf.sta.ssid);
+  if (strlen(ssid) == 0)
+  {
+    Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>("No stored SSID in NVS, skipping BSSID pin clear\n");
+    return;
+  }
+
+  const char *pass = reinterpret_cast<const char *>(conf.sta.password);
+  // channel=0, bssid=nullptr, connect=false: re-applies config with the pin cleared,
+  // without triggering an immediate connection attempt.
+  Logger::log<Logger::Level::DEBUG, Logger::Topic::WIFI>("Clearing pinned BSSID/channel before full scan\n");
+  WiFi.begin(ssid, pass, 0, nullptr, false);
+}
+
 void init(const String &hostname, const String &password, void (*callback)())
 {
   // Connecting to WiFi
   Logger::log<Logger::Topic::WIFI>("Connecting...\n");
   WiFi.mode(WIFI_STA);
+  WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);
+  WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);
+  clearPinnedBssid();
+
   wm.setWiFiAutoReconnect(true);
   wm.setConnectRetries(5);
   wm.setDarkMode(true);
