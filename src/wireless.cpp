@@ -105,6 +105,9 @@ void init(const String &hostname, const String &password, void (*callback)())
   // Connecting to WiFi
   Logger::log<Logger::Topic::WIFI>("Connecting...\n");
   WiFi.mode(WIFI_STA);
+  WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);
+  WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);
+
   wm.setWiFiAutoReconnect(true);
   wm.setConnectRetries(5);
   wm.setDarkMode(true);
