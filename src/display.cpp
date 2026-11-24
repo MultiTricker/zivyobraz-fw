@@ -404,8 +404,32 @@ namespace Display
 // Track whether partial refresh is requested for direct streaming mode
 static bool directStreamingPartialRefresh = false;
 
+#if defined(TYPE_3C) || defined(TYPE_4C) || defined(TYPE_7C)
+// GxEPD2 sets a fixed BUSY timeout per panel driver (20-60 s for 3C/4C/7C; e.g. only 20 s for GDEP073E01,
+// whose full refresh was measured at ~28 s, and for several 3C panels with 14-18 s nominal refresh).
+// Refresh gets considerably slower in the cold. When the timeout hits, GxEPD2 stops waiting and we power
+// the panel down mid-refresh, leaving a half-drawn image.
+// Enforce a minimum of 60 s; never lower a timeout the library already sets higher.
+// _busy_timeout is protected in GxEPD2_EPD, so access it via a pointer-to-member from a derived class.
+static constexpr uint32_t COLOR_MIN_BUSY_TIMEOUT_US = 60UL * 1000UL * 1000UL; // 60 s
+
+struct BusyTimeoutAccess : GxEPD2_EPD
+{
+  static void raiseTo(GxEPD2_EPD &epd, uint32_t minTimeoutUs)
+  {
+    uint32_t GxEPD2_EPD::*timeout = &BusyTimeoutAccess::_busy_timeout;
+    if (epd.*timeout < minTimeoutUs)
+      epd.*timeout = minTimeoutUs;
+  }
+};
+#endif
+
 void init()
 {
+#if defined(TYPE_3C) || defined(TYPE_4C) || defined(TYPE_7C)
+  BusyTimeoutAccess::raiseTo(display.epd2, COLOR_MIN_BUSY_TIMEOUT_US);
+#endif
+
 #ifdef REMAP_SPI
   // only CLK and MOSI are important for EPD
   hspi.begin(PIN_SPI_CLK, PIN_SPI_MISO, PIN_SPI_MOSI, PIN_SPI_SS); // swap pins
